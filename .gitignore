@@ -1,0 +1,58 @@
+# User-specific files
+*.user
+*.userosscache
+*.suo
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+build/
+bld/
+[Bb]in/
+[Oo]bj/
+dist/
+
+# IDEs
+.vscode/
+.idea/
+*.sln.iml
+*.sln.DotSettings.user
+
+# Dependencies
+node_modules/
+**/packages/
+
+# Environment and secrets
+appsettings.local.json
+appsettings.Development.json
+secrets.json
+.env
+.env.local
+
+# Logs
+*.log
+*.tmp
+*.bak
+npm-debug.log
+yarn-error.log
+
+# OS files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+[Dd]esktop.ini
+*~
+.directory
+
+# Other
+*.pfx
+*.key
+project.assets.json
+*.cache
+*.ide
+*.nupkg
+*.snupkg
