@@ -2,11 +2,11 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Header from "./layout/Header";
-import Hero from "./layout/Hero";
+import Hero from "./Hero";
 import ModulesSection from "./modules/ModulesSection";
-import Consulting from "./layout/Consulting";
-import PricingCalculator from "./layout/PricingCalculator";
-import Contact from "./layout/Contact";
+import Consulting from "./Consulting";
+import PricingCalculator from "./PricingCalculator";
+import Contact from "./Contact";
 import Footer from "./layout/Footer";
 
 const sections = [

@@ -10,6 +10,7 @@ import {
   X,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import PaymentButton from "./PaymentButton";
 
 const getCompanySizeForEmployees = (count) => {
   if (count <= 10) return "micro";
@@ -161,6 +162,11 @@ const PricingCalculator = () => {
   const handleEmployeeCountChange = (value) => {
     setEmployeeCount(value);
     setCustomEmployeeCount("");
+  };
+
+  const handlePaymentInitiated = (paymentData) => {
+    console.log("Payment initiated:", paymentData);
+    // Aquí se puede agregar tracking de analytics
   };
 
   return (
@@ -426,6 +432,21 @@ const PricingCalculator = () => {
                       )}
                     </div>
                   </div>
+
+                  {/* Botón de Pago */}
+                  {deploymentType === "saas" && (
+                    <PaymentButton
+                      amount={price.monthly}
+                      modules={selectedModules}
+                      deploymentType={deploymentType}
+                      employeeCount={
+                        customEmployeeCount
+                          ? parseInt(customEmployeeCount)
+                          : employeeCount
+                      }
+                      onPaymentInitiated={handlePaymentInitiated}
+                    />
+                  )}
                 </div>
               ) : (
                 <div className="text-center py-8 flex-grow flex flex-col justify-center items-center">
