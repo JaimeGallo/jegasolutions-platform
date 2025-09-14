@@ -19,6 +19,15 @@ const getCompanySizeForEmployees = (count) => {
   return "large";
 };
 
+// Helper para formatear a pesos colombianos
+const formatCOP = (value) => {
+  return new Intl.NumberFormat("es-CO", {
+    style: "currency",
+    currency: "COP",
+    minimumFractionDigits: 0,
+  }).format(value);
+};
+
 const PricingCalculator = () => {
   const [deploymentType, setDeploymentType] = useState("saas");
   const [companySize, setCompanySize] = useState("small");
@@ -42,7 +51,11 @@ const PricingCalculator = () => {
     }
   }, [employeeCount, customEmployeeCount, companySize]);
 
-  const basePricing = {
+  // --- Base de Precios en USD ---
+  // Mantener los precios originales en USD facilita el mantenimiento.
+  const USD_TO_COP_RATE = 4026; // Tasa de cambio usada para la conversión.
+
+  const basePricingUSD = {
     saas: {
       micro: { min: 97, max: 139 },
       small: { min: 157, max: 189 },
@@ -56,6 +69,24 @@ const PricingCalculator = () => {
       large: { license: 25000, maintenance: 0.25, implementation: 8000 },
     },
   };
+
+  // Función para convertir los precios base de USD a COP
+  const convertPricingToCOP = (pricingUSD, rate) => {
+    const converted = JSON.parse(JSON.stringify(pricingUSD)); // Deep copy
+    for (const type in converted) {
+      for (const size in converted[type]) {
+        for (const key in converted[type][size]) {
+          if (key !== "maintenance") {
+            // El mantenimiento es un porcentaje
+            converted[type][size][key] *= rate;
+          }
+        }
+      }
+    }
+    return converted;
+  };
+
+  const basePricing = convertPricingToCOP(basePricingUSD, USD_TO_COP_RATE);
 
   const moduleMultipliers = {
     extraHours: { saas: 1.0, onpremise: 1.0 },
@@ -120,8 +151,8 @@ const PricingCalculator = () => {
       return {
         monthly: Math.round(monthlyPrice),
         annual: Math.round(annualPrice),
-        setup: 500,
-        total3Years: Math.round(annualPrice * 3 + 500),
+        setup: 500 * USD_TO_COP_RATE, // Setup en COP
+        total3Years: Math.round(annualPrice * 3 + 500 * USD_TO_COP_RATE),
       };
     } else {
       const licensePrice = pricing.license * moduleMultiplier;
@@ -359,24 +390,24 @@ const PricingCalculator = () => {
                         <div className="flex justify-between items-baseline">
                           <span className="text-gray-700">Mensual:</span>
                           <span className="font-bold text-3xl text-jega-blue-800">
-                            ${price.monthly}
+                            {formatCOP(price.monthly)}
                           </span>
                         </div>
                         <div className="flex justify-between items-baseline text-green-700">
                           <span>Anual (15% desc.):</span>
                           <span className="font-semibold text-lg">
-                            ${price.annual}
+                            {formatCOP(price.annual)}
                           </span>
                         </div>
                         <div className="flex justify-between items-baseline text-sm text-gray-600">
                           <span>Setup único:</span>
-                          <span>${price.setup}</span>
+                          <span>{formatCOP(price.setup)}</span>
                         </div>
                         <hr className="my-2 border-blue-200" />
                         <div className="flex justify-between items-center font-bold text-lg">
                           <span>Total 3 años:</span>
                           <span className="text-green-800">
-                            ${price.total3Years}
+                            {formatCOP(price.total3Years)}
                           </span>
                         </div>
                       </div>
@@ -385,24 +416,24 @@ const PricingCalculator = () => {
                         <div className="flex justify-between items-baseline">
                           <span>Licencia:</span>
                           <span className="font-bold text-3xl text-jega-blue-800">
-                            ${price.license}
+                            {formatCOP(price.license)}
                           </span>
                         </div>
                         <div className="flex justify-between items-baseline">
                           <span>Implementación:</span>
                           <span className="font-semibold text-lg">
-                            ${price.implementation}
+                            {formatCOP(price.implementation)}
                           </span>
                         </div>
                         <div className="flex justify-between items-baseline text-sm text-gray-600">
                           <span>Mantenimiento/año:</span>
-                          <span>${price.maintenance}</span>
+                          <span>{formatCOP(price.maintenance)}</span>
                         </div>
                         <hr className="my-2 border-blue-200" />
                         <div className="flex justify-between items-center font-bold text-lg">
                           <span>Total 3 años:</span>
                           <span className="text-green-800">
-                            ${price.total3Years}
+                            {formatCOP(price.total3Years)}
                           </span>
                         </div>
                       </div>
@@ -436,7 +467,7 @@ const PricingCalculator = () => {
                   {/* Botón de Pago */}
                   {deploymentType === "saas" && (
                     <PaymentButton
-                      amount={price.monthly * 100} // Wompi espera el monto en centavos
+                      amount={price.monthly} // El monto ya está en COP, Wompi lo necesita en centavos
                       modules={selectedModules}
                       deploymentType={deploymentType}
                       employeeCount={
