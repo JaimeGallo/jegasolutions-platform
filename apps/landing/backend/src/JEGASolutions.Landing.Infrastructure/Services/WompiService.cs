@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using System.Net.Http.Headers;
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -52,7 +53,56 @@ public class WompiService : IWompiService
         _publicKey = _configuration["Wompi:PublicKey"] ?? throw new ArgumentNullException("Wompi:PublicKey");
 
         _httpClient.BaseAddress = new Uri(_configuration["Wompi:BaseUrl"] ?? "https://production.wompi.co/v1/");
-        _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_privateKey}");
+        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _publicKey);
+    }
+
+    public async Task<WompiTransactionResponseDto> CreateTransactionAsync(Payment payment)
+    {
+        _logger.LogInformation("Creating Wompi transaction for reference {Reference}", payment.Reference);
+
+        var wompiApiUrl = _configuration["Wompi:BaseUrl"] ?? "https://production.wompi.co/v1/";
+        var redirectUrl = _configuration["Wompi:RedirectUrl"] ?? $"https://{payment.Reference}.localhost/payment-status"; // Fallback a localhost
+
+        var requestPayload = new
+        {
+            amount_in_cents = (int)(payment.Amount * 100),
+            currency = "COP",
+            customer_email = payment.CustomerEmail,
+            reference = payment.Reference,
+            payment_method = new
+            {
+                // Permite todos los métodos de pago disponibles en el checkout
+                type = "CARD", // Este valor es un placeholder, el checkout de Wompi mostrará todas las opciones
+            },
+            redirect_url = redirectUrl,
+            customer_data = new
+            {
+                full_name = payment.CustomerName,
+                phone_number = payment.CustomerPhone,
+                email = payment.CustomerEmail
+            }
+        };
+
+        var jsonPayload = JsonSerializer.Serialize(requestPayload, JsonUtils.GetJsonSerializerOptions());
+        var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+
+        var response = await _httpClient.PostAsync("transactions", content);
+
+        var responseBody = await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogError("Error creating Wompi transaction for reference {Reference}. Status: {StatusCode}, Body: {Body}", payment.Reference, response.StatusCode, responseBody);
+            throw new ApplicationException($"Error from Wompi API: {responseBody}");
+        }
+
+        var wompiResponse = JsonSerializer.Deserialize<WompiApiResponse<WompiTransactionResponseDto>>(responseBody, JsonUtils.GetJsonSerializerOptions());
+
+        var transactionData = wompiResponse?.Data ?? throw new ApplicationException("Failed to deserialize Wompi transaction response.");
+
+        transactionData.CheckoutUrl = $"https://checkout.wompi.co/p/{transactionData.Id}";
+
+        return transactionData;
     }
 
     public Task<bool> ValidateWebhookSignature(string payload, string signature)
@@ -71,7 +121,7 @@ public class WompiService : IWompiService
             if (response.IsSuccessStatusCode)
             {
                 var content = await response.Content.ReadAsStringAsync();
-                var result = JsonSerializer.Deserialize<WompiApiResponse<WompiTransactionResponseDto>>(content);
+                var result = JsonSerializer.Deserialize<WompiApiResponse<WompiTransactionResponseDto>>(content, JsonUtils.GetJsonSerializerOptions());
                 return result?.Data;
             }
 

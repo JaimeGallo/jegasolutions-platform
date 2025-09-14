@@ -45,4 +45,5 @@ public class WompiTransactionResponseDto
     public string Currency { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public DateTime FinalizedAt { get; set; }
+    public string? CheckoutUrl { get; set; }
 }

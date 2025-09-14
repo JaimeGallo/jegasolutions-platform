@@ -9,21 +9,27 @@ public class PaymentService : IPaymentService
 {
     private readonly IRepository<Payment> _paymentRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IWompiService _wompiService;
 
-    public PaymentService(IRepository<Payment> paymentRepository, IUnitOfWork unitOfWork)
+    public PaymentService(IRepository<Payment> paymentRepository, IUnitOfWork unitOfWork, IWompiService wompiService)
     {
         _paymentRepository = paymentRepository;
         _unitOfWork = unitOfWork;
+        _wompiService = wompiService;
     }
 
     public async Task<PaymentResponseDto> CreatePaymentAsync(PaymentRequestDto request)
     {
-        var payment = new Payment
+        // 1. Crear la entidad de pago en estado PENDING
+        // Usamos una referencia única para la transacción interna y con Wompi.
+        var reference = $"JEGA-{Guid.NewGuid().ToString().Substring(0, 8)}";
+        var payment = new Payment()
         {
             Reference = request.Reference,
             Amount = request.Amount,
             CustomerEmail = request.CustomerEmail,
             CustomerName = request.CustomerName,
+            CustomerPhone = request.CustomerPhone,
             Status = "PENDING",
             CreatedAt = DateTime.UtcNow,
             Metadata = request.Metadata
@@ -32,7 +38,19 @@ public class PaymentService : IPaymentService
         await _paymentRepository.AddAsync(payment);
         await _unitOfWork.SaveChangesAsync();
 
-        return MapToDto(payment);
+        // 2. Crear la transacción en Wompi
+        var wompiTransaction = await _wompiService.CreateTransactionAsync(payment);
+
+        // 3. Actualizar nuestra entidad de pago con el ID de Wompi
+        payment.WompiTransactionId = wompiTransaction.Id;
+        await _paymentRepository.UpdateAsync(payment);
+        await _unitOfWork.SaveChangesAsync();
+
+        // 4. Devolver el DTO con la URL de checkout para el frontend
+        var responseDto = MapToDto(payment);
+        responseDto.CheckoutUrl = wompiTransaction.CheckoutUrl;
+
+        return responseDto;
     }
 
     public async Task<PaymentResponseDto?> GetPaymentByReferenceAsync(string reference)
@@ -73,7 +91,9 @@ public class PaymentService : IPaymentService
             Amount = payment.Amount,
             CustomerEmail = payment.CustomerEmail,
             CustomerName = payment.CustomerName,
+            CustomerPhone = payment.CustomerPhone,
             WompiTransactionId = payment.WompiTransactionId,
+            // CheckoutUrl no se mapea aquí porque solo es relevante al crear el pago.
             CreatedAt = payment.CreatedAt,
             UpdatedAt = payment.UpdatedAt,
             Metadata = payment.Metadata

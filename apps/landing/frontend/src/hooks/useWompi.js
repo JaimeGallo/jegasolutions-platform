@@ -1,30 +1,11 @@
 import { useState, useCallback } from "react";
 
+// La URL base de tu API de backend. Debería estar en una variable de entorno.
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
+
 export const useWompi = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-
-  const initializeWompi = useCallback(() => {
-    return new Promise((resolve, reject) => {
-      if (window.WompiCheckoutWidget) {
-        resolve(window.WompiCheckoutWidget);
-        return;
-      }
-
-      const script = document.createElement("script");
-      script.src = "https://checkout.wompi.co/widget.js";
-      script.async = true;
-      script.onload = () => {
-        if (window.WompiCheckoutWidget) {
-          resolve(window.WompiCheckoutWidget);
-        } else {
-          reject(new Error("Wompi widget failed to load"));
-        }
-      };
-      script.onerror = () => reject(new Error("Failed to load Wompi script"));
-      document.head.appendChild(script);
-    });
-  }, []);
 
   const createPayment = useCallback(
     async (paymentData) => {
@@ -32,37 +13,34 @@ export const useWompi = () => {
       setError(null);
 
       try {
-        const WompiCheckoutWidget = await initializeWompi();
-
-        const checkout = new WompiCheckoutWidget({
-          publicKey: import.meta.env.VITE_WOMPI_PUBLIC_KEY,
-          currency: "COP",
-          amountInCents: paymentData.amount * 100,
-          reference: paymentData.reference,
-          redirectUrl: paymentData.redirectUrl,
-          customerData: paymentData.customerData,
-          taxInCents: paymentData.taxInCents || 0,
-          customerEmail: paymentData.customerEmail,
-          phoneNumber: paymentData.phoneNumber,
-          customerFullName: paymentData.customerFullName,
+        // 1. Llamar a nuestro backend para crear el pago
+        const response = await fetch(`${API_BASE_URL}/payments/create`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(paymentData),
         });
 
-        checkout.open();
+        const result = await response.json();
 
-        return checkout;
+        if (!response.ok || !result.checkoutUrl) {
+          throw new Error(
+            result.message || "Error al iniciar el pago desde el servidor."
+          );
+        }
+
+        // 2. Redirigir al usuario a la URL de checkout de Wompi
+        window.location.href = result.checkoutUrl;
       } catch (err) {
+        console.error("Error creating payment:", err);
         setError(err.message);
-        throw err;
       } finally {
         setIsLoading(false);
       }
     },
-    [initializeWompi]
+    [] // No hay dependencias externas, ya que todo está contenido en la función.
   );
 
-  return {
-    createPayment,
-    isLoading,
-    error,
-  };
+  return { createPayment, isLoading, error };
 };
