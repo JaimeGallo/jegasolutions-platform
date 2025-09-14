@@ -436,7 +436,7 @@ const PricingCalculator = () => {
                   {/* Botón de Pago */}
                   {deploymentType === "saas" && (
                     <PaymentButton
-                      amount={price.monthly}
+                      amount={price.monthly * 100} // Wompi espera el monto en centavos
                       modules={selectedModules}
                       deploymentType={deploymentType}
                       employeeCount={
