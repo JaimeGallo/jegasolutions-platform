@@ -5,11 +5,12 @@ Una landing page moderna y profesional para JEGASolutions, diseñada con React, 
 ## ✨ Características
 
 - **Diseño Moderno**: Interfaz limpia y profesional con animaciones suaves
-- **Componentes Modulares**: Arquitectura bien estructurada y reutilizable
+- **Componentes Interactivos**: Tarjetas con efecto "flip" para mostrar más detalles
 - **Responsive Design**: Optimizada para todos los dispositivos
 - **Animaciones**: Transiciones fluidas con Framer Motion
 - **SEO Optimizado**: Meta tags y estructura semántica
 - **Performance**: Código optimizado y lazy loading
+- **Integración de Pagos**: Lista para procesar pagos a través de Wompi
 
 ## 🏗️ Estructura del Proyecto
 
@@ -17,12 +18,18 @@ Una landing page moderna y profesional para JEGASolutions, diseñada con React, 
 src/
 ├── components/
 │   ├── Hero.jsx              # Sección principal con logo y CTA
-│   ├── Modules.jsx           # Módulos disponibles y próximos
-│   ├── Consulting.jsx        # Servicios de consultoría
-│   ├── PricingCalculator.jsx # Calculadora de precios interactiva
+│   ├── modules/
+│   │   ├── ExtraHoursModule.jsx  # Módulo de Horas Extra
+│   │   ├── UpcomingModules.jsx   # Módulos en desarrollo
+│   │   └── FlippableModuleCard.jsx # Tarjeta reutilizable con efecto flip
 │   ├── Contact.jsx           # Formulario de contacto
 │   ├── Footer.jsx            # Pie de página
-│   └── JEGASolutionsLanding.jsx # Componente principal
+│   ├── PaymentButton.jsx     # Botón de pago con Wompi
+│   └── JEGASolutionsLanding.jsx # Componente principal que une las secciones
+├── hooks/
+│   └── useWompi.js           # Hook para la integración con Wompi
+├── utils/
+│   └── useMediaQuery.js      # Hook para queries de CSS en JS
 ├── index.css                 # Estilos globales y Tailwind
 └── App.jsx                   # Punto de entrada
 ```
@@ -129,6 +136,7 @@ Cualquier hosting estático que soporte SPA routing.
   "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0"
 }
 ```
+
 ## 🎯 Características Principales
 
 ### Hero Section

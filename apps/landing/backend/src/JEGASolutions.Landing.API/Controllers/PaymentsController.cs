@@ -148,10 +148,7 @@ public class PaymentsController : ControllerBase
 
             var payment = await _paymentService.CreatePaymentAsync(request);
 
-            return CreatedAtAction(
-                nameof(GetPaymentStatus),
-                new { reference = payment.Reference },
-                payment);
+            return Ok(payment); // Devolvemos el DTO que ahora contiene el CheckoutUrl
         }
         catch (Exception ex)
         {

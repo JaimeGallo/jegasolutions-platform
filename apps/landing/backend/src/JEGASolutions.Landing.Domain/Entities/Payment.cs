@@ -22,6 +22,8 @@ public class Payment
     [MaxLength(255)]
     public string? CustomerName { get; set; }
 
+    public string? CustomerPhone { get; set; }
+
     [MaxLength(20)]
     public string? WompiTransactionId { get; set; }
 
