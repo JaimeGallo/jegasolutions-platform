@@ -36,11 +36,7 @@ src/
 
 ## 🚀 Tecnologías Utilizadas
 
-- **React 18** - Biblioteca de interfaz de usuario
-- **Vite** - Build tool y dev server
-- **Tailwind CSS** - Framework de CSS utility-first
-- **Framer Motion** - Biblioteca de animaciones
-- **Lucide React** - Iconos modernos
+- **Vite** - Herramienta de build y servidor de desarrollo ultrarrápido
 - **PostCSS** - Procesador de CSS
 
 ## 📦 Instalación
@@ -53,6 +49,7 @@ src/
    ```
 
 2. **Instalar dependencias**
+   (Se recomienda usar `npm`, `yarn` o `pnpm`)
 
    ```bash
    npm install
@@ -75,6 +72,21 @@ src/
    npm run preview
    ```
 
+## ⚙️ Backend
+
+El frontend se apoya en una API construida con **.NET 7** que gestiona:
+
+- **Procesamiento de Pagos**: Orquesta la creación de transacciones con Wompi y persiste los pagos en la base de datos.
+- **Notificaciones por Email**: Envía correos de bienvenida y confirmación de pago usando un servicio SMTP.
+- **Arquitectura Limpia**: Sigue principios de Clean Architecture, separando dominio, aplicación e infraestructura.
+- **Patrones de Diseño**: Utiliza el patrón Repositorio y Unidad de Trabajo para la abstracción del acceso a datos.
+
+El backend está ubicado en el directorio `apps/landing/backend/`.
+
+---
+
+## 🎨 Personalización
+
 ## 🎨 Personalización
 
 ### Colores de Marca
@@ -93,11 +105,11 @@ colors: {
 
 Cada sección es un componente independiente que puede ser fácilmente modificado:
 
-- **Hero**: Cambiar logo, título, descripción y botones CTA
-- **Modules**: Agregar/quitar módulos y características
-- **Consulting**: Modificar servicios y testimonios
-- **PricingCalculator**: Ajustar precios y opciones
-- **Contact**: Personalizar formulario e información de contacto
+- **`Hero.jsx`**: Cambiar logo, eslogan, descripción y botones CTA.
+- **`*Module.jsx`**: Agregar/quitar módulos y editar sus características en las tarjetas.
+- **`Consulting.jsx`**: Modificar los servicios y el proceso de consultoría.
+- **`PricingCalculator.jsx`**: Ajustar la lógica de precios, rangos de empleados y tasas de conversión.
+- **`Contact.jsx`**: Personalizar el formulario de contacto y la información de la empresa.
 
 ## 📱 Responsive Design
 
@@ -128,13 +140,18 @@ Cualquier hosting estático que soporte SPA routing.
 
 ## 🔧 Scripts Disponibles
 
-```json
-{
-  "dev": "vite", // Servidor de desarrollo
-  "build": "vite build", // Construir para producción
-  "preview": "vite preview", // Previsualizar build
-  "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0"
-}
+```bash
+# Inicia el servidor de desarrollo en http://localhost:5173
+"dev": "vite"
+
+# Compila la aplicación para producción en la carpeta /dist
+"build": "vite build"
+
+# Previsualiza el build de producción localmente
+"preview": "vite preview"
+
+# Ejecuta el linter de ESLint para revisar la calidad del código
+"lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0"
 ```
 
 ## 🎯 Características Principales
