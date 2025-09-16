@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-     "dev:landing": "pnpm --filter @jegasolutions/landing-frontend dev",
+    "dev:landing": "pnpm --filter @jegasolutions/landing-frontend dev",
     "build:landing": "pnpm --filter @jegasolutions/landing-frontend build",
     "preview:landing": "pnpm --filter @jegasolutions/landing-frontend preview",
     "lint:landing": "pnpm --filter @jegasolutions/landing-frontend lint"
