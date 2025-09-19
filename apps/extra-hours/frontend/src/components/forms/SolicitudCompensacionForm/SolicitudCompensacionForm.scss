@@ -1,0 +1,675 @@
+/* Variables para colores y espaciado */
+$primary-color: #005eb8;
+$primary-light: #00a9e0;
+$primary-dark: #1d4ed8;
+$secondary-color: #10b981;
+$secondary-dark: #047857;
+$background-color: #f8fafc;
+$card-background: #ffffff;
+$text-color: #1e293b;
+$label-color: #4b5563;
+$field-border: #e2e8f0;
+$focus-border: #00a9e0;
+$field-background: #ffffff;
+$error-color: #ef4444;
+$error-background: #d85252;
+$success-color: #10b981;
+$success-background: #d1fae5;
+$warning-color: #f59e0b;
+$warning-background: #fef3c7;
+$info-color: #3b82f6;
+$info-background: #dbeafe;
+$hover-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+  0 4px 6px -2px rgba(0, 0, 0, 0.05);
+$border-radius: 12px;
+$input-radius: 8px;
+$button-radius: 30px;
+$transition-speed: 0.3s;
+
+// Importar el módulo de color de Sass
+@use "sass:color";
+
+/* Estilos de animación */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba($primary-light, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba($primary-light, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba($primary-light, 0);
+  }
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Contenedor principal */
+.solicitud-compensacion-container {
+  max-width: 900px;
+  width: 100%;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  color: $text-color;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+/* Título del formulario */
+.form-title {
+  color: $primary-dark;
+  font-size: 1.75rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 2rem;
+  position: relative;
+
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, $primary-color, $primary-light);
+    border-radius: 2px;
+  }
+}
+
+/* Contenedor del formulario */
+.form-container {
+  background: $card-background;
+  border-radius: $border-radius;
+  padding: 2rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  animation: slideIn 0.4s ease-out;
+  position: relative;
+
+  &.compensacion-component {
+    background: var(--card-compensacion-gradient);
+    border-radius: 12px;
+    box-shadow: 0 6px 24px rgba(30, 64, 175, 0.18),
+      0 1.5px 6px rgba(0, 0, 0, 0.13);
+    padding: 32px 24px;
+    margin: 24px auto;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+/* Secciones del formulario */
+.form-section {
+  margin-bottom: 2rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.section-title {
+  color: $primary-dark;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid $field-border;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 40px;
+    height: 2px;
+    background: $primary-color;
+  }
+
+  .section-icon {
+    width: 20px;
+    height: 20px;
+    color: $primary-color;
+  }
+}
+
+/* Grid de campos */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+/* Grupos de campos */
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.field-label {
+  color: $label-color;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+
+  &.required::after {
+    content: " *";
+    color: $error-color;
+  }
+
+  .field-help {
+    color: $label-color;
+    opacity: 0.7;
+    font-size: 0.75rem;
+    margin-left: auto;
+  }
+}
+
+.field-input {
+  padding: 0.75rem;
+  border: 1px solid $field-border;
+  border-radius: $input-radius;
+  background: $field-background;
+  font-size: 0.875rem;
+  transition: all $transition-speed ease;
+
+  &:focus {
+    outline: none;
+    border-color: $focus-border;
+    box-shadow: 0 0 0 3px rgba($focus-border, 0.1);
+  }
+
+  &:hover {
+    border-color: color.adjust($field-border, $lightness: -5%);
+  }
+
+  &.error {
+    border-color: $error-color;
+    box-shadow: 0 0 0 3px rgba($error-color, 0.1);
+  }
+
+  &:disabled {
+    background: color.adjust($field-background, $lightness: -5%);
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+}
+
+.field-select {
+  @extend .field-input;
+  cursor: pointer;
+
+  &:hover {
+    border-color: color.adjust($field-border, $lightness: -5%);
+  }
+}
+
+.field-textarea {
+  @extend .field-input;
+  resize: vertical;
+  min-height: 100px;
+  font-family: inherit;
+}
+
+.field-date {
+  @extend .field-input;
+
+  &::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity $transition-speed ease;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
+/* Campos especiales */
+.time-input-group {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.time-input {
+  @extend .field-input;
+  width: 80px;
+  text-align: center;
+}
+
+.time-separator {
+  color: $label-color;
+  font-weight: 600;
+}
+
+/* Calculadora de horas */
+.hours-calculator {
+  background: color.adjust($info-color, $lightness: 95%);
+  border: 1px solid color.adjust($info-color, $lightness: 80%);
+  border-radius: $border-radius;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.calculator-title {
+  color: $info-color;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.calculator-result {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid color.adjust($info-color, $lightness: 80%);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.calculator-label {
+  color: $text-color;
+  font-size: 0.875rem;
+}
+
+.calculator-value {
+  font-weight: 600;
+  color: $primary-color;
+  font-size: 0.875rem;
+}
+
+/* Checkbox y radio buttons */
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.checkbox-input {
+  width: 18px;
+  height: 18px;
+  accent-color: $primary-color;
+  cursor: pointer;
+}
+
+.checkbox-label {
+  font-size: 0.875rem;
+  color: $text-color;
+  cursor: pointer;
+  user-select: none;
+}
+
+.radio-group {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.radio-input {
+  width: 16px;
+  height: 16px;
+  accent-color: $primary-color;
+  cursor: pointer;
+}
+
+.radio-label {
+  font-size: 0.875rem;
+  color: $text-color;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Botones */
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid $field-border;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.form-button {
+  padding: 0.875rem 2rem;
+  border: none;
+  border-radius: $button-radius;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all $transition-speed ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-width: 120px;
+
+  &.primary {
+    background: linear-gradient(135deg, $primary-color, $primary-light);
+    color: white;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: $hover-shadow;
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+
+  &.secondary {
+    background: $secondary-color;
+    color: white;
+
+    &:hover {
+      background: $secondary-dark;
+      transform: translateY(-2px);
+      box-shadow: $hover-shadow;
+    }
+  }
+
+  &.outline {
+    background: transparent;
+    color: $primary-color;
+    border: 2px solid $primary-color;
+
+    &:hover {
+      background: $primary-color;
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: $hover-shadow;
+    }
+  }
+
+  &.warning {
+    background: $warning-color;
+    color: white;
+
+    &:hover {
+      background: color.adjust($warning-color, $lightness: -10%);
+      transform: translateY(-2px);
+      box-shadow: $hover-shadow;
+    }
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+}
+
+/* Mensajes de error y éxito */
+.error-message {
+  color: $error-color;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.success-message {
+  background: $success-background;
+  color: $success-color;
+  padding: 1rem;
+  border-radius: $border-radius;
+  margin: 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+}
+
+.error-alert {
+  background: $error-background;
+  color: $error-color;
+  padding: 1rem;
+  border-radius: $border-radius;
+  margin: 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+}
+
+.warning-alert {
+  background: $warning-background;
+  color: $warning-color;
+  padding: 1rem;
+  border-radius: $border-radius;
+  margin: 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+}
+
+/* Estados de carga */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: $border-radius;
+  z-index: 10;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid $field-border;
+  border-top: 3px solid $primary-color;
+  border-radius: 50%;
+  animation: rotate 1s linear infinite;
+}
+
+/* Información adicional */
+.info-section {
+  background: color.adjust($info-color, $lightness: 95%);
+  border: 1px solid color.adjust($info-color, $lightness: 80%);
+  border-radius: $border-radius;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.info-title {
+  color: $info-color;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.info-text {
+  color: $text-color;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* Validación de campos */
+.field-validation {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+
+  &.valid {
+    color: $success-color;
+  }
+
+  &.invalid {
+    color: $error-color;
+  }
+
+  &.warning {
+    color: $warning-color;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .solicitud-compensacion-container {
+    padding: 0 0.5rem;
+  }
+
+  .form-container {
+    padding: 1.5rem;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .form-button {
+    width: 100%;
+  }
+
+  .time-input-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .time-input {
+    width: 100%;
+  }
+}
+
+/* Animaciones adicionales */
+.slide-enter {
+  transform: translateX(-100%);
+  opacity: 0;
+}
+
+.slide-enter-active {
+  transform: translateX(0);
+  opacity: 1;
+  transition: all $transition-speed ease-out;
+}
+
+.slide-exit {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.slide-exit-active {
+  transform: translateX(100%);
+  opacity: 0;
+  transition: all $transition-speed ease-in;
+}
+
+/* Efectos de hover para campos */
+.field-input:hover,
+.field-select:hover,
+.field-textarea:hover,
+.field-date:hover {
+  border-color: color.adjust($field-border, $lightness: -10%);
+}
+
+/* Estilos para campos con autocompletado */
+.field-input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 30px $field-background inset !important;
+  -webkit-text-fill-color: $text-color !important;
+}
+
+/* Estilos para campos de archivo */
+.file-input {
+  display: none;
+}
+
+.file-input-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: 2px dashed $field-border;
+  border-radius: $input-radius;
+  cursor: pointer;
+  transition: all $transition-speed ease;
+  background: color.adjust($field-background, $lightness: -2%);
+
+  &:hover {
+    border-color: $primary-color;
+    background: color.adjust($primary-color, $lightness: 95%);
+  }
+
+  .file-icon {
+    color: $primary-color;
+    font-size: 1.25rem;
+  }
+}

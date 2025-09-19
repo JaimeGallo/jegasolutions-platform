@@ -1,0 +1,634 @@
+/* Variables para colores y espaciado */
+$primary-color: #005eb8;
+$primary-light: #00a9e0;
+$primary-dark: #1d4ed8;
+$secondary-color: #10b981;
+$secondary-dark: #047857;
+$background-color: #f8fafc;
+$card-background: #ffffff;
+$text-color: #1e293b;
+$label-color: #4b5563;
+$field-border: #e2e8f0;
+$focus-border: #00a9e0;
+$field-background: #ffffff;
+$error-color: #ef4444;
+$error-background: #d85252;
+$success-color: #10b981;
+$success-background: #d1fae5;
+$hover-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+  0 4px 6px -2px rgba(0, 0, 0, 0.05);
+$border-radius: 12px;
+$input-radius: 8px;
+$button-radius: 30px;
+$transition-speed: 0.3s;
+
+// Importar el módulo de color de Sass
+@use "sass:color";
+
+/* Estilos de animación para loading spinners */
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba($primary-light, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba($primary-light, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba($primary-light, 0);
+  }
+}
+
+/* Estilos generales y contenedor principal */
+.form-container {
+  max-width: 1100px;
+  width: 100%;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  color: $text-color;
+  animation: fadeIn 0.5s ease-in-out;
+
+  &.form-component {
+    background: var(--card-register-gradient);
+    border-radius: 12px;
+    box-shadow: 0 6px 24px rgba(30, 64, 175, 0.18),
+      0 1.5px 6px rgba(0, 0, 0, 0.13);
+    padding: 32px 24px;
+    margin: 24px auto;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    // Estilo específico para el título dentro del componente
+    .form-title {
+      color: #ffffff !important;
+    }
+  }
+}
+
+.form-title {
+  color: #ffffff !important; // Forzar color blanco
+  font-size: 1.75rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  margin-top: 0;
+  font-family: "Inter", Arial, Helvetica, sans-serif;
+  letter-spacing: -0.01em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); // Sombra sutil para mejor legibilidad
+}
+
+.section-title {
+  color: #ffffff; // Cambiado a blanco puro para mejor contraste
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 1.5rem 0 1rem;
+  margin-top: 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.4); // Aumentado la opacidad
+  font-family: "Inter", Arial, Helvetica, sans-serif;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); // Sombra sutil para mejor legibilidad
+}
+
+/* Estilos del formulario */
+form {
+  background: transparent;
+  border-radius: $border-radius;
+  padding: 2rem;
+  position: relative;
+  color: #fff;
+
+  // Estilo específico para el título dentro del formulario
+  .form-title {
+    color: #ffffff !important;
+  }
+
+  .required {
+    color: #ff6b6b; // Color más contrastante para asteriscos requeridos
+    margin-left: 2px;
+  }
+
+  .field-icon {
+    margin-right: 6px;
+    vertical-align: middle;
+    color: #ffffff; // Cambiado a blanco puro
+  }
+
+  .info-icon {
+    margin-left: 6px;
+    vertical-align: middle;
+    color: #ffffff; // Cambiado a blanco puro
+    cursor: help;
+  }
+
+  /* Estilos para tooltips */
+  .tooltip-container {
+    display: inline-block;
+    position: relative;
+
+    .tooltip-content {
+      visibility: hidden;
+      position: absolute;
+      z-index: 10;
+      width: 220px;
+      background-color: $text-color;
+      color: white;
+      text-align: center;
+      border-radius: 6px;
+      padding: 8px;
+      bottom: 125%;
+      left: 50%;
+      transform: translateX(-50%);
+      opacity: 0;
+      transition: opacity 0.3s;
+      font-size: 0.8rem;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+      pointer-events: none;
+
+      &::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        margin-left: -5px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: $text-color transparent transparent transparent;
+      }
+    }
+
+    &:hover .tooltip-content {
+      visibility: visible;
+      opacity: 1;
+    }
+  }
+
+  /* Estilos para campos fecha y hora */
+  .form-group-date-time {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    gap: 2rem;
+
+    .form-field {
+      flex: 1;
+      min-width: 200px;
+
+      label {
+        display: block;
+        font-weight: 600; // Aumentado para mejor contraste
+        font-size: 0.875rem;
+        color: #ffffff; // Cambiado a blanco puro para mejor contraste
+        margin-bottom: 0.5rem;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); // Sombra sutil
+      }
+
+      input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid rgba(255, 255, 255, 0.4); // Borde más visible
+        border-radius: $input-radius;
+        font-size: 0.95rem;
+        background-color: rgba(
+          255,
+          255,
+          255,
+          0.95
+        ); // Más opaco para mejor contraste
+        color: #1e293b; // Texto oscuro para contraste en fondo claro
+        transition: all $transition-speed ease;
+        font-weight: 500; // Texto más pesado para mejor legibilidad
+
+        &:hover {
+          border-color: rgba(255, 255, 255, 0.7);
+          background-color: rgba(
+            255,
+            255,
+            255,
+            0.3
+          ); // Completamente opaco al hover
+        }
+
+        &:focus {
+          outline: none;
+          border-color: #ffffff;
+          background-color: rgba(
+            255,
+            255,
+            255,
+            1
+          ); // Completamente opaco al focus
+          box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+        }
+
+        &::placeholder {
+          color: #64748b; // Color más oscuro para placeholders en fondo claro
+          opacity: 1;
+        }
+      }
+    }
+  }
+
+  /* Indicador de cálculo en progreso */
+  .calculation-status {
+    height: 30px;
+    margin-bottom: 0.5rem;
+
+    .calculating-indicator {
+      display: flex;
+      align-items: center;
+      color: #ffffff; // Cambiado a blanco para mejor contraste
+      font-size: 0.875rem;
+      animation: fadeIn 0.2s ease-in-out;
+      font-weight: 500;
+
+      .loading-spinner-small {
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: #ffffff;
+        border-radius: 50%;
+        margin-right: 8px;
+        animation: rotate 1s linear infinite;
+      }
+    }
+  }
+
+  /* Estilos para los campos de horas calculadas */
+  .form-group-horizontal {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 2rem;
+    width: 100%;
+    margin: 1rem 0 1.5rem;
+
+    .hora-extra-item {
+      position: relative;
+      // ... (estilos existentes del item)
+    }
+
+    input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid rgba(255, 255, 255, 0.4); // Borde más visible
+      border-radius: $input-radius;
+      font-size: 0.95rem;
+      background-color: rgba(255, 255, 255, 0.95); // Más opaco
+      color: #1e293b; // Texto oscuro para contraste
+      transition: all $transition-speed ease;
+      font-weight: 500;
+
+      &::placeholder {
+        color: #64748b; // Color más oscuro para placeholders
+        opacity: 1;
+      }
+    }
+
+    .calculated-field {
+      background-color: rgba(
+        255,
+        255,
+        255,
+        0.9
+      ); // Más opaco para mejor legibilidad
+      font-weight: 600; // Más pesado
+      color: #1e293b; // Texto oscuro
+      border-color: rgba(255, 255, 255, 0.6);
+
+      &.total-field {
+        background-color: rgba(255, 255, 255, 0.95); // Más opaco para el total
+        font-weight: 700;
+        color: #1e293b;
+        border-color: rgba(255, 255, 255, 0.8);
+      }
+    }
+
+    .hora-extra-item.total-horas-extra {
+      // Se eliminan los estilos que lo forzaban a una nueva línea.
+      // El grid ahora manejará su posición automáticamente.
+      label {
+        font-weight: 700; // Más pesado para el total
+        color: #ffffff;
+      }
+    }
+  }
+}
+
+/* Estilos para el campo de observaciones */
+.observaciones-container {
+  margin-bottom: 2rem;
+  margin-top: -10px;
+
+  label {
+    display: block;
+    font-weight: 600; // Aumentado para mejor contraste
+    font-size: 0.875rem;
+    color: #ffffff; // Cambiado a blanco puro
+    margin-bottom: 0.5rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); // Sombra sutil
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 60px;
+    padding: 0.75rem;
+    border: 2px solid rgba(255, 255, 255, 0.4); // Borde más visible
+    border-radius: $input-radius;
+    font-size: 0.95rem;
+    background-color: rgba(255, 255, 255, 0.95); // Más opaco
+    color: #1e293b; // Texto oscuro para contraste
+    resize: vertical;
+    font-family: inherit;
+    transition: all $transition-speed ease;
+    font-weight: 500;
+
+    &:hover {
+      border-color: rgba(255, 255, 255, 0.7);
+      background-color: rgba(255, 255, 255, 1);
+    }
+
+    &:focus {
+      outline: none;
+      border-color: #ffffff;
+      background-color: rgba(255, 255, 255, 1);
+      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+    }
+
+    &::placeholder {
+      color: #64748b; // Color más oscuro para placeholders
+      opacity: 1;
+    }
+  }
+}
+
+/* Estilos para el botón de envío */
+.submit-container {
+  text-align: center;
+  margin-top: 1.5rem;
+
+  button[type="submit"] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 2.5rem;
+    background: linear-gradient(135deg, #2563eb 0%, #60a5fa 100%);
+    color: white;
+    font-size: 1rem;
+    font-weight: 500;
+    border: none;
+    border-radius: $button-radius;
+    cursor: pointer;
+    transition: all $transition-speed ease;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
+    min-width: 180px;
+
+    &:hover {
+      background: linear-gradient(135deg, #3b82f6 0%, #93c5fd 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+
+    &:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    &.loading {
+      background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%) !important;
+      color: #1565c0 !important;
+      cursor: wait;
+      transform: none !important;
+      box-shadow: 0 2px 8px rgba(21, 101, 192, 0.2) !important;
+
+      &:hover,
+      &:active,
+      &:focus {
+        background: linear-gradient(
+          135deg,
+          #e3f2fd 0%,
+          #bbdefb 100%
+        ) !important;
+        color: #1565c0 !important;
+        transform: none !important;
+      }
+    }
+
+    .loading-spinner-button {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(21, 101, 192, 0.2);
+      border-top-color: #1565c0;
+      border-radius: 50%;
+      margin-right: 8px;
+      animation: rotate 1s linear infinite;
+    }
+  }
+}
+
+/* Estilos para mensajes de error */
+.error-message {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: #ffffff; // Cambiado a blanco para mejor contraste
+  padding: 0.75rem;
+  border-radius: $input-radius;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  text-align: center;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  animation: slideIn 0.3s ease;
+
+  p {
+    margin: 0;
+    color: #ffffff; // Asegurar que el texto del error sea blanco
+  }
+}
+
+/* Estilos específicos para usuarios superusuario */
+.superuser-employee-selection {
+  background-color: rgba(255, 255, 255, 0.12); // Fondo más claro y visible
+  border: 2px solid rgba(255, 255, 255, 0.25); // Borde más visible
+  border-radius: $border-radius;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  backdrop-filter: blur(4px); // Efecto de desenfoque para mejor definición
+
+  h2 {
+    color: #ffffff; // Cambiado a blanco puro para mejor contraste
+    font-size: 1.1rem;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); // Sombra sutil
+  }
+}
+
+/* Estilos para notificaciones */
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 1rem 2rem 1rem 1rem;
+  border-radius: $border-radius;
+  box-shadow: $hover-shadow;
+  animation: slideIn 0.3s ease;
+  z-index: 1000;
+  max-width: 300px;
+
+  &-success {
+    background-color: $secondary-color;
+    border-left: 4px solid $success-color;
+    color: $text-color;
+  }
+
+  &-error {
+    background-color: $error-background;
+    border-left: 4px solid $error-color;
+    color: color.adjust($error-color, $lightness: -20%);
+  }
+
+  p {
+    margin: 0;
+  }
+
+  .close-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    cursor: pointer;
+    opacity: 0.6;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
+/* Indicador de carga general */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+
+  .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba($primary-color, 0.2);
+    border-top-color: $primary-color;
+    border-radius: 50%;
+    animation: rotate 1s linear infinite;
+    margin-bottom: 1rem;
+  }
+
+  p {
+    color: $primary-color;
+    font-size: 1rem;
+  }
+}
+
+/* Media queries para responsividad */
+@media (max-width: 768px) {
+  form {
+    padding: 1.5rem;
+
+    .form-group-date-time {
+      flex-direction: column;
+      gap: 15px;
+
+      .form-field {
+        width: 100%;
+      }
+    }
+
+    .form-group-horizontal {
+      grid-template-columns: repeat(2, 1fr);
+
+      .hora-extra-item.total-horas-extra {
+        grid-column: span 2;
+        max-width: 100%;
+      }
+    }
+
+    .submit-container button[type="submit"] {
+      width: 100%;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .form-container {
+    padding: 0 0.5rem;
+  }
+
+  form {
+    padding: 1rem;
+
+    .form-group-horizontal {
+      grid-template-columns: 1fr;
+
+      .hora-extra-item.total-horas-extra {
+        grid-column: 1;
+      }
+    }
+  }
+
+  .notification {
+    left: 20px;
+    right: 20px;
+    max-width: calc(100% - 40px);
+  }
+}
+
+// Estilos específicos para asegurar el color blanco en etiquetas y títulos
+#date-label,
+#startTime-label,
+#endTime-label,
+#observatios-label {
+  color: #ffffff;
+}
+
+#detail-hours-title {
+  color: #ffffff;
+}

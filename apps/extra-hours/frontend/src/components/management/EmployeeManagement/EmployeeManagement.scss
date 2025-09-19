@@ -1,0 +1,155 @@
+$primary-color: #ffffff;
+$background-color: #d4ad2d;
+$text-color: #a87810;
+$info-bg-color: #f0f7ff;
+$danger-color: #ff4d4f;
+$shadow-color: rgba(0, 0, 0, 0.1);
+
+.employee-management {
+  padding: 54px;
+  max-width: 1200px;
+  margin: 0 auto;
+  margin-top: -50px;
+
+  .ant-tabs-nav {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-bottom: -1px; // Para que el borde se una con el contenido
+
+    &::before {
+      display: none;
+    }
+
+    .ant-tabs-nav-wrap {
+      justify-content: center;
+      overflow: visible; // Evita que se corten sombras o bordes
+    }
+
+    // Estilos para las pestañas
+    .ant-tabs-tab {
+      background-color: #fcf99e; // Color cuando no está seleccionado
+      padding: 10px 25px; // Tamaño similar a un botón grande
+      margin: 0 5px; // Espacio entre pestañas
+      border-radius: 8px 8px 0 0; // Bordes redondeados en la parte superior
+      border: 1px solid transparent;
+      border-bottom: none;
+      font-size: 16px; // Tamaño de fuente más grande
+      transition: all 0.3s ease;
+
+      .ant-tabs-tab-btn {
+        color: $text-color; // Texto oscuro para contraste
+        font-weight: 500;
+        transition: all 0.3s ease;
+      }
+
+      &:hover {
+        background-color: #f5ff87; // Un hover sutil
+      }
+
+      &.ant-tabs-tab-active {
+        background-color: #ffffff; // Color blanco cuando está seleccionado
+        border-color: #d9d9d9 #d9d9d9 #ffffff; // Bordes para integrarse con el panel
+
+        .ant-tabs-tab-btn {
+          color: $background-color !important; // Texto amarillo oscuro para seleccionada
+          font-weight: 600;
+        }
+      }
+    }
+
+    // Línea indicadora de la pestaña activa
+    .ant-tabs-ink-bar {
+      display: none; // Ocultamos la línea, el fondo ya indica la selección
+    }
+  }
+
+  h2 {
+    font-size: 24px;
+    font-weight: 600;
+    color: $text-color;
+    margin-bottom: 24px;
+    border-bottom: 2px solid $primary-color;
+    padding-bottom: 12px;
+  }
+
+  .add-employee-form {
+    .form-columns {
+      display: flex;
+      border: 1px solid #e8e8e8;
+      box-shadow: #333 0px 0px 10px 0px;
+      gap: 20px;
+      width: 90%;
+      max-width: 1200px;
+      margin: 0 auto;
+      box-shadow: 0 2px 12px rgba(22, 22, 43, 0.795);
+
+      .form-column {
+        flex: 1;
+      }
+    }
+
+    .submit-button-container {
+      background-color: $background-color;
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+      padding: 20px;
+    }
+
+    .ant-btn {
+      background: linear-gradient(135deg, #f6bb3b 0%, #d8a61dfd 100%);
+      border: none;
+      border-radius: 8px;
+      padding: 12px 32px;
+      font-weight: 600;
+      color: white;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+        background: linear-gradient(135deg, #ebac25 0%, #af8d1e 100%);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      &.ant-btn-loading {
+        background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+        cursor: not-allowed;
+      }
+    }
+
+    background-color: $background-color;
+    padding: 24px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px $shadow-color;
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    box-shadow: 0 2px 12px rgba(22, 22, 43, 0.795);
+
+    .ant-form-item {
+      color: $text-color;
+      max-width: 100%;
+
+      .ant-form-item-control-input {
+        width: 100%;
+      }
+    }
+  }
+
+  .manage-employees {
+    background-color: $background-color;
+    padding: 24px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px $shadow-color;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    box-shadow: #333 0px 0px 10px 0px;
+  }
+}

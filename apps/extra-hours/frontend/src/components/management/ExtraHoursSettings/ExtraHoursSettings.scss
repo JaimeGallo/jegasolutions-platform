@@ -1,0 +1,269 @@
+.config-extra-hours {
+  padding: 20px;
+  min-height: 100vh;
+  background: var(--card-settings-component-bg);
+  transition: background 0.5s ease-in-out;
+
+  &.config-component {
+    background: var(--card-settings-gradient);
+    border-radius: 12px;
+    box-shadow: 0 6px 24px rgba(30, 64, 175, 0.18),
+      0 1.5px 6px rgba(0, 0, 0, 0.13);
+    padding: 32px 24px;
+    margin: 24px auto;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  // Estilos específicos para cada ruta
+  &.route-add {
+    background: var(--card-register-component-bg);
+  }
+
+  &.route-solicitud-compensacion {
+    background: var(--card-compensacion-component-bg);
+  }
+
+  &.route-reports {
+    background: var(--card-reports-component-bg);
+  }
+
+  &.route-autorizacion-ingreso {
+    background: var(--card-autorizacion-component-bg);
+  }
+
+  &.route-gestion-compensacion {
+    background: var(--card-gestion-compensacion-component-bg);
+  }
+
+  &.route-ManagementExtraHour {
+    background: var(--card-management-component-bg);
+  }
+
+  &.route-settings {
+    background: var(--card-settings-component-bg);
+  }
+
+  // Contenedor principal similar al de Consulta de Horas Extras
+  .settings-container {
+    background: rgba(245, 216, 87, 0.9);
+    border-radius: 12px;
+    padding: 32px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+    backdrop-filter: blur(10px);
+    margin: 0 auto;
+    max-width: 1000px;
+  }
+
+  h3 {
+    color: #a37208;
+    margin-bottom: 24px;
+    font-weight: 600;
+    font-size: 1.5rem;
+    text-align: center;
+    font-family: "Inter", Arial, Helvetica, sans-serif;
+    letter-spacing: -0.01em;
+  }
+
+  h4 {
+    color: #c78e12;
+    margin-bottom: 16px;
+    font-weight: 600;
+    font-size: 1.1rem;
+    font-family: "Inter", Arial, Helvetica, sans-serif;
+  }
+
+  .input-group {
+    background: rgba(221, 176, 29, 0.9);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+    backdrop-filter: blur(10px);
+
+    &.limits-group {
+      border-left: 4px solid #a37e03;
+    }
+
+    &.regular-multipliers-group {
+      border-left: 4px solid #10b981;
+    }
+
+    &.holiday-multipliers-group {
+      border-left: 4px solid #f59e0b;
+    }
+
+    &.time-range-group {
+      border-left: 4px solid #8b5cf6;
+    }
+  }
+
+  .input-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: flex-end;
+
+    .ant-form-item {
+      flex: 1;
+      min-width: 200px;
+      margin-bottom: 0;
+
+      .ant-form-item-label {
+        label {
+          color: #374151;
+          font-weight: 500;
+        }
+      }
+
+      .ant-input-number,
+      .ant-picker {
+        width: 100%;
+        border-radius: 6px;
+        border: 1px solid #d1d5db;
+        transition: all 0.2s ease;
+        background-color: #ffffff;
+        color: #1f2937;
+
+        &:hover {
+          border-color: #3b82f6;
+        }
+
+        &:focus,
+        &.ant-input-number-focused,
+        &.ant-picker-focused {
+          border-color: #3b82f6;
+          box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+        }
+
+        // Estilos específicos para el InputNumber
+        &.ant-input-number {
+          input {
+            color: #1f2937 !important;
+            font-weight: 500;
+
+            &::placeholder {
+              color: #6b7280 !important;
+            }
+          }
+        }
+      }
+
+      // Estilos adicionales con mayor especificidad
+      .ant-form-item .ant-input-number {
+        input {
+          color: #000000 !important;
+          font-weight: 600;
+        }
+      }
+
+      .ant-form-item .ant-input-number input::placeholder {
+        color: #666666 !important;
+      }
+    }
+  }
+
+  .submit-container {
+    margin-top: 32px;
+    text-align: center;
+
+    .ant-btn {
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      border: none;
+      border-radius: 8px;
+      padding: 12px 32px;
+      font-weight: 600;
+      color: white;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+        background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      &.ant-btn-loading {
+        background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  // Responsive design
+  @media (max-width: 768px) {
+    padding: 16px;
+
+    .settings-container {
+      padding: 24px;
+    }
+
+    h3 {
+      font-size: 1.25rem;
+      margin-bottom: 16px;
+    }
+
+    h4 {
+      font-size: 1rem;
+      margin-bottom: 12px;
+    }
+
+    .input-group {
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .input-container {
+      flex-direction: column;
+      gap: 12px;
+
+      .ant-form-item {
+        min-width: 100%;
+      }
+    }
+
+    .submit-container {
+      margin-top: 24px;
+
+      .ant-btn {
+        width: 100%;
+        padding: 14px 24px;
+      }
+    }
+  }
+
+  @media (max-width: 480px) {
+    padding: 12px;
+
+    .settings-container {
+      padding: 20px;
+    }
+
+    h3 {
+      font-size: 1.1rem;
+      margin-bottom: 12px;
+    }
+
+    h4 {
+      font-size: 0.95rem;
+      margin-bottom: 8px;
+    }
+
+    .input-group {
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+
+    .input-container {
+      gap: 8px;
+    }
+  }
+}

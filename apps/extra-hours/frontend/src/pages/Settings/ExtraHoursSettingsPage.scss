@@ -1,0 +1,233 @@
+// Variables del tema mostaza
+$primary-color: #7c5f00;
+$primary-hover: #a67c00;
+$accent-mustard: #ffda3d;
+$background-mustard: #b8941a;
+$text-color: rgba(255, 255, 255, 0.95);
+$info-bg-color: #d4a017;
+$danger-color: #ff6b47;
+$shadow-color: rgba(124, 95, 0, 0.15);
+
+.settingsMenu {
+  min-height: calc(100vh - 60px);
+  padding: 1rem;
+  background: linear-gradient(135deg, #ffda3d 0%, #f5c842 100%);
+  background-size: cover;
+  background-position: center;
+
+  h2 {
+    font-size: 24px;
+    font-weight: 600;
+    color: $text-color;
+    margin-bottom: 24px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+    padding-bottom: 12px;
+    text-shadow: 0 1px 3px rgba(124, 95, 0, 0.3);
+  }
+}
+
+.page__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+}
+
+.settings__container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background-color: $background-mustard;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 16px rgba(124, 95, 0, 0.2);
+
+  @media (min-width: 992px) {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+}
+
+.settings__article {
+  flex: 1;
+  max-width: 100%;
+
+  background-color: $info-bg-color;
+  padding: 32px;
+  border-radius: 8px;
+  border-left: 4px solid $primary-color;
+  box-shadow: 0 2px 8px $shadow-color;
+  overflow: auto;
+  max-height: none;
+  min-height: 400px;
+
+  h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: $text-color;
+    margin-bottom: 16px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  article {
+    color: $text-color;
+    font-family: Arial, Helvetica, sans-serif;
+    margin-bottom: 16px;
+    line-height: 1.6;
+  }
+
+  .editable-textarea {
+    width: 100%;
+    min-height: 300px;
+    padding: 16px;
+    border: 2px solid $primary-color;
+    border-radius: 6px;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: $text-color;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    resize: vertical;
+
+    &:focus {
+      outline: none;
+      border-color: $accent-mustard;
+      background-color: rgba(255, 255, 255, 0.15);
+    }
+  }
+
+  ol {
+    margin-left: 20px;
+    margin-bottom: 16px;
+
+    li {
+      margin-bottom: 8px;
+      line-height: 1.5;
+      color: $text-color;
+    }
+  }
+
+  strong {
+    color: $text-color;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: 600;
+  }
+
+  .edit-button {
+    background-color: $primary-color;
+    color: $text-color;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    margin-top: 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+    &:hover {
+      background-color: $primary-hover;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+
+  @media (min-width: 992px) {
+    flex: 0 0 32%;
+    max-width: 32%;
+  }
+}
+
+.settings__form {
+  flex: 2;
+  max-width: 100%;
+  padding: 1rem;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px $shadow-color;
+  color: $text-color;
+  backdrop-filter: blur(10px);
+
+  div {
+    margin-bottom: 0.5rem;
+  }
+
+  button {
+    background-color: $primary-color;
+    color: $text-color;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+    &:hover {
+      background-color: $primary-hover;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+
+  // Estilos específicos para elementos de formulario
+  .limits-group {
+    border-color: $primary-color !important;
+
+    .input-group-text {
+      background-color: $primary-color !important;
+      color: $text-color !important;
+      border-color: $primary-color !important;
+    }
+
+    input {
+      border-color: $primary-color !important;
+      background-color: rgba(255, 255, 255, 0.1) !important;
+      color: $text-color !important;
+
+      &:focus {
+        border-color: $accent-mustard !important;
+        background-color: rgba(255, 255, 255, 0.15) !important;
+        box-shadow: 0 0 0 0.2rem rgba(255, 218, 61, 0.25) !important;
+      }
+    }
+  }
+
+  // Títulos y textos del formulario
+  h3,
+  h4,
+  label {
+    color: $text-color !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  .form-control {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border-color: $primary-color !important;
+    color: $text-color !important;
+
+    &:focus {
+      background-color: rgba(255, 255, 255, 0.15) !important;
+      border-color: $accent-mustard !important;
+      box-shadow: 0 0 0 0.2rem rgba(255, 218, 61, 0.25) !important;
+      color: $text-color !important;
+    }
+
+    &::placeholder {
+      color: rgba(255, 255, 255, 0.6) !important;
+    }
+  }
+
+  @media (min-width: 992px) {
+    flex: 0 0 65%;
+    max-width: 65%;
+  }
+}

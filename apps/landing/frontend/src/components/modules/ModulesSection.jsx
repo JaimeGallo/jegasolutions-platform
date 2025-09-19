@@ -1,8 +1,8 @@
 import React from "react";
 import { motion } from "framer-motion";
-import ExtraHoursModule from "./ExtraHoursModule";
-import AIReportsModule from "./AIReportsModule";
-import UpcomingModules from "./UpcomingModules";
+import ExtraHoursModule from "../modules/ExtraHoursModule";
+import AIReportsModule from "../modules/AIReportsModule";
+import UpcomingModules from "../modules/UpcomingModules";
 
 const ModulesSection = () => {
   return (

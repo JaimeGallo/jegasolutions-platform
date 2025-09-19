@@ -1,0 +1,141 @@
+// Variables del tema mostaza
+$primary-color: #7c5f00;
+$primary-hover: #a67c00;
+$accent-mustard: #ffda3d;
+$accent-gradient: linear-gradient(135deg, #ffda3d 0%, #f5c842 100%);
+$text-color: rgba(255, 255, 255, 0.95);
+$secondary-text: rgba(255, 255, 255, 0.75);
+$border-radius: 12px;
+$box-shadow: 0 4px 16px rgba(252, 218, 61, 0.15), 0 1.5px 6px rgba(0, 0, 0, 0.1);
+$transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+
+.settings-page-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  background: $accent-gradient;
+  background-attachment: fixed;
+  background-size: cover;
+  background-position: center;
+  padding: 32px 0 64px 0;
+}
+
+.settings-title {
+  color: $primary-color;
+  font-weight: 700;
+  font-size: 2.2rem;
+  margin-bottom: 12px;
+  letter-spacing: -0.025em;
+  text-align: center;
+  text-shadow: 0 1px 3px rgba(124, 95, 0, 0.3);
+}
+
+.settings-subtitle {
+  color: $primary-color;
+  font-size: 1.1rem;
+  font-weight: 500;
+  text-align: center;
+  margin-bottom: 32px;
+  opacity: 0.8;
+}
+
+.settings-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px;
+  justify-content: center;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto 24px auto;
+}
+
+.settings-card {
+  background: #fffef7;
+  border-radius: $border-radius;
+  box-shadow: $box-shadow;
+  padding: 32px 24px;
+  min-width: 320px;
+  max-width: 360px;
+  width: 100%;
+  transition: box-shadow 0.3s, transform 0.3s, background-color 0.3s;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 2px solid #f0c335;
+
+  &:hover {
+    box-shadow: 0 8px 32px rgba(252, 218, 61, 0.25),
+      0 2px 8px rgba(124, 95, 0, 0.15);
+    transform: translateY(-2px) scale(1.01);
+    background: #fffffa;
+  }
+}
+
+.settings-card.active {
+  box-shadow: 0 0 0 3px #f5c842, 0 4px 16px rgba(252, 218, 61, 0.2);
+  background: #fffffa;
+  cursor: default;
+  pointer-events: none;
+}
+
+.settings-card-icon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.5rem;
+  background-color: #fff2a8;
+  color: #7c5f00;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+  box-shadow: 0 2px 8px rgba(252, 218, 61, 0.15);
+}
+
+.settings-card-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: $primary-color;
+  margin: 0 0 0.25rem 0;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.settings-card-desc {
+  font-size: 0.95rem;
+  color: rgba(124, 95, 0, 0.7);
+  margin: 0;
+  line-height: 1.4;
+  text-align: center;
+}
+
+// Responsive
+@media (max-width: 900px) {
+  .settings-grid {
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+  .settings-card {
+    min-width: 90vw;
+    max-width: 98vw;
+    padding: 20px 10px;
+  }
+}
+
+@media (max-width: 600px) {
+  .settings-page-container {
+    padding: 8px 0 32px 0;
+  }
+  .settings-title {
+    font-size: 1.3rem;
+    margin-bottom: 8px;
+  }
+  .settings-card {
+    min-width: 98vw;
+    max-width: 99vw;
+    padding: 12px 4px;
+  }
+}
