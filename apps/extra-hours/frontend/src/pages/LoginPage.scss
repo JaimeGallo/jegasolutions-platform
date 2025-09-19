@@ -1,0 +1,175 @@
+// Variables
+$primary-color: #005baf;
+$primary-hover: #40a9ff;
+$accent-blue: #2563eb;
+$accent-gradient: linear-gradient(
+  135deg,
+  #e0e7ff 0%,
+  #a5b4fc 50%,
+  #2563eb 100%
+);
+$text-color: rgba(0, 0, 0, 0.85);
+$secondary-text: rgba(0, 0, 0, 0.45);
+$border-radius: 8px;
+$box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+$transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+
+// Reset global para eliminar márgenes y padding por defecto
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+// Asegurar que html y body ocupen toda la pantalla
+html,
+body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden; // Evitar scroll horizontal
+}
+
+#root {
+  height: 100%;
+  width: 100%;
+}
+
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  height: 100vh; // Altura fija para ocupar toda la pantalla
+  width: 100vw; // Ancho completo de la ventana
+  background: $accent-gradient;
+  background-attachment: fixed; // Mantener el fondo fijo
+  background-size: cover; // Cubrir toda la pantalla
+  background-repeat: no-repeat;
+  padding: 24px;
+  margin: 0; // Eliminar cualquier margen
+  position: relative; // Para posicionamiento absoluto si es necesario
+}
+
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 40px;
+  background: #fff;
+  border-radius: $border-radius;
+  box-shadow: $box-shadow;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+  z-index: 1; // Asegurar que esté encima del fondo
+
+  &:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+  }
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 24px;
+
+  .logo {
+    height: 48px;
+    margin-bottom: 16px;
+  }
+
+  .welcome-title {
+    color: $accent-blue;
+    background: linear-gradient(90deg, #2563eb 60%, #60a5fa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 10px;
+    margin-top: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    font-size: 2rem;
+  }
+
+  .welcome-subtitle {
+    color: $secondary-text;
+    font-size: 14px;
+  }
+}
+
+.divider {
+  margin: 16px 0 24px;
+}
+
+.login-form {
+  .form-input {
+    border-radius: $border-radius;
+    padding: 10px 12px;
+    transition: $transition;
+
+    &:hover {
+      border-color: $primary-hover;
+    }
+
+    &:focus {
+      border-color: $primary-color;
+      box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+    }
+
+    .ant-input-prefix {
+      margin-right: 8px;
+      color: $secondary-text;
+    }
+  }
+
+  .login-button {
+    height: 42px;
+    border-radius: $border-radius;
+    font-weight: 500;
+    background: $primary-color;
+    border: none;
+    transition: $transition;
+
+    &:hover {
+      background: $primary-hover;
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+}
+
+.login-footer {
+  text-align: center;
+  margin-top: 16px;
+
+  .footer-text {
+    color: $secondary-text;
+    font-size: 13px;
+
+    a {
+      color: $primary-color;
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 480px) {
+  .login-container {
+    padding: 16px;
+  }
+
+  .login-card {
+    padding: 24px;
+    max-width: 100%;
+    margin: 0 8px;
+  }
+
+  .login-header {
+    .welcome-title {
+      font-size: 1.5rem;
+    }
+  }
+}

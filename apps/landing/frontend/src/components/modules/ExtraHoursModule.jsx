@@ -1,6 +1,6 @@
 import React from "react";
 import { Clock, CheckCircle, TrendingUp, Shield, FileText } from "lucide-react";
-import FlippableModuleCard from "./FlippableModuleCard";
+import FlippableModuleCard from "../FlippableModuleCard";
 
 const ExtraHoursModule = () => {
   const features = [
