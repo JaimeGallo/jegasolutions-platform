@@ -33,44 +33,6 @@ const JEGASolutionsLanding = () => {
     return () => mediaQuery.removeEventListener("change", handleResize);
   }, []);
 
-  useEffect(() => {
-    const container = containerRef.current;
-    if (isDesktop && container) {
-      let scrollTimeout;
-      const handleWheel = (e) => {
-        // Prioritize vertical scroll to convert to horizontal.
-        // This avoids conflicts with horizontal trackpad swipes.
-        if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-          e.preventDefault();
-
-          // Temporarily disable snap for smooth wheel scrolling.
-          // The browser will try to snap to the nearest section after each small scroll
-          // which creates a jerky effect.
-          if (container.style.scrollSnapType !== "none") {
-            container.style.scrollSnapType = "none";
-          }
-
-          container.scrollLeft += e.deltaY;
-
-          // Re-enable snap after a short delay of no scrolling
-          clearTimeout(scrollTimeout);
-          scrollTimeout = setTimeout(() => {
-            container.style.scrollSnapType = "x mandatory";
-          }, 150);
-        }
-      };
-
-      container.addEventListener("wheel", handleWheel, { passive: false });
-
-      return () => {
-        container.removeEventListener("wheel", handleWheel);
-        if (scrollTimeout) {
-          clearTimeout(scrollTimeout);
-        }
-      };
-    }
-  }, [isDesktop]);
-
   const scrollToSection = useCallback(
     (index) => {
       const section = sectionRefs.current[index];
@@ -95,6 +57,40 @@ const JEGASolutionsLanding = () => {
     },
     [isDesktop]
   );
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (isDesktop && container) {
+      let isScrolling = false;
+      let scrollTimeout;
+
+      const handleWheel = (e) => {
+        e.preventDefault();
+        if (isScrolling) return;
+
+        isScrolling = true;
+
+        if (e.deltaY > 0) {
+          // Scrolling down
+          nextSection();
+        } else {
+          // Scrolling up
+          prevSection();
+        }
+
+        // Debounce to prevent rapid section changes
+        scrollTimeout = setTimeout(() => {
+          isScrolling = false;
+        }, 800); // Adjust time as needed for feel
+      };
+
+      container.addEventListener("wheel", handleWheel, { passive: false });
+      return () => {
+        container.removeEventListener("wheel", handleWheel);
+        clearTimeout(scrollTimeout);
+      };
+    }
+  }, [isDesktop, scrollToSection]); // Add scrollToSection to dependencies
 
   const nextSection = () => {
     const nextIndex = Math.min(activeSection + 1, sections.length - 1);
@@ -145,8 +141,8 @@ const JEGASolutionsLanding = () => {
       <div
         ref={containerRef}
         className="flex flex-col lg:flex-row lg:h-full lg:w-full lg:overflow-x-scroll lg:snap-x lg:snap-mandatory"
-        // This is important to make wheel scroll immediate, while button clicks can be smooth.
-        style={{ scrollBehavior: isDesktop ? "auto" : "smooth" }}
+        // The duplicate style attribute was removed. The one below is kept.
+        style={{ scrollBehavior: "smooth" }}
       >
         {sections.map((Section, index) => (
           <div
