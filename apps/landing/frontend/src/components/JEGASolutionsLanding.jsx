@@ -42,6 +42,7 @@ const JEGASolutionsLanding = () => {
         const container = containerRef.current;
         if (container) {
           // Use scrollTo for more reliable horizontal scrolling
+          setActiveSection(index); // Set active section immediately on scroll command
           container.scrollTo({
             left: section.offsetLeft,
             behavior: "smooth",
@@ -49,6 +50,7 @@ const JEGASolutionsLanding = () => {
         }
       } else {
         // Fallback for mobile
+        setActiveSection(index); // Set active section immediately on scroll command
         section.scrollIntoView({
           behavior: "smooth",
           block: "start",
@@ -101,37 +103,6 @@ const JEGASolutionsLanding = () => {
     const prevIndex = Math.max(activeSection - 1, 0);
     scrollToSection(prevIndex);
   };
-
-  useEffect(() => {
-    // Don't run observer if refs are not ready
-    if (!sectionRefs.current.length) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const index = sectionRefs.current.findIndex(
-              (ref) => ref === entry.target
-            );
-            if (index !== -1) {
-              setActiveSection(index);
-            }
-          }
-        });
-      },
-      { threshold: 0.6, root: isDesktop ? containerRef.current : null }
-    );
-
-    sectionRefs.current.forEach((ref) => {
-      if (ref) observer.observe(ref);
-    });
-
-    return () => {
-      sectionRefs.current.forEach((ref) => {
-        if (ref) observer.unobserve(ref);
-      });
-      observer.disconnect();
-    };
-  }, [isDesktop]);
 
   return (
     <div className="w-screen bg-gray-50 m-0 p-0 lg:h-screen lg:overflow-hidden">
