@@ -95,13 +95,19 @@ const JEGASolutionsLanding = () => {
   }, [isDesktop, scrollToSection]); // Add scrollToSection to dependencies
 
   const nextSection = () => {
-    const nextIndex = Math.min(activeSection + 1, sections.length - 1);
-    scrollToSection(nextIndex);
+    setActiveSection((prevIndex) => {
+      const nextIndex = Math.min(prevIndex + 1, sections.length - 1);
+      scrollToSection(nextIndex);
+      return nextIndex;
+    });
   };
 
   const prevSection = () => {
-    const prevIndex = Math.max(activeSection - 1, 0);
-    scrollToSection(prevIndex);
+    setActiveSection((prevIndex) => {
+      const nextIndex = Math.max(prevIndex - 1, 0);
+      scrollToSection(nextIndex);
+      return nextIndex;
+    });
   };
 
   return (
