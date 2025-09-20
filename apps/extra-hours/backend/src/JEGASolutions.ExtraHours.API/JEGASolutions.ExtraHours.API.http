@@ -1,0 +1,6 @@
+@JEGASolutions.ExtraHours.API_HostAddress = http://localhost:5164
+
+GET {{JEGASolutions.ExtraHours.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

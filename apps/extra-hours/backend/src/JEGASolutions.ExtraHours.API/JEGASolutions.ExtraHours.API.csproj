@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.7" />
+    <ProjectReference Include="..\JEGASolutions.ExtraHours.Core\JEGASolutions.ExtraHours.Core.csproj" />
+    <ProjectReference Include="..\JEGASolutions.ExtraHours.Infrastructure\JEGASolutions.ExtraHours.Infrastructure.csproj" />
+    <ProjectReference Include="..\JEGASolutions.ExtraHours.Data\JEGASolutions.ExtraHours.Data.csproj" />
+  </ItemGroup>
+
+</Project>
