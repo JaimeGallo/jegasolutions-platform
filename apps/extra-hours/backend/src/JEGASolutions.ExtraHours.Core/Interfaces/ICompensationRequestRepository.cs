@@ -1,20 +1,20 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using JEGASolutions.ExtraHours.Core.Entities.Models;
 
 namespace JEGASolutions.ExtraHours.Core.Interfaces
 {
-    public interface ICompensationRequestService
+    public interface ICompensationRequestRepository
     {
-        Task<CompensationRequest> CreateAsync(CompensationRequest request);
+        Task<CompensationRequest> AddAsync(CompensationRequest request);
+        Task<CompensationRequest> CreateAsync(CompensationRequest request); // Alias de AddAsync
+        Task<CompensationRequest?> GetByIdAsync(int id); // Cambiar a int
         Task<List<CompensationRequest>> GetAllAsync();
         Task<List<CompensationRequest>> GetAllFilteredAsync(DateTime? startDate, DateTime? endDate);
         Task<List<CompensationRequest>> GetByManagerFilteredAsync(long managerId, DateTime? startDate, DateTime? endDate);
-        Task<CompensationRequest?> GetByIdAsync(int id);
         Task<List<CompensationRequest>> GetByEmployeeIdAsync(long employeeId);
         Task<List<CompensationRequest>> GetByManagerIdAsync(long managerId);
+        Task<CompensationRequest> UpdateAsync(CompensationRequest request);
         Task<CompensationRequest?> UpdateStatusAsync(int id, string status, string? justification, long? approvedById);
-        Task<CompensationRequest?> UpdateAsync(CompensationRequest request);
         Task<bool> DeleteAsync(int id);
+        Task<bool> ExistsAsync(long id);
     }
 }

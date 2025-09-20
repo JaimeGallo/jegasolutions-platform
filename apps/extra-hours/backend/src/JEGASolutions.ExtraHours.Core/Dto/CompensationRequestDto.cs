@@ -1,7 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace JEGASolutions.ExtraHours.API.Dto
+namespace JEGASolutions.ExtraHours.Core.Dto
 {
     public class CompensationRequestDto
     {

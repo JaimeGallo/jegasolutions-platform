@@ -1,6 +1,6 @@
-﻿using JEGASolutions.ExtraHours.API.Model;
+﻿using JEGASolutions.ExtraHours.Core.Entities.Models;
 
-namespace JEGASolutions.ExtraHours.API.Dto
+namespace JEGASolutions.ExtraHours.Core.Dto
 {
     public class ExtraHourWithEmployee
     {

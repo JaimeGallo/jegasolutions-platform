@@ -1,7 +1,7 @@
-﻿using JEGASolutions.ExtraHours.API.Model;
+﻿using JEGASolutions.ExtraHours.Core.Entities.Models;
 using System.Security.Claims;
 
-namespace JEGASolutions.ExtraHours.API.Utils
+namespace JEGASolutions.ExtraHours.Core.Interfaces
 {
     public interface IJWTUtils
     {

@@ -1,4 +1,4 @@
-﻿using JEGASolutions.ExtraHours.API.Utils;
+﻿using JEGASolutions.ExtraHours.Core.Interfaces;
 using System.Security.Claims;
 
 namespace JEGASolutions.ExtraHours.API.Middleware
@@ -12,7 +12,7 @@ namespace JEGASolutions.ExtraHours.API.Middleware
             _next = next;
         }
 
-        public async Task InvokeAsync(HttpContext context, JWTUtils jwtUtils)
+        public async Task InvokeAsync(HttpContext context, IJWTUtils jwtUtils)
         {
             var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
             Console.WriteLine($"Token recibido: {token}");

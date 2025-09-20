@@ -1,11 +1,11 @@
 using System;
 using System.Net.Mail;
 using System.Threading.Tasks;
-using JEGASolutions.ExtraHours.API.Service.Interface;
+using JEGASolutions.ExtraHours.Core.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace JEGASolutions.ExtraHours.API.Services
+namespace JEGASolutions.ExtraHours.Ifrastructure.services
 {
     public class EmailService : IEmailService
     {

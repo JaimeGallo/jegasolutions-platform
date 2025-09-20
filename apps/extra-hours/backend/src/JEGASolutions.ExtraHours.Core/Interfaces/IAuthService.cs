@@ -1,4 +1,4 @@
-﻿namespace JEGASolutions.ExtraHours.API.Service.Interface
+﻿namespace JEGASolutions.ExtraHours.Core.Interfaces
 {
     public interface IAuthService
     {

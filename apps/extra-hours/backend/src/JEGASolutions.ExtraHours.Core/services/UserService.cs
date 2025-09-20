@@ -1,8 +1,7 @@
-﻿using JEGASolutions.ExtraHours.API.Model;
-using JEGASolutions.ExtraHours.API.Repositories.Interfaces;
-using JEGASolutions.ExtraHours.API.Service.Interface;
+﻿using JEGASolutions.ExtraHours.Core.Entities.Models;
+using JEGASolutions.ExtraHours.Core.Interfaces;
 
-namespace JEGASolutions.ExtraHours.API.Service.Implementations
+namespace JEGASolutions.ExtraHours.Core.Services
 {
     public class UserService : IUserService
     {
@@ -50,15 +49,7 @@ namespace JEGASolutions.ExtraHours.API.Service.Implementations
 
         public async Task<bool> UserExistsAsync(long userId)
         {
-            try
-            {
-                var user = await _userRepository.GetUserByIdAsync(userId);
-                return user != null;
-            }
-            catch (InvalidOperationException)
-            {
-                return false;
-            }
+            return await _userRepository.UserExistsAsync(userId);
         }
 
         public async Task<bool> EmailExistsAsync(string email)

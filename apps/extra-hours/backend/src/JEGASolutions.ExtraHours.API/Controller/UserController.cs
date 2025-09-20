@@ -1,7 +1,8 @@
-﻿using JEGASolutions.ExtraHours.API.Model;
+﻿using JEGASolutions.ExtraHours.Core.Entities.Models;
 using Microsoft.AspNetCore.Mvc;
-using JEGASolutions.ExtraHours.API.Service.Interface;
-using JEGASolutions.ExtraHours.API.Dto;
+using JEGASolutions.ExtraHours.Core.Interfaces;
+
+using JEGASolutions.ExtraHours.Core.Dto;
 using System.Threading.Tasks;
 
 namespace JEGASolutions.ExtraHours.API.Controller

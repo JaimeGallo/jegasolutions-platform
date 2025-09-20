@@ -1,8 +1,9 @@
-﻿using JEGASolutions.ExtraHours.API.Repositories.Interfaces;
-using JEGASolutions.ExtraHours.API.Service.Interface;
-using JEGASolutions.ExtraHours.API.Utils;
+﻿using BCrypt.Net;
+using JEGASolutions.ExtraHours.Infrastructure.Repositories;
+using JEGASolutions.ExtraHours.Core.Interfaces;
 
-namespace JEGASolutions.ExtraHours.API.Service.Implementations
+
+namespace JEGASolutions.ExtraHours.Ifrastructure.services
 {
     public class AuthService : IAuthService
     {

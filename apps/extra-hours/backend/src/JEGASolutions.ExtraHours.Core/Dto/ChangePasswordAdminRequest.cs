@@ -1,4 +1,4 @@
-﻿namespace JEGASolutions.ExtraHours.API.Dto
+﻿namespace JEGASolutions.ExtraHours.Core.Dto
 {
     public class ChangePasswordAdminRequest
     {

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Concurrent;
-using JEGASolutions.ExtraHours.API.Service.Interface;
+using JEGASolutions.ExtraHours.Core.Interfaces;
 
-namespace JEGASolutions.ExtraHours.API.Service.Implementations
+namespace JEGASolutions.ExtraHours.Ifrastructure.services
 {
     public class JWTTokenService : IJWTTokenService
     {

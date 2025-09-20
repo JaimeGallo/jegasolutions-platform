@@ -1,34 +1,27 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using JEGASolutions.ExtraHours.Data;              // AppDbContext
 using JEGASolutions.ExtraHours.Core.Entities.Models;     // Employee
-using JEGASolutions.ExtraHours.Core.DTOs;         // UpdateEmployeeDTO
+using JEGASolutions.ExtraHours.Core.Dto;
 using JEGASolutions.ExtraHours.Core.Interfaces;   // IEmployeeService, IEmployeeRepository, IManagerRepository
 
-namespace JEGASolutions.ExtraHours.Infrastructure.Services
+namespace JEGASolutions.ExtraHours.Core.Services
 {
     public class EmployeeService : IEmployeeService
     {
         private readonly IEmployeeRepository _employeeRepository;
         private readonly IManagerRepository _managerRepository;
-        private readonly AppDbContext _context;
 
         public EmployeeService(
             IEmployeeRepository employeeRepository,
-            IManagerRepository managerRepository,
-            AppDbContext context)
+            IManagerRepository managerRepository)
         {
             _employeeRepository = employeeRepository;
             _managerRepository = managerRepository;
-            _context = context;
         }
 
         public async Task<bool> EmployeeExistsAsync(long id)
         {
-            return await _context.Employees
-                .AsNoTracking()
-                .AnyAsync(e => e.Id == id);
+            return await _employeeRepository.EmployeeExistsAsync(id);
         }
 
         public async Task<List<Employee>> GetEmployeesByManagerIdAsync(long managerId)
@@ -65,7 +58,7 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Services
                 throw new KeyNotFoundException("Empleado no encontrado");
             }
 
-            await _employeeRepository.DeleteAsync(employee.Id);
+            await _employeeRepository.DeleteAsync(employee.id);
         }
     }
 }

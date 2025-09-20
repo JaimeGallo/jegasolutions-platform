@@ -1,6 +1,6 @@
-﻿using JEGASolutions.ExtraHours.API.Model;
+﻿using JEGASolutions.ExtraHours.Core.Entities.Models;
 
-namespace JEGASolutions.ExtraHours.API.Repositories.Interfaces
+namespace JEGASolutions.ExtraHours.Core.Interfaces
 {
     public interface IUserRepository
     {
@@ -12,5 +12,6 @@ namespace JEGASolutions.ExtraHours.API.Repositories.Interfaces
         Task UpdateUserAsync(User user);
         Task DeleteUserAsync(long userId);
         Task<bool> EmailExistsAsync(string email);
+        Task<bool> UserExistsAsync(long userId);
     }
 }

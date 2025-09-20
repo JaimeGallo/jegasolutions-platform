@@ -2,10 +2,11 @@
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
-using JEGASolutions.ExtraHours.API.Model;
+using JEGASolutions.ExtraHours.Core.Entities.Models;
+using JEGASolutions.ExtraHours.Core.Interfaces;
 using Microsoft.Extensions.Configuration;
 
-namespace JEGASolutions.ExtraHours.API.Utils
+namespace JEGASolutions.ExtraHours.Ifrastructure.services
 {
     public class JWTUtils : IJWTUtils
     {

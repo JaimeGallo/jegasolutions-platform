@@ -1,4 +1,4 @@
-﻿namespace JEGASolutions.ExtraHours.API.Service.Implementations
+﻿namespace JEGASolutions.ExtraHours.Ifrastructure.services
 {
     public class ColombianHolidayService
     {

@@ -1,6 +1,6 @@
-﻿using JEGASolutions.ExtraHours.API.Model;
+﻿using JEGASolutions.ExtraHours.Core.Entities.Models;
 
-namespace JEGASolutions.ExtraHours.API.Repositories.Interfaces
+namespace JEGASolutions.ExtraHours.Core.Interfaces
 {
     public interface IExtraHoursConfigRepository
     {

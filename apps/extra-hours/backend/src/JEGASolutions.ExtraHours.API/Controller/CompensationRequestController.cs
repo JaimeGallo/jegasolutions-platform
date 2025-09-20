@@ -1,13 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using JEGASolutions.ExtraHours.API.Model;
-using JEGASolutions.ExtraHours.API.Service.Interface;
+using JEGASolutions.ExtraHours.Core.Entities.Models;
+using JEGASolutions.ExtraHours.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using System.Linq;
-using JEGASolutions.ExtraHours.API.Dto;
+
+using JEGASolutions.ExtraHours.Core.Dto;
 using Microsoft.EntityFrameworkCore;
-using JEGASolutions.ExtraHours.API.Data;
 using System.Security.Claims;
 
 namespace JEGASolutions.ExtraHours.API.Controller
@@ -18,12 +18,10 @@ namespace JEGASolutions.ExtraHours.API.Controller
     {
         private readonly ICompensationRequestService _service;
         private readonly IEmployeeService _employeeService;
-        private readonly AppDbContext _context;
-        public CompensationRequestController(ICompensationRequestService service, IEmployeeService employeeService, AppDbContext context)
+        public CompensationRequestController(ICompensationRequestService service, IEmployeeService employeeService)
         {
             _service = service;
             _employeeService = employeeService;
-            _context = context;
         }
 
         // GET: api/CompensationRequest/all

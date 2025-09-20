@@ -1,4 +1,4 @@
-﻿using JEGASolutions.ExtraHours.API.Service.Interface;
+﻿using JEGASolutions.ExtraHours.Core.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JEGASolutions.ExtraHours.API.Controller

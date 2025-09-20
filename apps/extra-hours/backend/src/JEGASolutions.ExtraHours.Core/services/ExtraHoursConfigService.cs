@@ -1,8 +1,10 @@
-﻿using JEGASolutions.ExtraHours.API.Model;
-using JEGASolutions.ExtraHours.API.Repositories.Interfaces;
-using JEGASolutions.ExtraHours.API.Service.Interface;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using JEGASolutions.ExtraHours.Core.Entities.Models;
+using JEGASolutions.ExtraHours.Core.Interfaces;
 
-namespace JEGASolutions.ExtraHours.API.Service.Implementations
+namespace JEGASolutions.ExtraHours.Core.Services
 {
     public class ExtraHoursConfigService : IExtraHoursConfigService
     {
@@ -18,9 +20,8 @@ namespace JEGASolutions.ExtraHours.API.Service.Implementations
             var config = await _configRepository.GetConfigAsync();
             if (config == null)
                 throw new KeyNotFoundException("Configuración no encontrada");
-            config.diurnalStart = TimeSpan.ParseExact(config.diurnalStart.ToString(@"hh\:mm"), @"hh\:mm", null);
-            config.diurnalEnd = TimeSpan.ParseExact(config.diurnalEnd.ToString(@"hh\:mm"), @"hh\:mm", null);
 
+            // La conversión de TimeSpan es innecesaria, el tipo ya es correcto.
             return config;
         }
 

@@ -1,17 +1,18 @@
-﻿using JEGASolutions.ExtraHours.API.Model;
-using JEGASolutions.ExtraHours.API.Service.Interface;
-
-namespace JEGASolutions.ExtraHours.API.Service.Implementations
+﻿using System;
+using System.Threading.Tasks;
+using JEGASolutions.ExtraHours.Core.Entities.Models;
+using JEGASolutions.ExtraHours.Core.Interfaces;
+namespace JEGASolutions.ExtraHours.Core.Services
 {
     public class ExtraHourCalculationService : IExtraHourCalculationService
     {
+        private readonly IColombianHolidayService _holidayService;
         private readonly IExtraHoursConfigService _configService;
-        private readonly ColombianHolidayService _holidayService;
 
-        public ExtraHourCalculationService(IExtraHoursConfigService configService)
+        public ExtraHourCalculationService(IColombianHolidayService holidayService, IExtraHoursConfigService configService)
         {
+            _holidayService = holidayService;
             _configService = configService;
-            _holidayService = new ColombianHolidayService();
         }
 
         public async Task<ExtraHourCalculation> DetermineExtraHourTypeAsync(DateTime date, TimeSpan startTime, TimeSpan endTime)
