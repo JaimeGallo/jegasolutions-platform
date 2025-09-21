@@ -7,6 +7,7 @@ ENV ASPNETCORE_URLS=http://+:8080
 # Imagen para build
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
+ENV CACHE_BUST=v4-20240921
 
 # Copiar archivos de proyecto (.csproj solamente)
 COPY ["src/JEGASolutions.Landing.API/JEGASolutions.Landing.API.csproj", "src/JEGASolutions.Landing.API/"]
