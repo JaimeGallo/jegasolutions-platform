@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 
 // La URL base de tu API de backend. Debería estar en una variable de entorno.
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 
 export const useWompi = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -14,7 +14,8 @@ export const useWompi = () => {
 
       try {
         // 1. Llamar a nuestro backend para crear el pago
-        const response = await fetch(`${API_BASE_URL}/payments/create`, {
+        const response = await fetch(`${API_BASE_URL}/api/payments/create`, {
+          // Se mantiene /api aquí
           method: "POST",
           headers: {
             "Content-Type": "application/json",
