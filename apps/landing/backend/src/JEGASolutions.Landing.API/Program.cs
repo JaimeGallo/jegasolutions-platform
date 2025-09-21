@@ -71,27 +71,18 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddHttpClient<IWompiService, WompiService>();
 
 // CORS
-// builder.Services.AddCors(options =>
-// {
-//     options.AddPolicy("AllowFrontend", policy =>
-//     {
-//         policy.WithOrigins("http://localhost:3000", "https://jegasolutions-platform-frontend.vercel.app")
-//               .AllowAnyMethod()
-//               .AllowAnyHeader()
-//               .AllowCredentials();
-//     });
-// });
-
-// Temporal - permitir cualquier origen para testing
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.AllowAnyOrigin()  // Temporal - para testing
+        policy.WithOrigins("http://localhost:3000", "https://jegasolutions-platform-frontend.vercel.app")
               .AllowAnyMethod()
-              .AllowAnyHeader();
+              .AllowAnyHeader()
+              .AllowCredentials();
     });
 });
+
+
 
 var app = builder.Build();
 
