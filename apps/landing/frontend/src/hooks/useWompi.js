@@ -14,7 +14,7 @@ export const useWompi = () => {
 
       try {
         // 1. Llamar a nuestro backend para crear el pago
-        const response = await fetch(`${API_BASE_URL}/api/payments/create`, {
+        const response = await fetch(`${API_BASE_URL}/payments/create`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
