@@ -38,9 +38,14 @@ public class PaymentsController : ControllerBase
             }
 
             // Get the raw body for signature validation
-            Request.Body.Position = 0;
-            using var reader = new StreamReader(Request.Body);
-            var rawBody = await reader.ReadToEndAsync();
+            // Get the raw body for signature validation. Requires enabling buffering in Program.cs
+            // Example: app.Use(async (context, next) => { context.Request.EnableBuffering(); await next(); });
+            string rawBody;
+            Request.Body.Seek(0, SeekOrigin.Begin);
+            using (var reader = new StreamReader(Request.Body, leaveOpen: true))
+            {
+                rawBody = await reader.ReadToEndAsync();
+            }
 
             // Validate signature
             var isValidSignature = await _wompiService.ValidateWebhookSignature(rawBody, signature);
@@ -148,7 +153,12 @@ public class PaymentsController : ControllerBase
 
             var payment = await _paymentService.CreatePaymentAsync(request);
 
-            return Ok(payment); // Devolvemos el DTO que ahora contiene el CheckoutUrl
+            // Es una buena práctica devolver un 201 Created para la creación de recursos.
+            return CreatedAtAction(
+                nameof(GetPaymentStatus),
+                new { reference = payment.Reference },
+                payment
+            );
         }
         catch (Exception ex)
         {
