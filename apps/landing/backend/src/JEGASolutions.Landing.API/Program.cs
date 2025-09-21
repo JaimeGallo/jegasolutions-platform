@@ -14,6 +14,11 @@ using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Debug log para verificar rebuild
+Console.WriteLine("=== BACKEND STARTING V4 ===");
+Console.WriteLine($"Environment: {builder.Environment.EnvironmentName}");
+
+
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -79,8 +84,8 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Configure the pipeline.
-if (app.Environment.IsDevelopment())
+// swagger
+if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
@@ -92,4 +97,16 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
+// Endpoint básico para testing
+app.MapGet("/", () => new
+{
+    message = "JEGASolutions Backend is working!",
+    version = "v4",
+    timestamp = DateTime.UtcNow
+});
+
+app.MapGet("/health", () => new { status = "OK" });
+
+Console.WriteLine("=== BACKEND READY V4 ===");
 app.Run();
+
