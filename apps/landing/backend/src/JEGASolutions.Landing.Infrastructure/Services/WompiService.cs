@@ -75,8 +75,12 @@ public class WompiService : IWompiService
     {
         _logger.LogInformation("Creating Wompi transaction for reference {Reference}", payment.Reference);
 
+        // CAMBIO: Usar la clave privada para crear transacciones
+        var request = new HttpRequestMessage(HttpMethod.Post, "transactions");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _privateKey); // Usar _privateKey aquí
+
         var wompiApiUrl = _configuration["Wompi__BaseUrl"] ?? "https://sandbox.wompi.co/v1/";
-        var redirectUrl = _configuration["Wompi:RedirectUrl"] ?? $"https://{payment.Reference}.localhost/payment-status"; // Fallback a localhost
+        var redirectUrl = _configuration["Wompi:RedirectUrl"] ?? $"https://{payment.Reference}.localhost/payment-status";
 
         var requestPayload = new
         {
@@ -86,8 +90,7 @@ public class WompiService : IWompiService
             reference = payment.Reference,
             payment_method = new
             {
-                // Permite todos los métodos de pago disponibles en el checkout
-                type = "CARD", // Este valor es un placeholder, el checkout de Wompi mostrará todas las opciones
+                type = "CARD",
             },
             redirect_url = redirectUrl,
             customer_data = new
@@ -99,20 +102,21 @@ public class WompiService : IWompiService
         };
 
         var jsonPayload = JsonSerializer.Serialize(requestPayload, JsonUtils.GetJsonSerializerOptions());
-        var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+        request.Content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
 
-        var response = await _httpClient.PostAsync("transactions", content);
+        // Usar SendAsync en lugar de PostAsync para enviar con el header correcto
+        var response = await _httpClient.SendAsync(request);
 
         var responseBody = await response.Content.ReadAsStringAsync();
 
         if (!response.IsSuccessStatusCode)
         {
-            _logger.LogError("Error creating Wompi transaction for reference {Reference}. Status: {StatusCode}, Body: {Body}", payment.Reference, response.StatusCode, responseBody);
+            _logger.LogError("Error creating Wompi transaction for reference {Reference}. Status: {StatusCode}, Body: {Body}",
+                payment.Reference, response.StatusCode, responseBody);
             throw new ApplicationException($"Error from Wompi API: {responseBody}");
         }
 
         var wompiResponse = JsonSerializer.Deserialize<WompiApiResponse<WompiTransactionResponseDto>>(responseBody, JsonUtils.GetJsonSerializerOptions());
-
         var transactionData = wompiResponse?.Data ?? throw new ApplicationException("Failed to deserialize Wompi transaction response.");
 
         transactionData.CheckoutUrl = $"https://checkout.wompi.co/p/{transactionData.Id}";
