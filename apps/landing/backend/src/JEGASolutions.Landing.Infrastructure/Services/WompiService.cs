@@ -88,10 +88,6 @@ public class WompiService : IWompiService
             currency = "COP",
             customer_email = payment.CustomerEmail,
             reference = payment.Reference,
-            payment_method = new
-            {
-                type = "CARD",
-            },
             redirect_url = redirectUrl,
             customer_data = new
             {
