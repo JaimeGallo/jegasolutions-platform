@@ -49,10 +49,14 @@ public class WompiService : IWompiService
         _emailService = emailService;
         _logger = logger;
         _passwordGenerator = passwordGenerator;
-        _privateKey = _configuration["Wompi:PrivateKey"] ?? throw new ArgumentNullException("Wompi:PrivateKey");
-        _publicKey = _configuration["Wompi:PublicKey"] ?? throw new ArgumentNullException("Wompi:PublicKey");
+        _privateKey = _configuration["Wompi__PrivateKey"] ?? throw new ArgumentNullException("Wompi__PrivateKey");
+        _publicKey = _configuration["Wompi__PublicKey"] ?? throw new ArgumentNullException("Wompi__PublicKey");
 
-        _httpClient.BaseAddress = new Uri(_configuration["Wompi:BaseUrl"] ?? "https://production.wompi.co/v1/");
+        var baseUrl = _configuration["Wompi__BaseUrl"] ?? "https://sandbox.wompi.co/v1/";
+        _httpClient.BaseAddress = new Uri(baseUrl);
+
+        // Log para confirmar el ambiente
+        _logger.LogInformation("Wompi configured with BaseUrl: {BaseUrl}", baseUrl);
         _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _publicKey);
     }
 
@@ -60,7 +64,7 @@ public class WompiService : IWompiService
     {
         _logger.LogInformation("Creating Wompi transaction for reference {Reference}", payment.Reference);
 
-        var wompiApiUrl = _configuration["Wompi:BaseUrl"] ?? "https://production.wompi.co/v1/";
+        var wompiApiUrl = _configuration["Wompi__BaseUrl"] ?? "https://sandbox.wompi.co/v1/";
         var redirectUrl = _configuration["Wompi:RedirectUrl"] ?? $"https://{payment.Reference}.localhost/payment-status"; // Fallback a localhost
 
         var requestPayload = new
