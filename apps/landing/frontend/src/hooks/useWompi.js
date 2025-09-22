@@ -17,19 +17,33 @@ export const useWompi = () => {
         paymentData.reference ||
         `PAY-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
+      // Extraer correctamente el customerName desde diferentes posibles ubicaciones
+      const customerName =
+        paymentData.customerName ||
+        paymentData.customerData?.name ||
+        paymentData.customerData?.customerName ||
+        paymentData.customerData?.firstName ||
+        "Cliente"; // fallback si no se encuentra
+
       const requestPayload = {
         reference: reference,
         amount: parseFloat(paymentData.amount),
         currency: paymentData.currency || "COP", // Campo requerido
         customerEmail: paymentData.customerEmail,
-        customerName: paymentData.customerName,
-        customerPhone: paymentData.customerPhone || null,
-        redirectUrl: paymentData.redirectUrl || window.location.origin, // Campo opcional pero útil
+        customerName: customerName, // Ahora siempre tendrá un valor
+        customerPhone:
+          paymentData.customerPhone ||
+          paymentData.customerData?.phone ||
+          paymentData.customerData?.phoneNumber ||
+          null,
+        redirectUrl: paymentData.redirectUrl || window.location.origin,
         metadata: paymentData.metadata
           ? JSON.stringify(paymentData.metadata)
           : null,
       };
 
+      // Log para debugging - muestra todos los campos que se envían
+      console.log("Payment initiated:", paymentData);
       console.log("Sending payment request:", requestPayload);
 
       const response = await fetch(`${API_BASE_URL}/api/payments/create`, {
@@ -40,34 +54,53 @@ export const useWompi = () => {
         body: JSON.stringify(requestPayload),
       });
 
+      // Manejo mejorado de errores
       if (!response.ok) {
-        const errorData = await response
-          .json()
-          .catch(() => ({ message: "Server error" }));
-        console.error("Server error response:", errorData);
-        throw new Error(
-          errorData.message || `Server error: ${response.status}`
-        );
+        let errorMessage = `Server error: ${response.status}`;
+
+        try {
+          const errorData = await response.json();
+          console.error("Server error response:", errorData);
+
+          // Si hay errores de validación, mostrarlos específicamente
+          if (errorData.errors && typeof errorData.errors === "object") {
+            const validationErrors = Object.entries(errorData.errors)
+              .map(
+                ([field, errors]) =>
+                  `${field}: ${
+                    Array.isArray(errors) ? errors.join(", ") : errors
+                  }`
+              )
+              .join("; ");
+            errorMessage = `Errores de validación: ${validationErrors}`;
+          } else if (errorData.message) {
+            errorMessage = errorData.message;
+          }
+        } catch (parseError) {
+          console.error("Could not parse error response:", parseError);
+        }
+
+        throw new Error(errorMessage);
       }
 
       const result = await response.json();
+      console.log("Payment created successfully:", result);
 
-      if (!result.checkoutUrl && !result.reference) {
-        throw new Error("Invalid response from server");
-      }
-
-      // Si el backend devuelve una URL de checkout, redirigir
+      // Manejar diferentes tipos de respuesta del backend
       if (result.checkoutUrl) {
         window.location.href = result.checkoutUrl;
-      } else {
-        // Si no, puedes construir la URL o manejar la respuesta según tu lógica
-        console.log("Payment created successfully:", result);
+      } else if (result.reference) {
+        // Si solo devuelve la referencia, puedes construir la URL de Wompi o manejar según tu lógica
         return result;
+      } else {
+        throw new Error(
+          "Respuesta inválida del servidor - falta checkoutUrl o reference"
+        );
       }
     } catch (err) {
       console.error("Error creating payment:", err);
       setError(err.message);
-      throw err; // Re-lanzar para que el componente que llama pueda manejar el error
+      throw err;
     } finally {
       setIsLoading(false);
     }
