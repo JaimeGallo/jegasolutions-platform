@@ -71,51 +71,75 @@ public class WompiService : IWompiService
 
     }
 
+    // public async Task<WompiTransactionResponseDto> CreateTransactionAsync(Payment payment)
+    // {
+    //     _logger.LogInformation("Creating Wompi payment source for reference {Reference}", payment.Reference);
+
+    //     var request = new HttpRequestMessage(HttpMethod.Post, "payment_sources");
+    //     request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _publicKey); // Usar pública para payment sources
+
+    //     var redirectUrl = _configuration["Wompi:RedirectUrl"] ?? $"https://jegasolutions-platform-frontend.vercel.app/payment-success";
+
+    //     var requestPayload = new
+    //     {
+    //         type = "CARD",
+    //         currency = "COP",
+    //         amount_in_cents = (int)(payment.Amount * 100),
+    //         reference = payment.Reference,
+    //         customer_email = payment.CustomerEmail,
+    //         customer_data = new
+    //         {
+    //             full_name = payment.CustomerName,
+    //             phone_number = payment.CustomerPhone,
+    //             email = payment.CustomerEmail
+    //         },
+    //         redirect_url = redirectUrl
+    //     };
+
+    //     var jsonPayload = JsonSerializer.Serialize(requestPayload, JsonUtils.GetJsonSerializerOptions());
+    //     request.Content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+
+    //     var response = await _httpClient.SendAsync(request);
+    //     var responseBody = await response.Content.ReadAsStringAsync();
+
+    //     if (!response.IsSuccessStatusCode)
+    //     {
+    //         _logger.LogError("Error creating Wompi payment source for reference {Reference}. Status: {StatusCode}, Body: {Body}",
+    //             payment.Reference, response.StatusCode, responseBody);
+    //         throw new ApplicationException($"Error from Wompi API: {responseBody}");
+    //     }
+
+    //     var wompiResponse = JsonSerializer.Deserialize<WompiApiResponse<WompiTransactionResponseDto>>(responseBody, JsonUtils.GetJsonSerializerOptions());
+    //     var transactionData = wompiResponse?.Data ?? throw new ApplicationException("Failed to deserialize Wompi payment source response.");
+
+    //     // Para payment sources, la URL de checkout es diferente
+    //     transactionData.CheckoutUrl = $"https://checkout.wompi.co/p/{transactionData.Id}";
+
+    //     return transactionData;
+    // }
+
     public async Task<WompiTransactionResponseDto> CreateTransactionAsync(Payment payment)
     {
-        _logger.LogInformation("Creating Wompi payment source for reference {Reference}", payment.Reference);
+        _logger.LogInformation("Creating Wompi checkout for reference {Reference}", payment.Reference);
 
-        var request = new HttpRequestMessage(HttpMethod.Post, "payment_sources");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _publicKey); // Usar pública para payment sources
+        // Generar URL de checkout directa
+        var checkoutUrl = "https://checkout.wompi.co/p/" +
+            $"?public-key={_publicKey}" +
+            $"&currency=COP" +
+            $"&amount-in-cents={payment.Amount * 100}" +
+            $"&reference={payment.Reference}" +
+            $"&redirect-url={Uri.EscapeDataString("https://jegasolutions-platform-frontend.vercel.app/payment-success")}";
 
-        var redirectUrl = _configuration["Wompi:RedirectUrl"] ?? $"https://jegasolutions-platform-frontend.vercel.app/payment-success";
-
-        var requestPayload = new
+        var result = new WompiTransactionResponseDto
         {
-            type = "CARD",
-            currency = "COP",
-            amount_in_cents = (int)(payment.Amount * 100),
-            reference = payment.Reference,
-            customer_email = payment.CustomerEmail,
-            customer_data = new
-            {
-                full_name = payment.CustomerName,
-                phone_number = payment.CustomerPhone,
-                email = payment.CustomerEmail
-            },
-            redirect_url = redirectUrl
+            Id = payment.Reference,
+            Reference = payment.Reference,
+            CheckoutUrl = checkoutUrl,
+            Status = "PENDING"
         };
 
-        var jsonPayload = JsonSerializer.Serialize(requestPayload, JsonUtils.GetJsonSerializerOptions());
-        request.Content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-
-        var response = await _httpClient.SendAsync(request);
-        var responseBody = await response.Content.ReadAsStringAsync();
-
-        if (!response.IsSuccessStatusCode)
-        {
-            _logger.LogError("Error creating Wompi payment source for reference {Reference}. Status: {StatusCode}, Body: {Body}",
-                payment.Reference, response.StatusCode, responseBody);
-            throw new ApplicationException($"Error from Wompi API: {responseBody}");
-        }
-
-        var wompiResponse = JsonSerializer.Deserialize<WompiApiResponse<WompiTransactionResponseDto>>(responseBody, JsonUtils.GetJsonSerializerOptions());
-        var transactionData = wompiResponse?.Data ?? throw new ApplicationException("Failed to deserialize Wompi payment source response.");
-
-        // Para payment sources, la URL de checkout es diferente
-        transactionData.CheckoutUrl = $"https://checkout.wompi.co/p/{transactionData.Id}";
-
-        return transactionData;
+        _logger.LogInformation("Checkout URL created: {CheckoutUrl}", checkoutUrl);
+        return result;
     }
 
     public Task<bool> ValidateWebhookSignature(string payload, string signature)
