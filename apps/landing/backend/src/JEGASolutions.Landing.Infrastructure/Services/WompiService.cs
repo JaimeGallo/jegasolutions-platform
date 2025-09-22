@@ -130,9 +130,12 @@ public class WompiService : IWompiService
             $"&reference={payment.Reference}" +
             $"&redirect-url={Uri.EscapeDataString("https://jegasolutions-platform-frontend.vercel.app/payment-success")}";
 
+        // Generar un ID corto para BD (máximo 18 caracteres)
+        var shortId = $"WMP_{DateTime.Now:yyyyMMdd}_{payment.Id}";
+
         var result = new WompiTransactionResponseDto
         {
-            Id = payment.Reference,
+            Id = shortId, // ID corto que quepa en la BD
             Reference = payment.Reference,
             CheckoutUrl = checkoutUrl,
             Status = "PENDING"
