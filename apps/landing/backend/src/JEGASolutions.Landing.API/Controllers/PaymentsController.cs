@@ -144,6 +144,13 @@ public class PaymentsController : ControllerBase
     {
         try
         {
+            // LOG TEMPORAL - para ver qué llega
+            _logger.LogInformation("=== PAYMENT REQUEST RECEIVED ===");
+            _logger.LogInformation("Reference: {Reference}", request.Reference);
+            _logger.LogInformation("Amount: {Amount}", request.Amount);
+            _logger.LogInformation("CustomerEmail: {Email}", request.CustomerEmail);
+            _logger.LogInformation("CustomerName: {Name}", request.CustomerName);
+            _logger.LogInformation("================================");
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
