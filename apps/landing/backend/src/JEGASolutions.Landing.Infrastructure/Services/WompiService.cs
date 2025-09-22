@@ -49,15 +49,26 @@ public class WompiService : IWompiService
         _emailService = emailService;
         _logger = logger;
         _passwordGenerator = passwordGenerator;
-        _privateKey = _configuration["Wompi__PrivateKey"] ?? throw new ArgumentNullException("Wompi__PrivateKey");
-        _publicKey = _configuration["Wompi__PublicKey"] ?? throw new ArgumentNullException("Wompi__PublicKey");
+        // _privateKey = _configuration["Wompi__PrivateKey"] ?? throw new ArgumentNullException("Wompi__PrivateKey");
+        // _publicKey = _configuration["Wompi__PublicKey"] ?? throw new ArgumentNullException("Wompi__PublicKey");
 
-        var baseUrl = _configuration["Wompi__BaseUrl"] ?? "https://sandbox.wompi.co/v1/";
+        // var baseUrl = _configuration["Wompi__BaseUrl"] ?? "https://sandbox.wompi.co/v1/";
+        // _httpClient.BaseAddress = new Uri(baseUrl);
+
+        // // Log para confirmar el ambiente
+        // _logger.LogInformation("Wompi configured with BaseUrl: {BaseUrl}", baseUrl);
+        // _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _publicKey);
+        // Cambio temporal para debugging:
+        _privateKey = _configuration["Wompi__PrivateKey"] ?? _configuration["Wompi:PrivateKey"] ?? "prv_test_gDNaHJY811U2thwFtYXj4vYEqTEgbBo5";
+        _publicKey = _configuration["Wompi__PublicKey"] ?? _configuration["Wompi:PublicKey"] ?? "pub_test_igA8bSRjaCepeDu8dKix4fSF0KgsUqeu";
+
+        var baseUrl = _configuration["Wompi__BaseUrl"] ?? _configuration["Wompi:BaseUrl"] ?? "https://sandbox.wompi.co/v1/";
         _httpClient.BaseAddress = new Uri(baseUrl);
 
-        // Log para confirmar el ambiente
-        _logger.LogInformation("Wompi configured with BaseUrl: {BaseUrl}", baseUrl);
-        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _publicKey);
+        // Log para debugging
+        _logger.LogInformation("Wompi configured with BaseUrl: {BaseUrl}, PrivateKey exists: {PrivateKeyExists}",
+            baseUrl, !string.IsNullOrEmpty(_privateKey));
+
     }
 
     public async Task<WompiTransactionResponseDto> CreateTransactionAsync(Payment payment)
