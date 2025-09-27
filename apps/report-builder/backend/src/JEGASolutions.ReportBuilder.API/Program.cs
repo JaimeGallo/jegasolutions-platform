@@ -68,7 +68,7 @@ builder.Services.AddAuthentication(options =>
                       builder.Configuration["JwtSettings:Issuer"],
         ValidAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? 
                         builder.Configuration["JwtSettings:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey ?? throw new InvalidOperationException("JWT secret key is required"))),
         ClockSkew = TimeSpan.Zero
     };
 });

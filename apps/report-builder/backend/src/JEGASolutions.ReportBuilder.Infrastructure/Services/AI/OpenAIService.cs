@@ -2,6 +2,7 @@ using Azure.AI.OpenAI;
 using JEGASolutions.ReportBuilder.Core.Interfaces;
 using JEGASolutions.ReportBuilder.Core.Dto;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 
 namespace JEGASolutions.ReportBuilder.Infrastructure.Services.AI
 {
@@ -68,6 +69,7 @@ namespace JEGASolutions.ReportBuilder.Infrastructure.Services.AI
         {
             // This would typically query the database for existing insights
             // For now, return empty list as this is handled by the repository layer
+            await Task.CompletedTask;
             return new List<AIInsightDto>();
         }
 
@@ -75,6 +77,7 @@ namespace JEGASolutions.ReportBuilder.Infrastructure.Services.AI
         {
             // This would typically query the database for insights by type
             // For now, return empty list as this is handled by the repository layer
+            await Task.CompletedTask;
             return new List<AIInsightDto>();
         }
 
@@ -85,6 +88,7 @@ namespace JEGASolutions.ReportBuilder.Infrastructure.Services.AI
                 // Implementation would generate insights for the report
                 // This is a placeholder for the actual AI processing
                 _logger.LogInformation("Generating insights for report {ReportId} in tenant {TenantId}", reportSubmissionId, tenantId);
+                await Task.CompletedTask;
                 return true;
             }
             catch (Exception ex)
@@ -98,6 +102,7 @@ namespace JEGASolutions.ReportBuilder.Infrastructure.Services.AI
         {
             // This would typically delete the insight from the database
             // For now, return true as this is handled by the repository layer
+            await Task.CompletedTask;
             return true;
         }
 
