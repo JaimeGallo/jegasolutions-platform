@@ -1,10 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using JEGASolutions.ExtraHours.Core.Entities;
 
 namespace JEGASolutions.ExtraHours.Core.Entities.Models
 {
     [Table("managers")]
-    public class Manager
+    public class Manager : TenantEntity
     {
 
         [Key]

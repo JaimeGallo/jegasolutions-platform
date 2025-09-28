@@ -3,7 +3,7 @@ using JEGASolutions.ExtraHours.Infrastructure.Repositories;
 using JEGASolutions.ExtraHours.Core.Interfaces;
 
 
-namespace JEGASolutions.ExtraHours.Ifrastructure.services
+namespace JEGASolutions.ExtraHours.Infrastructure.Services
 {
     public class AuthService : IAuthService
     {

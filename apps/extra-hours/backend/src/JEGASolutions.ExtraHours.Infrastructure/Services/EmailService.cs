@@ -5,7 +5,7 @@ using JEGASolutions.ExtraHours.Core.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace JEGASolutions.ExtraHours.Ifrastructure.services
+namespace JEGASolutions.ExtraHours.Infrastructure.Services
 {
     public class EmailService : IEmailService
     {

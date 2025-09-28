@@ -1,10 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using JEGASolutions.ExtraHours.Core.Entities;
 
 namespace JEGASolutions.ExtraHours.Core.Entities.Models
 {
     [Table("extra_hours_config")]
-    public class ExtraHoursConfig
+    public class ExtraHoursConfig : TenantEntity
     {
         [Key]
         [Column("id")]
