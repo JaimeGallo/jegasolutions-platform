@@ -6,7 +6,7 @@ using JEGASolutions.ExtraHours.Core.Entities.Models;
 using JEGASolutions.ExtraHours.Core.Interfaces;
 using Microsoft.Extensions.Configuration;
 
-namespace JEGASolutions.ExtraHours.Ifrastructure.services
+namespace JEGASolutions.ExtraHours.Infrastructure.Services
 {
     public class JWTUtils : IJWTUtils
     {

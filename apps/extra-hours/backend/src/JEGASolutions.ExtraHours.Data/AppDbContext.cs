@@ -16,6 +16,9 @@ namespace JEGASolutions.ExtraHours.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            // Configure multi-tenant properties for all entities
+            ConfigureMultiTenantProperties(modelBuilder);
+
             // Relación entre Employee y Manager
             modelBuilder.Entity<Employee>()
                 .HasOne(e => e.manager)
@@ -93,6 +96,84 @@ namespace JEGASolutions.ExtraHours.Data
                     v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) : (DateTime?)null);
 
             base.OnModelCreating(modelBuilder);
+        }
+
+        private void ConfigureMultiTenantProperties(ModelBuilder modelBuilder)
+        {
+            // Configure TenantId for all entities
+            modelBuilder.Entity<Employee>()
+                .HasIndex(e => e.TenantId)
+                .HasDatabaseName("IX_employees_tenant_id");
+
+            modelBuilder.Entity<ExtraHour>()
+                .HasIndex(e => e.TenantId)
+                .HasDatabaseName("IX_extra_hours_tenant_id");
+
+            modelBuilder.Entity<ExtraHoursConfig>()
+                .HasIndex(e => e.TenantId)
+                .HasDatabaseName("IX_extra_hours_config_tenant_id");
+
+            modelBuilder.Entity<Manager>()
+                .HasIndex(e => e.TenantId)
+                .HasDatabaseName("IX_managers_tenant_id");
+
+            modelBuilder.Entity<User>()
+                .HasIndex(e => e.TenantId)
+                .HasDatabaseName("IX_users_tenant_id");
+
+            modelBuilder.Entity<CompensationRequest>()
+                .HasIndex(e => e.TenantId)
+                .HasDatabaseName("IX_compensation_requests_tenant_id");
+
+            // Configure TenantId as required
+            modelBuilder.Entity<Employee>()
+                .Property(e => e.TenantId)
+                .IsRequired();
+
+            modelBuilder.Entity<ExtraHour>()
+                .Property(e => e.TenantId)
+                .IsRequired();
+
+            modelBuilder.Entity<ExtraHoursConfig>()
+                .Property(e => e.TenantId)
+                .IsRequired();
+
+            modelBuilder.Entity<Manager>()
+                .Property(e => e.TenantId)
+                .IsRequired();
+
+            modelBuilder.Entity<User>()
+                .Property(e => e.TenantId)
+                .IsRequired();
+
+            modelBuilder.Entity<CompensationRequest>()
+                .Property(e => e.TenantId)
+                .IsRequired();
+
+            // Configure audit fields
+            ConfigureAuditFields(modelBuilder);
+        }
+
+        private void ConfigureAuditFields(ModelBuilder modelBuilder)
+        {
+            // Configure CreatedAt, UpdatedAt, DeletedAt for all entities
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                if (typeof(JEGASolutions.ExtraHours.Core.Entities.TenantEntity).IsAssignableFrom(entityType.ClrType))
+                {
+                    modelBuilder.Entity(entityType.ClrType)
+                        .Property("CreatedAt")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    modelBuilder.Entity(entityType.ClrType)
+                        .Property("UpdatedAt")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    modelBuilder.Entity(entityType.ClrType)
+                        .Property("DeletedAt")
+                        .IsRequired(false);
+                }
+            }
         }
     }
 }

@@ -15,6 +15,14 @@ namespace JEGASolutions.ExtraHours.Core.Interfaces
         Task UpdateAsync(ExtraHour extraHour);
         Task<IEnumerable<ExtraHour>> FindAllAsync();
 
-
+        // Multi-tenant methods
+        Task<IEnumerable<ExtraHour>> FindExtraHoursByIdAsync(long id, int tenantId);
+        Task<IEnumerable<ExtraHour>> FindByDateRangeAsync(DateTime startDate, DateTime endDate, int tenantId);
+        Task<IEnumerable<ExtraHour>> FindExtraHoursByIdAndDateRangeAsync(long employeeId, DateTime startDate, DateTime endDate, int tenantId);
+        Task<ExtraHour?> FindByRegistryAsync(long registry, int tenantId);
+        Task<ExtraHour?> FindByRegistryWithApproverAsync(long registry, int tenantId);
+        Task<bool> DeleteByRegistryAsync(long registry, int tenantId);
+        Task<bool> ExistsByRegistryAsync(long registry, int tenantId);
+        Task<IEnumerable<ExtraHour>> FindAllAsync(int tenantId);
     }
 }

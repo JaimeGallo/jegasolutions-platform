@@ -1,11 +1,12 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using JEGASolutions.ExtraHours.Core.Entities;
 
 namespace JEGASolutions.ExtraHours.Core.Entities.Models
 {
     [Table("compensationrequests")]
-    public class CompensationRequest
+    public class CompensationRequest : TenantEntity
     {
         [Key]
         [Column("id")]

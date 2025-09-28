@@ -19,7 +19,7 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Repositories
         {
             return await _context.employees
                 .Include(e => e.manager)
-                .ThenInclude(m => m.User)
+                .ThenInclude(m => m!.User)
                 .Where(e => e.manager_id == managerId)
                 .ToListAsync();
         }
@@ -28,7 +28,7 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Repositories
         {
             return await _context.employees
                 .Include(e => e.manager)
-                .ThenInclude(m => m.User)
+                .ThenInclude(m => m!.User)
                 .FirstOrDefaultAsync(e => e.id == id);
         }
 
@@ -41,7 +41,7 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Repositories
         {
             return await _context.employees
                 .Include(e => e.manager)
-                .ThenInclude(m => m.User)
+                .ThenInclude(m => m!.User)
                 .ToListAsync();
         }
 

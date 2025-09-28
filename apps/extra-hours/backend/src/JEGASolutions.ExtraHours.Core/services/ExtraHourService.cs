@@ -7,51 +7,87 @@ namespace JEGASolutions.ExtraHours.Core.Services
     {
         private readonly IExtraHourRepository _extraHourRepository;
         private readonly IEmployeeRepository _employeeRepository;
+        private readonly ITenantContextService _tenantContextService;
 
-        public ExtraHourService(IExtraHourRepository extraHourRepository, IEmployeeRepository employeeRepository)
+        public ExtraHourService(IExtraHourRepository extraHourRepository, IEmployeeRepository employeeRepository, ITenantContextService tenantContextService)
         {
             _extraHourRepository = extraHourRepository;
             _employeeRepository = employeeRepository;
+            _tenantContextService = tenantContextService;
         }
 
         public async Task<IEnumerable<ExtraHour>> FindExtraHoursByIdAsync(long id)
         {
-            return await _extraHourRepository.FindExtraHoursByIdAsync(id);
+            if (!_tenantContextService.HasTenantId())
+                throw new InvalidOperationException("Tenant context is required");
+            
+            var tenantId = _tenantContextService.GetCurrentTenantId();
+            return await _extraHourRepository.FindExtraHoursByIdAsync(id, tenantId);
         }
 
         public async Task<IEnumerable<ExtraHour>> FindByDateRangeAsync(DateTime startDate, DateTime endDate)
         {
-            return await _extraHourRepository.FindByDateRangeAsync(startDate, endDate);
+            if (!_tenantContextService.HasTenantId())
+                throw new InvalidOperationException("Tenant context is required");
+            
+            var tenantId = _tenantContextService.GetCurrentTenantId();
+            return await _extraHourRepository.FindByDateRangeAsync(startDate, endDate, tenantId);
         }
 
         public async Task<IEnumerable<ExtraHour>> FindExtraHoursByIdAndDateRangeAsync(long employeeId, DateTime startDate, DateTime endDate)
         {
-            return await _extraHourRepository.FindExtraHoursByIdAndDateRangeAsync(employeeId, startDate, endDate);
+            if (!_tenantContextService.HasTenantId())
+                throw new InvalidOperationException("Tenant context is required");
+            
+            var tenantId = _tenantContextService.GetCurrentTenantId();
+            return await _extraHourRepository.FindExtraHoursByIdAndDateRangeAsync(employeeId, startDate, endDate, tenantId);
         }
 
         public async Task<ExtraHour?> FindByRegistryAsync(long registry)
         {
-            return await _extraHourRepository.FindByRegistryAsync(registry);
+            if (!_tenantContextService.HasTenantId())
+                throw new InvalidOperationException("Tenant context is required");
+            
+            var tenantId = _tenantContextService.GetCurrentTenantId();
+            return await _extraHourRepository.FindByRegistryAsync(registry, tenantId);
         }
 
         public async Task<bool> DeleteExtraHourByRegistryAsync(long registry)
         {
-            return await _extraHourRepository.DeleteByRegistryAsync(registry);
+            if (!_tenantContextService.HasTenantId())
+                throw new InvalidOperationException("Tenant context is required");
+            
+            var tenantId = _tenantContextService.GetCurrentTenantId();
+            return await _extraHourRepository.DeleteByRegistryAsync(registry, tenantId);
         }
 
         public async Task<ExtraHour> AddExtraHourAsync(ExtraHour extraHour)
         {
+            if (!_tenantContextService.HasTenantId())
+                throw new InvalidOperationException("Tenant context is required");
+            
+            var tenantId = _tenantContextService.GetCurrentTenantId();
+            extraHour.TenantId = tenantId;
             return await _extraHourRepository.AddAsync(extraHour);
         }
 
         public async Task UpdateExtraHourAsync(ExtraHour extraHour)
         {
+            if (!_tenantContextService.HasTenantId())
+                throw new InvalidOperationException("Tenant context is required");
+            
+            var tenantId = _tenantContextService.GetCurrentTenantId();
+            extraHour.TenantId = tenantId;
             await _extraHourRepository.UpdateAsync(extraHour);
         }
 
         public async Task<IEnumerable<ExtraHour>> GetAllAsync()
         {
-            return await _extraHourRepository.FindAllAsync();
+            if (!_tenantContextService.HasTenantId())
+                throw new InvalidOperationException("Tenant context is required");
+            
+            var tenantId = _tenantContextService.GetCurrentTenantId();
+            return await _extraHourRepository.FindAllAsync(tenantId);
         }
 
         public async Task<ExtraHour?> GetExtraHourWithApproverDetailsAsync(long registry)
