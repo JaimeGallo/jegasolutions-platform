@@ -47,7 +47,7 @@ const Hero = ({ onContactClick, onDemoClick }) => {
             className="btn-primary text-base md:text-lg px-8 py-4 group"
           >
             <span className="flex items-center justify-center">
-              Solicita Demo Gratuita
+              Ver Módulos
               <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
             </span>
           </button>

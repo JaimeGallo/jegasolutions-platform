@@ -1,8 +1,10 @@
-import React from "react";
-import { Clock, CheckCircle, TrendingUp, Shield, FileText } from "lucide-react";
+import React, { useState } from "react";
+import { Clock, CheckCircle, TrendingUp, Shield, FileText, Play } from "lucide-react";
 import FlippableModuleCard from "../modules/FlippableModuleCard";
+import VideoModal from "../VideoModal";
 
 const ExtraHoursModule = () => {
+  const [isVideoOpen, setIsVideoOpen] = useState(false);
   const features = [
     "Registro automático por empleados",
     "Cálculo categorizado (diurna/nocturna/festiva)",
@@ -41,11 +43,22 @@ const ExtraHoursModule = () => {
       <h3 className="text-3xl font-bold text-gray-900 mb-4">
         Gestión de Horas Extra
       </h3>
-      <p className="text-lg text-gray-600 max-w-xs">
+      <p className="text-lg text-gray-600 max-w-xs mb-6">
         Automatiza el registro, cálculo y aprobación de horas extra con
         cumplimiento normativo garantizado. Sistema inteligente que se adapta a
         las políticas de tu empresa.
       </p>
+      
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsVideoOpen(true);
+        }}
+        className="inline-flex items-center space-x-2 px-6 py-3 bg-jega-blue-600 hover:bg-jega-blue-700 text-white rounded-lg transition-all duration-300 hover:scale-105 shadow-md hover:shadow-lg"
+      >
+        <Play className="w-5 h-5" />
+        <span className="font-semibold">Ver Demo</span>
+      </button>
     </>
   );
   const backContent = (
@@ -90,10 +103,18 @@ const ExtraHoursModule = () => {
   );
 
   return (
-    <FlippableModuleCard
-      frontContent={frontContent}
-      backContent={backContent}
-    />
+    <>
+      <FlippableModuleCard
+        frontContent={frontContent}
+        backContent={backContent}
+      />
+      <VideoModal
+        isOpen={isVideoOpen}
+        onClose={() => setIsVideoOpen(false)}
+        videoUrl="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        title="Demo - Gestión de Horas Extra"
+      />
+    </>
   );
 };
 

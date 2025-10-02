@@ -163,7 +163,7 @@ const Contact = () => {
                   <MessageCircle className="w-4 h-4 text-gray-900" />
                 </div>
                 <h3 className="text-2xl font-bold">
-                  Solicita tu Demo Gratuita
+                  Envíanos tu Consulta
                 </h3>
               </div>
 
@@ -227,7 +227,7 @@ const Contact = () => {
                   ) : (
                     <>
                       <Send className="w-4 h-4" />
-                      <span>Solicitar Demo Gratuita</span>
+                      <span>Enviar Mensaje</span>
                     </>
                   )}
                 </button>
