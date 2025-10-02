@@ -5,8 +5,7 @@ import {
   Phone,
   MapPin,
   Linkedin,
-  Twitter as X,
-  Github,
+  Instagram,
   Send,
   MessageCircle,
 } from "lucide-react";
@@ -34,8 +33,7 @@ const contactInfo = [
 
 const socialLinks = [
   { icon: Linkedin, href: "#", label: "LinkedIn" },
-  { icon: X, href: "#", label: "X" },
-  { icon: Github, href: "#", label: "GitHub" },
+  { icon: Instagram, href: "#", label: "Instagram" },
 ];
 
 const Contact = () => {
