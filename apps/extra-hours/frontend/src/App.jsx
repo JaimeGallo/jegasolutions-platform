@@ -44,7 +44,10 @@ function App() {
             <Route
               path="/menu"
               element={
-                <ProtectedRouteWithLayout element={<ExtraHoursMenu />} />
+                <ProtectedRouteWithLayout 
+                  allowedRoles={["empleado", "manager", "superusuario"]}
+                  element={<ExtraHoursMenu />} 
+                />
               }
             />
             <Route

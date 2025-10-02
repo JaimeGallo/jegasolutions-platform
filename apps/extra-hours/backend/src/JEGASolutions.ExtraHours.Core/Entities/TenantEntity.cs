@@ -7,14 +7,13 @@ namespace JEGASolutions.ExtraHours.Core.Entities
     /// </summary>
     public abstract class TenantEntity
     {
-        [Required]
-        public int TenantId { get; set; }
+        // Make TenantId optional for backwards compatibility with existing data
+        public int? TenantId { get; set; } = 1; // Default to tenant 1
         
-        [Required]
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        // Make audit fields optional for backwards compatibility
+        public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
         
-        [Required]
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? UpdatedAt { get; set; } = DateTime.UtcNow;
         
         public DateTime? DeletedAt { get; set; }
         
