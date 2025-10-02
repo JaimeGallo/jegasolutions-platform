@@ -5,7 +5,7 @@ import {
   Phone,
   MapPin,
   Linkedin,
-  Twitter,
+  Twitter as X,
   Github,
   Send,
   MessageCircle,
@@ -15,13 +15,13 @@ const contactInfo = [
   {
     icon: Mail,
     title: "Email",
-    value: "soporte@jegasolutions.com",
+    value: "JaimeGallo@jegasolutions.co",
     description: "Respuesta en 24 horas",
   },
   {
     icon: Phone,
     title: "Teléfono",
-    value: "+57 (305) 123-4567",
+    value: "+57 3136093516",
     description: "Lun - Vie: 8:00 AM - 6:00 PM",
   },
   {
@@ -34,7 +34,7 @@ const contactInfo = [
 
 const socialLinks = [
   { icon: Linkedin, href: "#", label: "LinkedIn" },
-  { icon: Twitter, href: "#", label: "Twitter" },
+  { icon: X, href: "#", label: "X" },
   { icon: Github, href: "#", label: "GitHub" },
 ];
 
