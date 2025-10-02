@@ -1,7 +1,10 @@
-import { Brain, CheckCircle, Sparkles, BarChart3, Zap } from "lucide-react";
+import { useState } from "react";
+import { Brain, CheckCircle, Sparkles, BarChart3, Zap, Play } from "lucide-react";
 import FlippableModuleCard from "./FlippableModuleCard";
+import VideoModal from "../VideoModal";
 
 const AIReportsModule = () => {
+  const [isVideoOpen, setIsVideoOpen] = useState(false);
   const features = [
     "Narrativas automáticas con Claude AI",
     "Análisis semántico de datos",
@@ -38,10 +41,21 @@ const AIReportsModule = () => {
       </div>
 
       <h3 className="text-3xl font-bold text-gray-900 mb-4">Reportes con IA</h3>
-      <p className="text-lg text-gray-600 max-w-md">
+      <p className="text-lg text-gray-600 max-w-md mb-6">
         Generación automática de narrativas profesionales y análisis inteligente
         con Claude AI. Transforma datos complejos en insights accionables.
       </p>
+      
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsVideoOpen(true);
+        }}
+        className="inline-flex items-center space-x-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all duration-300 hover:scale-105 shadow-md hover:shadow-lg"
+      >
+        <Play className="w-5 h-5" />
+        <span className="font-semibold">Ver Demo</span>
+      </button>
     </>
   );
 
@@ -91,10 +105,18 @@ const AIReportsModule = () => {
   );
 
   return (
-    <FlippableModuleCard
-      frontContent={frontContent}
-      backContent={backContent}
-    />
+    <>
+      <FlippableModuleCard
+        frontContent={frontContent}
+        backContent={backContent}
+      />
+      <VideoModal
+        isOpen={isVideoOpen}
+        onClose={() => setIsVideoOpen(false)}
+        videoUrl="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        title="Demo - Reportes con IA"
+      />
+    </>
   );
 };
 

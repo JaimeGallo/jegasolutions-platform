@@ -129,7 +129,7 @@ const JEGASolutionsLanding = () => {
           >
             <Section.component
               onContactClick={() => scrollToSection(4)}
-              onDemoClick={() => scrollToSection(3)}
+              onDemoClick={() => scrollToSection(1)}
               onScrollToTop={() =>
                 isDesktop
                   ? scrollToSection(0)
