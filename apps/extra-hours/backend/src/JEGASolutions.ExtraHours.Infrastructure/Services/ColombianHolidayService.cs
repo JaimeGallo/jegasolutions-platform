@@ -1,6 +1,8 @@
-﻿namespace JEGASolutions.ExtraHours.Infrastructure.Services
+﻿using JEGASolutions.ExtraHours.Core.Interfaces;
+
+namespace JEGASolutions.ExtraHours.Infrastructure.Services
 {
-    public class ColombianHolidayService
+    public class ColombianHolidayService : IColombianHolidayService
     {
         // Festivos fijos en Colombia
         private static readonly Dictionary<(int month, int day), string> FixedHolidays = new Dictionary<(int month, int day), string>
@@ -110,6 +112,30 @@
             int day = ((h + l - 7 * m + 114) % 31) + 1;
 
             return new DateTime(year, month, day);
+        }
+
+        /// <summary>
+        /// Versión asíncrona de IsPublicHoliday
+        /// </summary>
+        public Task<bool> IsPublicHolidayAsync(DateTime date)
+        {
+            return Task.FromResult(IsPublicHoliday(date));
+        }
+
+        /// <summary>
+        /// Obtiene todos los festivos en un rango de fechas
+        /// </summary>
+        public Task<List<DateTime>> GetHolidaysInRangeAsync(DateTime startDate, DateTime endDate)
+        {
+            var holidays = new List<DateTime>();
+            for (var date = startDate; date <= endDate; date = date.AddDays(1))
+            {
+                if (IsPublicHoliday(date))
+                {
+                    holidays.Add(date);
+                }
+            }
+            return Task.FromResult(holidays);
         }
     }
 }

@@ -125,30 +125,36 @@ namespace JEGASolutions.ExtraHours.Data
                 .HasIndex(e => e.TenantId)
                 .HasDatabaseName("IX_compensation_requests_tenant_id");
 
-            // Configure TenantId as required
+            // Configure TenantId as optional with default value for backwards compatibility
             modelBuilder.Entity<Employee>()
                 .Property(e => e.TenantId)
-                .IsRequired();
+                .HasDefaultValue(1)
+                .IsRequired(false);
 
             modelBuilder.Entity<ExtraHour>()
                 .Property(e => e.TenantId)
-                .IsRequired();
+                .HasDefaultValue(1)
+                .IsRequired(false);
 
             modelBuilder.Entity<ExtraHoursConfig>()
                 .Property(e => e.TenantId)
-                .IsRequired();
+                .HasDefaultValue(1)
+                .IsRequired(false);
 
             modelBuilder.Entity<Manager>()
                 .Property(e => e.TenantId)
-                .IsRequired();
+                .HasDefaultValue(1)
+                .IsRequired(false);
 
             modelBuilder.Entity<User>()
                 .Property(e => e.TenantId)
-                .IsRequired();
+                .HasDefaultValue(1)
+                .IsRequired(false);
 
             modelBuilder.Entity<CompensationRequest>()
                 .Property(e => e.TenantId)
-                .IsRequired();
+                .HasDefaultValue(1)
+                .IsRequired(false);
 
             // Configure audit fields
             ConfigureAuditFields(modelBuilder);
@@ -163,11 +169,13 @@ namespace JEGASolutions.ExtraHours.Data
                 {
                     modelBuilder.Entity(entityType.ClrType)
                         .Property("CreatedAt")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                        .IsRequired(false);
 
                     modelBuilder.Entity(entityType.ClrType)
                         .Property("UpdatedAt")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                        .IsRequired(false);
 
                     modelBuilder.Entity(entityType.ClrType)
                         .Property("DeletedAt")

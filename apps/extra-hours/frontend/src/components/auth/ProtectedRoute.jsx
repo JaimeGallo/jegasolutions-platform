@@ -13,6 +13,7 @@ const ProtectedRoute = ({ element, allowedRoles }) => {
   }
 
   if (
+    allowedRoles && 
     !allowedRoles
       .map((role) => role.toLowerCase())
       .includes(auth.role.toLowerCase())

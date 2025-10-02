@@ -26,8 +26,8 @@ namespace JEGASolutions.ExtraHours.API.Middleware
             }
             else
             {
-                // For development/testing purposes, you might want to set a default tenant
-                // In production, this should throw an exception
+                // For development/testing purposes, set a default tenant
+                // Check for tenant in header first
                 if (context.Request.Headers.ContainsKey("X-Tenant-Id"))
                 {
                     var headerTenantId = context.Request.Headers["X-Tenant-Id"].FirstOrDefault();
@@ -35,6 +35,11 @@ namespace JEGASolutions.ExtraHours.API.Middleware
                     {
                         tenantContextService.SetCurrentTenantId(headerTenantIdInt);
                     }
+                }
+                else
+                {
+                    // Default tenant ID for backwards compatibility with existing data
+                    tenantContextService.SetCurrentTenantId(1);
                 }
             }
 
