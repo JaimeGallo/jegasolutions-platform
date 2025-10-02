@@ -47,10 +47,7 @@ const AIReportsModule = () => {
       </p>
       
       <button
-        onClick={(e) => {
-          e.stopPropagation();
-          setIsVideoOpen(true);
-        }}
+        onClick={() => setIsVideoOpen(true)}
         className="inline-flex items-center space-x-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all duration-300 hover:scale-105 shadow-md hover:shadow-lg"
       >
         <Play className="w-5 h-5" />
