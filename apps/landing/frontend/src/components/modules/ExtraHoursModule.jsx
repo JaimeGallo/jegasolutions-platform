@@ -108,7 +108,7 @@ const ExtraHoursModule = () => {
       <VideoModal
         isOpen={isVideoOpen}
         onClose={() => setIsVideoOpen(false)}
-        videoUrl="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        videoUrl="/videos/ModuloExtraHours.mp4"
         title="Demo - Gestión de Horas Extra"
       />
     </>

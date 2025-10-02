@@ -110,7 +110,7 @@ const AIReportsModule = () => {
       <VideoModal
         isOpen={isVideoOpen}
         onClose={() => setIsVideoOpen(false)}
-        videoUrl="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        videoUrl="/videos/ModuloInformes.mp4"
         title="Demo - Reportes con IA"
       />
     </>
