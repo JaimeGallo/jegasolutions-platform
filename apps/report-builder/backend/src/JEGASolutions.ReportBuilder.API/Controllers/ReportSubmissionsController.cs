@@ -50,7 +50,7 @@ namespace JEGASolutions.ReportBuilder.API.Controllers
                     PeriodStart = s.PeriodStart,
                     PeriodEnd = s.PeriodEnd,
                     CreatedAt = s.CreatedAt,
-                    UpdatedAt = s.UpdatedAt
+                    UpdatedAt = s.UpdatedAt ?? s.CreatedAt
                 }).ToList();
 
                 return Ok(submissionDtos);
@@ -93,7 +93,7 @@ namespace JEGASolutions.ReportBuilder.API.Controllers
                     PeriodStart = submission.PeriodStart,
                     PeriodEnd = submission.PeriodEnd,
                     CreatedAt = submission.CreatedAt,
-                    UpdatedAt = submission.UpdatedAt
+                    UpdatedAt = submission.UpdatedAt ?? submission.CreatedAt
                 };
 
                 return Ok(result);
@@ -141,7 +141,7 @@ namespace JEGASolutions.ReportBuilder.API.Controllers
                     PeriodStart = submission.PeriodStart,
                     PeriodEnd = submission.PeriodEnd,
                     CreatedAt = submission.CreatedAt,
-                    UpdatedAt = submission.UpdatedAt
+                    UpdatedAt = submission.UpdatedAt ?? submission.CreatedAt
                 };
 
                 return CreatedAtAction(nameof(GetReportSubmission), new { id = submission.Id }, result);

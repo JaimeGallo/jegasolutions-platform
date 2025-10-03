@@ -39,7 +39,7 @@ namespace JEGASolutions.ReportBuilder.API.Controllers
                     AreaId = t.AreaId,
                     AreaName = t.Area?.Name,
                     CreatedAt = t.CreatedAt,
-                    UpdatedAt = t.UpdatedAt
+                    UpdatedAt = t.UpdatedAt ?? t.CreatedAt
                 }).ToList();
 
                 return Ok(templateDtos);
@@ -70,7 +70,7 @@ namespace JEGASolutions.ReportBuilder.API.Controllers
                     AreaName = template.Area?.Name,
                     Configuration = template.Configuration,
                     CreatedAt = template.CreatedAt,
-                    UpdatedAt = template.UpdatedAt
+                    UpdatedAt = template.UpdatedAt ?? template.CreatedAt
                 };
 
                 return Ok(result);
@@ -106,7 +106,7 @@ namespace JEGASolutions.ReportBuilder.API.Controllers
                     AreaId = t.AreaId,
                     AreaName = t.Area?.Name,
                     CreatedAt = t.CreatedAt,
-                    UpdatedAt = t.UpdatedAt
+                    UpdatedAt = t.UpdatedAt ?? t.CreatedAt
                 }).ToList();
 
                 return Ok(templateDtos);
@@ -137,7 +137,7 @@ namespace JEGASolutions.ReportBuilder.API.Controllers
                     AreaName = template.Area?.Name,
                     Configuration = template.Configuration,
                     CreatedAt = template.CreatedAt,
-                    UpdatedAt = template.UpdatedAt
+                    UpdatedAt = template.UpdatedAt ?? template.CreatedAt
                 };
 
                 return CreatedAtAction(nameof(GetTemplate), new { id = template.Id }, result);
