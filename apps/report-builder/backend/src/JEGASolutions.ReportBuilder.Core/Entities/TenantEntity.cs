@@ -8,17 +8,14 @@ namespace JEGASolutions.ReportBuilder.Core.Entities
     public abstract class TenantEntity
     {
         [Required]
-        public int TenantId { get; set; }
+        public int TenantId { get; set; } = 1; // Default to tenant 1 for single-tenant MVP
         
         [Required]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         
-        [Required]
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? UpdatedAt { get; set; } // Nullable
         
-        public DateTime? DeletedAt { get; set; }
-        
-        public bool IsDeleted => DeletedAt.HasValue;
+        public DateTime? DeletedAt { get; set; } // Nullable (soft delete)
         
         public void MarkAsUpdated()
         {

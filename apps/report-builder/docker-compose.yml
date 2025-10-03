@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: reportbuilder-postgres
+    environment:
+      POSTGRES_DB: reportbuilderdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: jega40
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db-init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - reportbuilder-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: reportbuilder-backend
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - DB_HOST=postgres
+      - DB_NAME=reportbuilderdb
+      - DB_USER=postgres
+      - DB_PASSWORD=jega40
+      - JWT_SECRET=${JWT_SECRET:-SuperClaveUltraSecretaParaReportes123456789RdollarTpercentU!}
+      - JWT_ISSUER=${JWT_ISSUER:-ReportBuilderAPI}
+      - JWT_AUDIENCE=${JWT_AUDIENCE:-report-builder-client}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-placeholder}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+    ports:
+      - "5000:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - reportbuilder-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: reportbuilder-frontend
+    environment:
+      - VITE_API_URL=http://localhost:5000/api
+    ports:
+      - "3001:3001"
+    depends_on:
+      - backend
+    networks:
+      - reportbuilder-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  reportbuilder-network:
+    driver: bridge
+

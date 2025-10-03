@@ -56,3 +56,8 @@ project.assets.json
 *.ide
 *.nupkg
 *.snupkg
+# Temporary test files
+apps/report-builder/consolidated-template.json
+apps/report-builder/backend/GenerateHash.csx
+apps/report-builder/db-scripts-manual/
+

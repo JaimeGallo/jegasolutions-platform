@@ -6,6 +6,7 @@ using JEGASolutions.ReportBuilder.Data;
 using JEGASolutions.ReportBuilder.Core.Interfaces;
 using JEGASolutions.ReportBuilder.Infrastructure.Repositories;
 using JEGASolutions.ReportBuilder.Core.Services;
+using JEGASolutions.ReportBuilder.Infrastructure.Services;
 using JEGASolutions.ReportBuilder.Infrastructure.Services.AI;
 using Azure.AI.OpenAI;
 
@@ -33,11 +34,18 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Register repositories
 builder.Services.AddScoped<ITemplateRepository, TemplateRepository>();
 builder.Services.AddScoped<IReportSubmissionRepository, ReportSubmissionRepository>();
+builder.Services.AddScoped<IUserRepository, JEGASolutions.ReportBuilder.Infrastructure.Repositories.UserRepository>();
+builder.Services.AddScoped<IAreaRepository, AreaRepository>();
+builder.Services.AddScoped<IConsolidatedTemplateRepository, ConsolidatedTemplateRepository>();
+builder.Services.AddScoped<IConsolidatedTemplateSectionRepository, ConsolidatedTemplateSectionRepository>();
+builder.Services.AddScoped<IExcelUploadRepository, ExcelUploadRepository>();
 
 // Register services
 builder.Services.AddScoped<ITemplateService, TemplateService>();
 builder.Services.AddScoped<IReportSubmissionService, ReportSubmissionService>();
 builder.Services.AddScoped<IAIAnalysisService, OpenAIService>();
+builder.Services.AddScoped<IAuthService, JEGASolutions.ReportBuilder.Infrastructure.Services.AuthService>();
+builder.Services.AddScoped<IConsolidatedTemplateService, ConsolidatedTemplateService>();
 
 // Register OpenAI client
 builder.Services.AddSingleton<OpenAIClient>(provider =>
@@ -93,6 +101,60 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// Apply migrations automatically in Development
+if (app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    
+    logger.LogInformation("Checking database connection...");
+    
+    // Wait for database to be ready (retry logic)
+    var retryCount = 0;
+    var maxRetries = 10;
+    var delayMs = 2000;
+    
+    while (retryCount < maxRetries)
+    {
+        try
+        {
+            if (dbContext.Database.CanConnect())
+            {
+                logger.LogInformation("Database connection successful");
+                break;
+            }
+        }
+        catch (Exception ex)
+        {
+            retryCount++;
+            logger.LogWarning("Database connection attempt {Retry}/{MaxRetries} failed: {Error}", 
+                retryCount, maxRetries, ex.Message);
+            
+            if (retryCount >= maxRetries)
+            {
+                logger.LogError("Failed to connect to database after {MaxRetries} attempts", maxRetries);
+                throw;
+            }
+            
+            await Task.Delay(delayMs);
+        }
+    }
+    
+    // Apply pending migrations
+    logger.LogInformation("Applying database migrations...");
+    try
+    {
+        await dbContext.Database.MigrateAsync();
+        logger.LogInformation("Database migrations applied successfully");
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error applying database migrations");
+        throw;
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
