@@ -46,6 +46,7 @@ builder.Services.AddScoped<IReportSubmissionService, ReportSubmissionService>();
 builder.Services.AddScoped<IAIAnalysisService, OpenAIService>();
 builder.Services.AddScoped<IAuthService, JEGASolutions.ReportBuilder.Infrastructure.Services.AuthService>();
 builder.Services.AddScoped<IConsolidatedTemplateService, ConsolidatedTemplateService>();
+builder.Services.AddScoped<IExcelProcessorService, ExcelProcessorService>();
 
 // Register OpenAI client
 builder.Services.AddSingleton<OpenAIClient>(provider =>
@@ -54,6 +55,49 @@ builder.Services.AddSingleton<OpenAIClient>(provider =>
                  builder.Configuration["OpenAI:ApiKey"];
     return new OpenAIClient(apiKey);
 });
+
+// Register HttpClient for AI services
+builder.Services.AddHttpClient();
+
+// Register AI providers
+builder.Services.AddScoped<IAIProvider, OpenAIProviderService>(provider =>
+{
+    var httpClientFactory = provider.GetRequiredService<IHttpClientFactory>();
+    var httpClient = httpClientFactory.CreateClient();
+    var config = provider.GetRequiredService<IConfiguration>();
+    var logger = provider.GetRequiredService<ILogger<OpenAIProviderService>>();
+    return new OpenAIProviderService(httpClient, config, logger);
+});
+
+builder.Services.AddScoped<IAIProvider, AnthropicService>(provider =>
+{
+    var httpClientFactory = provider.GetRequiredService<IHttpClientFactory>();
+    var httpClient = httpClientFactory.CreateClient();
+    var config = provider.GetRequiredService<IConfiguration>();
+    var logger = provider.GetRequiredService<ILogger<AnthropicService>>();
+    return new AnthropicService(httpClient, config, logger);
+});
+
+builder.Services.AddScoped<IAIProvider, DeepSeekService>(provider =>
+{
+    var httpClientFactory = provider.GetRequiredService<IHttpClientFactory>();
+    var httpClient = httpClientFactory.CreateClient();
+    var config = provider.GetRequiredService<IConfiguration>();
+    var logger = provider.GetRequiredService<ILogger<DeepSeekService>>();
+    return new DeepSeekService(httpClient, config, logger);
+});
+
+builder.Services.AddScoped<IAIProvider, GroqService>(provider =>
+{
+    var httpClientFactory = provider.GetRequiredService<IHttpClientFactory>();
+    var httpClient = httpClientFactory.CreateClient();
+    var config = provider.GetRequiredService<IConfiguration>();
+    var logger = provider.GetRequiredService<ILogger<GroqService>>();
+    return new GroqService(httpClient, config, logger);
+});
+
+// Register MultiAI coordinator service
+builder.Services.AddScoped<IMultiAIService, MultiAIService>();
 
 // Configure JWT Authentication
 builder.Services.AddAuthentication(options =>
