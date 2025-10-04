@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "react-query";
-import { Plus, Edit, Trash2, Eye } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, FileText } from "lucide-react";
 import { templateService } from "../services/templateService";
 import { toast } from "react-toastify";
 

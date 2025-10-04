@@ -6,6 +6,10 @@ import {
   Brain,
   Settings,
   LogOut,
+  FolderKanban,
+  CheckSquare,
+  Upload,
+  Layers,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useTenant } from "../contexts/TenantContext";
@@ -17,7 +21,11 @@ const Sidebar = () => {
   const navigation = [
     { name: "Dashboard", href: "/", icon: Home },
     { name: "Templates", href: "/templates", icon: FileText },
+    { name: "Hybrid Builder", href: "/hybrid-builder", icon: Layers },
     { name: "Reports", href: "/reports", icon: BarChart3 },
+    { name: "Consolidated", href: "/consolidated-templates", icon: FolderKanban },
+    { name: "My Tasks", href: "/my-tasks", icon: CheckSquare },
+    { name: "Excel Upload", href: "/excel-uploads", icon: Upload },
     { name: "AI Analysis", href: "/ai-analysis", icon: Brain },
   ];
 

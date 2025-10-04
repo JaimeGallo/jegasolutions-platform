@@ -14,6 +14,10 @@ import TemplatesPage from "./pages/TemplatesPage";
 import ReportsPage from "./pages/ReportsPage";
 import AIAnalysisPage from "./pages/AIAnalysisPage";
 import TemplateEditorPage from "./pages/TemplateEditorPage";
+import ConsolidatedTemplatesPage from "./pages/ConsolidatedTemplatesPage";
+import MyTasksPage from "./pages/MyTasksPage";
+import ExcelUploadsPage from "./pages/ExcelUploadsPage";
+import HybridTemplateBuilderPageOptimized from "./pages/HybridTemplateBuilderPageOptimized";
 
 // Components
 import PrivateRoute from "./components/PrivateRoute";
@@ -39,6 +43,34 @@ function App() {
               <Routes>
                 <Route path="/login" element={<LoginPage />} />
 
+                {/* Template Editor - Fullscreen sin sidebar */}
+                <Route
+                  path="/templates/create"
+                  element={
+                    <PrivateRoute>
+                      <TemplateEditorPage />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/templates/:id/edit"
+                  element={
+                    <PrivateRoute>
+                      <TemplateEditorPage />
+                    </PrivateRoute>
+                  }
+                />
+
+                {/* Hybrid Builder - Fullscreen sin sidebar */}
+                <Route
+                  path="/hybrid-builder"
+                  element={
+                    <PrivateRoute>
+                      <HybridTemplateBuilderPageOptimized />
+                    </PrivateRoute>
+                  }
+                />
+
                 <Route
                   path="/"
                   element={
@@ -49,19 +81,17 @@ function App() {
                 >
                   <Route index element={<DashboardPage />} />
                   <Route path="templates" element={<TemplatesPage />} />
-                  <Route
-                    path="templates/create"
-                    element={<TemplateEditorPage />}
-                  />
-                  <Route
-                    path="templates/:id/edit"
-                    element={<TemplateEditorPage />}
-                  />
                   <Route path="reports" element={<ReportsPage />} />
                   <Route
                     path="reports/:id/analysis"
                     element={<AIAnalysisPage />}
                   />
+                  <Route
+                    path="consolidated-templates"
+                    element={<ConsolidatedTemplatesPage />}
+                  />
+                  <Route path="my-tasks" element={<MyTasksPage />} />
+                  <Route path="excel-uploads" element={<ExcelUploadsPage />} />
                 </Route>
               </Routes>
 

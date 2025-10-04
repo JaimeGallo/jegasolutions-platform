@@ -40,4 +40,12 @@
   .label {
     @apply block text-sm font-medium text-gray-700 mb-1;
   }
+
+  /* Grid background for preview */
+  .bg-grid {
+    background-image: 
+      linear-gradient(to right, #e5e7eb 1px, transparent 1px),
+      linear-gradient(to bottom, #e5e7eb 1px, transparent 1px);
+    background-size: 10mm 10mm;
+  }
 }
