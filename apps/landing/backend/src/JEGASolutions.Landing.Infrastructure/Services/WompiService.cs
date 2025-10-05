@@ -53,59 +53,58 @@ public class WompiService : IWompiService
         // ===========================================
         // CONFIGURACIÓN WOMPI PRODUCCIÓN
         // ===========================================
-        // Cargar claves de configuración (appsettings.json o variables de entorno)
         _privateKey = _configuration["Wompi__PrivateKey"] ?? _configuration["Wompi:PrivateKey"] 
             ?? throw new ArgumentNullException("Wompi__PrivateKey", "Wompi private key is required. Configure in appsettings.json or environment variables.");
         
         _publicKey = _configuration["Wompi__PublicKey"] ?? _configuration["Wompi:PublicKey"] 
             ?? throw new ArgumentNullException("Wompi__PublicKey", "Wompi public key is required. Configure in appsettings.json or environment variables.");
 
-        // URL BASE - PRODUCCIÓN (no sandbox)
-        // Para volver a sandbox, cambiar a: "https://sandbox.wompi.co/v1/"
         var baseUrl = _configuration["Wompi__BaseUrl"] ?? _configuration["Wompi:BaseUrl"] ?? "https://production.wompi.co/v1/";
         _httpClient.BaseAddress = new Uri(baseUrl);
 
-        // Log para confirmar configuración
         var environment = baseUrl.Contains("sandbox") ? "SANDBOX" : "PRODUCTION";
         _logger.LogInformation("Wompi configured with Environment: {Environment}, BaseUrl: {BaseUrl}", environment, baseUrl);
     }
 
     public async Task<WompiTransactionResponseDto> CreateTransactionAsync(Payment payment)
-{
-    _logger.LogInformation("Creating Wompi checkout for reference {Reference}", payment.Reference);
-
-    var redirectUrl = _configuration["Wompi:RedirectUrl"] 
-        ?? "https://jegasolutions-platform-frontend-95l.vercel.app/payment-success";
-
-    // Calcular amount en centavos
-    var amountInCents = (int)(payment.Amount * 100);
-    
-    // GENERAR FIRMA DE INTEGRIDAD
-    var signatureString = $"{payment.Reference}{amountInCents}COP{_privateKey}";
-    var integrity = ComputeSignature(signatureString, _privateKey);
-
-    // Generar URL de checkout CON FIRMA
-    var checkoutUrl = "https://checkout.wompi.co/p/" +
-        $"?public-key={_publicKey}" +
-        $"&currency=COP" +
-        $"&amount-in-cents={amountInCents}" +
-        $"&reference={payment.Reference}" +
-        $"&signature:integrity={integrity}" +  // ← FIRMA AGREGADA
-        $"&redirect-url={Uri.EscapeDataString(redirectUrl)}";
-
-    var shortId = $"WMP_{DateTime.Now:yyyyMMdd}_{payment.Id}";
-
-    var result = new WompiTransactionResponseDto
     {
-        Id = shortId,
-        Reference = payment.Reference,
-        CheckoutUrl = checkoutUrl,
-        Status = "PENDING"
-    };
+        _logger.LogInformation("Creating Wompi checkout for reference {Reference}", payment.Reference);
 
-    _logger.LogInformation("Checkout URL created: {CheckoutUrl}", checkoutUrl);
-    return result;
-}
+        var redirectUrl = _configuration["Wompi:RedirectUrl"] 
+            ?? "https://jegasolutions-platform-frontend-95l.vercel.app/payment-success";
+
+        var amountInCents = (int)(payment.Amount * 100);
+        
+        // Generar firma de integridad para checkout (SHA256 simple, NO HMAC)
+        var integrity = ComputeCheckoutIntegrity(
+            payment.Reference, 
+            amountInCents, 
+            "COP", 
+            _privateKey
+        );
+
+        // Generar URL de checkout con firma
+        var checkoutUrl = "https://checkout.wompi.co/p/" +
+            $"?public-key={_publicKey}" +
+            $"&currency=COP" +
+            $"&amount-in-cents={amountInCents}" +
+            $"&reference={payment.Reference}" +
+            $"&signature:integrity={integrity}" +
+            $"&redirect-url={Uri.EscapeDataString(redirectUrl)}";
+
+        var shortId = $"WMP_{DateTime.Now:yyyyMMdd}_{payment.Id}";
+
+        var result = new WompiTransactionResponseDto
+        {
+            Id = shortId,
+            Reference = payment.Reference,
+            CheckoutUrl = checkoutUrl,
+            Status = "PENDING"
+        };
+
+        _logger.LogInformation("Checkout URL created: {CheckoutUrl}", checkoutUrl);
+        return result;
+    }
 
     public Task<bool> ValidateWebhookSignature(string payload, string signature)
     {
@@ -154,7 +153,6 @@ public class WompiService : IWompiService
 
             if (payment == null)
             {
-                // Create new payment record if not exists
                 payment = new Payment
                 {
                     Reference = payload.Data.Reference,
@@ -172,7 +170,6 @@ public class WompiService : IWompiService
             }
             else
             {
-                // Update existing payment
                 payment.Status = MapWompiStatus(payload.Data.Status);
                 payment.WompiTransactionId = payload.Data.Id;
                 payment.UpdatedAt = DateTime.UtcNow;
@@ -182,13 +179,10 @@ public class WompiService : IWompiService
 
             await _unitOfWork.SaveChangesAsync();
 
-            // If payment is approved, trigger tenant creation
             if (payment.Status == "APPROVED")
             {
                 _logger.LogInformation("Payment APPROVED - triggering tenant creation for {Reference}", payment.Reference);
                 await CreateTenantFromPayment(payment);
-
-                // Send payment confirmation email
                 await _emailService.SendPaymentConfirmationAsync(payment);
             }
 
@@ -207,7 +201,6 @@ public class WompiService : IWompiService
         {
             _logger.LogInformation("Creating tenant for payment {Reference}", payment.Reference);
 
-            // Extract module information from reference
             var referenceParts = payment.Reference.Split('-');
             if (referenceParts.Length < 3)
             {
@@ -221,19 +214,16 @@ public class WompiService : IWompiService
             _logger.LogInformation("Extracted modules: {Modules}, deployment type: {DeploymentType}", 
                 string.Join(", ", modules), deploymentType);
 
-            // Generate subdomain
             var baseSubdomain = _passwordGenerator.GenerateSubdomain(payment.CustomerName ?? payment.CustomerEmail ?? "cliente");
             var subdomain = baseSubdomain;
             var counter = 1;
 
-            // Check if subdomain already exists
             while (await _tenantRepository.FirstOrDefaultAsync(t => t.Subdomain == subdomain) != null)
             {
                 subdomain = $"{baseSubdomain}{counter}";
                 counter++;
             }
 
-            // Create tenant
             var tenant = new Tenant
             {
                 CompanyName = payment.CustomerName ?? "Cliente",
@@ -246,7 +236,6 @@ public class WompiService : IWompiService
 
             _logger.LogInformation("Created tenant {TenantId} with subdomain {Subdomain}", tenant.Id, tenant.Subdomain);
 
-            // Add modules to tenant
             foreach (var module in modules)
             {
                 var tenantModule = new TenantModule
@@ -259,7 +248,6 @@ public class WompiService : IWompiService
                 _logger.LogInformation("Added module {ModuleName} to tenant {TenantId}", module, tenant.Id);
             }
 
-            // Create admin user for the tenant
             var temporaryPassword = _passwordGenerator.GenerateSecurePassword();
             var nameParts = (payment.CustomerName ?? "").Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
             var firstName = nameParts.FirstOrDefault() ?? "Admin";
@@ -276,13 +264,10 @@ public class WompiService : IWompiService
             };
 
             await _userRepository.AddAsync(adminUser);
-
-            // Save all changes in a single transaction
             await _unitOfWork.SaveChangesAsync();
 
             _logger.LogInformation("Created admin user {UserId} for tenant {TenantId}", adminUser.Id, tenant.Id);
 
-            // Send welcome email with credentials
             try
             {
                 await _emailService.SendWelcomeEmailAsync(tenant, temporaryPassword);
@@ -314,6 +299,17 @@ public class WompiService : IWompiService
         };
     }
 
+    // Firma de integridad para CHECKOUT WIDGET (SHA256 simple)
+    private string ComputeCheckoutIntegrity(string reference, int amountInCents, string currency, string integrityKey)
+    {
+        var concatenated = $"{reference}{amountInCents}{currency}{integrityKey}";
+        
+        using var sha256 = SHA256.Create();
+        var hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(concatenated));
+        return Convert.ToHexString(hash).ToLower();
+    }
+
+    // Firma para WEBHOOKS (HMAC-SHA256)
     private string ComputeSignature(string payload, string privateKey)
     {
         using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(privateKey));
