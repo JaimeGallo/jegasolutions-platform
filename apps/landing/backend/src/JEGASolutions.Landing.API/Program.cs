@@ -104,17 +104,30 @@ builder.Services.AddAuthentication(options =>
 // HTTP Clients
 builder.Services.AddHttpClient<IWompiService, WompiService>();
 
-// CORS
+// CORS - ACTUALIZADO para permitir todos los deployments de Vercel
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins(
-            "http://localhost:3000",
-            "https://jegasolutions-platform-frontend.vercel.app",
-            "https://jegasolutions-platform-frontend-95l.vercel.app",
-            "https://jegasolutions-platform-fronten-git-8a293d-jaime-gallos-projects.vercel.app"
-        )
+        policy.SetIsOriginAllowed(origin =>
+        {
+            if (string.IsNullOrEmpty(origin))
+                return false;
+
+            // Permitir localhost (desarrollo)
+            if (origin.StartsWith("http://localhost:") || origin.StartsWith("https://localhost:"))
+                return true;
+
+            // Permitir TODOS los deployments de Vercel
+            if (origin.Contains(".vercel.app"))
+                return true;
+
+            // Permitir dominio personalizado si lo tienes
+            if (origin == "https://jegasolutions.co" || origin == "https://www.jegasolutions.co")
+                return true;
+
+            return false;
+        })
         .AllowAnyMethod()
         .AllowAnyHeader()
         .AllowCredentials();
