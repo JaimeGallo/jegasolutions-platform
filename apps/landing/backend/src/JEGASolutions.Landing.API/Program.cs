@@ -28,32 +28,40 @@ builder.Services.AddSwaggerGen();
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 
 // Database
-// 🔹 Si Render define DATABASE_URL, conviértela al formato Npgsql
 var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
 if (!string.IsNullOrEmpty(databaseUrl))
 {
     try
     {
-        var uri = new Uri(databaseUrl);
+        // Ejemplo de DATABASE_URL:
+        // postgresql://usuario:contraseña@host:5432/base?sslmode=require
+        var cleanedUrl = databaseUrl.Replace("postgres://", "postgresql://"); // compatibilidad
+        var uri = new Uri(cleanedUrl);
+
         var userInfo = uri.UserInfo.Split(':');
+        var username = Uri.UnescapeDataString(userInfo[0]);
+        var password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : string.Empty;
         var host = uri.Host;
-        var port = uri.Port != -1 ? uri.Port : 5432;
+        var port = uri.Port > 0 ? uri.Port : 5432;
         var database = uri.AbsolutePath.TrimStart('/');
-        var username = userInfo[0];
-        var password = userInfo.Length > 1 ? userInfo[1] : string.Empty;
+
+        // ⚡ Procesar parámetros de la query string (?sslmode=require&foo=bar)
+        var queryParams = System.Web.HttpUtility.ParseQueryString(uri.Query);
+        var sslMode = queryParams["sslmode"] ?? "Require";
 
         var npgsqlConnectionString =
-            $"Host={host};Port={port};Database={database};Username={username};Password={password};SSL Mode=Require;Trust Server Certificate=true";
+            $"Host={host};Port={port};Database={database};Username={username};Password={password};SSL Mode={sslMode};Trust Server Certificate=true";
 
         builder.Configuration["ConnectionStrings:DefaultConnection"] = npgsqlConnectionString;
 
-        Console.WriteLine($"✅ DATABASE_URL detected and parsed for host: {host}");
+        Console.WriteLine($"✅ DATABASE_URL parsed successfully for host: {host}");
     }
     catch (Exception ex)
     {
         Console.WriteLine($"⚠️ Failed to parse DATABASE_URL: {ex.Message}");
     }
 }
+
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString));
 
