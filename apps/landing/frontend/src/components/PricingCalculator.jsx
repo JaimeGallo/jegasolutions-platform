@@ -51,68 +51,83 @@ const PricingCalculator = () => {
     }
   }, [employeeCount, customEmployeeCount, companySize]);
 
-  // 💰 PRECIOS DE PRUEBA - $10 COP CADA MÓDULO
-// ===========================================
-const TESTING_PRICES = {
-  saas: {
-    micro: { min: 10, max: 10 },
-    small: { min: 10, max: 10 },
-    medium: { min: 10, max: 10 },
-    large: { min: 10, max: 10 },
-  },
-  onpremise: {
-    micro: { license: 10, maintenance: 0.2, implementation: 10 },
-    small: { license: 10, maintenance: 0.22, implementation: 10 },
-    medium: { license: 10, maintenance: 0.23, implementation: 10 },
-    large: { license: 10, maintenance: 0.25, implementation: 10 },
-  },
-};
-
-  /*
-  // --- Base de Precios en USD ---
-  // Mantener los precios originales en USD facilita el mantenimiento.
-  const USD_TO_COP_RATE = 4026; // Tasa de cambio usada para la conversión.
-
-  const basePricingUSD = {
+  // ==========================================
+  // 🧪 MODO PRUEBA - TODOS LOS PRECIOS A $10 COP
+  // ==========================================
+  // ⚠️ CONFIGURACIÓN TEMPORAL PARA TESTING
+  // Todos los módulos cuestan $10 COP independientemente del tamaño de empresa
+  
+  const TESTING_PRICES = {
     saas: {
-      micro: { min: 97, max: 139 },
-      small: { min: 157, max: 189 },
-      medium: { min: 199, max: 349 },
-      large: { min: 499, max: 1999 },
+      micro: { min: 10, max: 10 },
+      small: { min: 10, max: 10 },
+      medium: { min: 10, max: 10 },
+      large: { min: 10, max: 10 },
     },
     onpremise: {
-      micro: { license: 5000, maintenance: 0.2, implementation: 2000 },
-      small: { license: 8000, maintenance: 0.22, implementation: 3000 },
-      medium: { license: 15000, maintenance: 0.23, implementation: 5000 },
-      large: { license: 25000, maintenance: 0.25, implementation: 8000 },
+      micro: { license: 10, maintenance: 0, implementation: 10 },
+      small: { license: 10, maintenance: 0, implementation: 10 },
+      medium: { license: 10, maintenance: 0, implementation: 10 },
+      large: { license: 10, maintenance: 0, implementation: 10 },
     },
   };
-
-  // Función para convertir los precios base de USD a COP
-  const convertPricingToCOP = (pricingUSD, rate) => {
-    const converted = JSON.parse(JSON.stringify(pricingUSD)); // Deep copy
-    for (const type in converted) {
-      for (const size in converted[type]) {
-        for (const key in converted[type][size]) {
-          if (key !== "maintenance") {
-            // El mantenimiento es un porcentaje
-            converted[type][size][key] *= rate;
-          }
-        }
-      }
-    }
-    return converted;
-  };
-
-  const basePricing = convertPricingToCOP(basePricingUSD, USD_TO_COP_RATE);
-  
 
   const basePricing = TESTING_PRICES;
 
+  // 🧪 MULTIPLICADORES DE MÓDULOS EN MODO PRUEBA
+  // Fijados en 1.0 para mantener precio único de $10 COP
   const moduleMultipliers = {
     extraHours: { saas: 1.0, onpremise: 1.0 },
-    reports: { saas: 1.3, onpremise: 1.4 }, // Mayor valor por IA
+    reports: { saas: 1.0, onpremise: 1.0 },
   };
+
+  /* ==========================================
+   * 💰 PRECIOS REALES (COMENTADOS TEMPORALMENTE)
+   * ==========================================
+   * Descomentar esta sección cuando se termine el periodo de prueba
+   * 
+   * // --- Tasa de Cambio USD a COP ---
+   * const USD_TO_COP_RATE = 4026;
+   * 
+   * // --- Precios Base en USD ---
+   * const basePricingUSD = {
+   *   saas: {
+   *     micro: { min: 97, max: 139 },     // $390,522 - $559,614 COP
+   *     small: { min: 157, max: 189 },    // $632,082 - $761,094 COP
+   *     medium: { min: 199, max: 349 },   // $801,174 - $1,405,074 COP
+   *     large: { min: 499, max: 1999 },   // $2,008,974 - $8,047,974 COP
+   *   },
+   *   onpremise: {
+   *     micro: { license: 5000, maintenance: 0.2, implementation: 2000 },
+   *     small: { license: 8000, maintenance: 0.22, implementation: 3000 },
+   *     medium: { license: 15000, maintenance: 0.23, implementation: 5000 },
+   *     large: { license: 25000, maintenance: 0.25, implementation: 8000 },
+   *   },
+   * };
+   * 
+   * // --- Conversión a COP ---
+   * const convertPricingToCOP = (pricingUSD, rate) => {
+   *   const converted = JSON.parse(JSON.stringify(pricingUSD));
+   *   for (const type in converted) {
+   *     for (const size in converted[type]) {
+   *       for (const key in converted[type][size]) {
+   *         if (key !== "maintenance") {
+   *           converted[type][size][key] *= rate;
+   *         }
+   *       }
+   *     }
+   *   }
+   *   return converted;
+   * };
+   * 
+   * const basePricing = convertPricingToCOP(basePricingUSD, USD_TO_COP_RATE);
+   * 
+   * // --- Multiplicadores de Módulos Reales ---
+   * const moduleMultipliers = {
+   *   extraHours: { saas: 1.0, onpremise: 1.0 },
+   *   reports: { saas: 1.3, onpremise: 1.4 }, // Mayor valor por IA
+   * };
+   */
 
   const companySizes = {
     micro: { label: "Micro (hasta 10 empleados)", range: [1, 10] },
@@ -167,14 +182,26 @@ const TESTING_PRICES = {
 
       monthlyPrice *= moduleMultiplier;
 
-      const annualPrice = monthlyPrice * 12 * 0.85; // 15% descuento anual
+      // 🧪 MODO PRUEBA: Sin descuento anual ni setup fee
+      const annualPrice = monthlyPrice * 12; // Sin descuento en prueba
+      const setupFee = 10; // Setup también a $10 COP
 
       return {
         monthly: Math.round(monthlyPrice),
         annual: Math.round(annualPrice),
-        setup: 500 * USD_TO_COP_RATE, // Setup en COP
-        total3Years: Math.round(annualPrice * 3 + 500 * USD_TO_COP_RATE),
+        setup: setupFee,
+        total3Years: Math.round(annualPrice * 3 + setupFee),
       };
+
+      /* CÁLCULO REAL (comentado):
+       * const annualPrice = monthlyPrice * 12 * 0.85; // 15% descuento anual
+       * return {
+       *   monthly: Math.round(monthlyPrice),
+       *   annual: Math.round(annualPrice),
+       *   setup: 500 * USD_TO_COP_RATE,
+       *   total3Years: Math.round(annualPrice * 3 + 500 * USD_TO_COP_RATE),
+       * };
+       */
     } else {
       const licensePrice = pricing.license * moduleMultiplier;
       const maintenanceAnnual = licensePrice * pricing.maintenance;
@@ -202,211 +229,236 @@ const TESTING_PRICES = {
 
   const handleCompanySizeChange = (size) => {
     const representativeCounts = {
-      micro: 10,
-      small: 30,
+      micro: 5,
+      small: 25,
       medium: 100,
-      large: 250,
+      large: 500,
     };
+    setCompanySize(size);
     setEmployeeCount(representativeCounts[size]);
     setCustomEmployeeCount("");
   };
 
-  const handleEmployeeCountChange = (value) => {
-    setEmployeeCount(value);
-    setCustomEmployeeCount("");
-  };
-
   const handlePaymentInitiated = (paymentData) => {
-    console.log("Payment initiated:", paymentData);
-    // Aquí se puede agregar tracking de analytics
+    console.log("Payment initiated with data:", paymentData);
   };
-  */
 
   return (
-    <div className="section-with-header bg-gradient-to-br from-blue-400 to-blue-800">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 py-16 px-4">
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-        viewport={{ once: true }}
-        className="relative z-10 bg-white rounded-3xl shadow-2xl p-8 w-full max-w-6xl border border-gray-100"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="max-w-7xl mx-auto"
       >
-        <div className="text-center mb-10">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            Calcula tu <span className="gradient-text">Inversión</span>
-          </h2>
-          <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-            Obtén una cotización personalizada en tiempo real.
+        {/* 🧪 Banner de Modo Prueba */}
+        <div className="mb-8 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-yellow-700">
+                <strong>🧪 MODO PRUEBA ACTIVADO:</strong> Todos los módulos tienen un precio de <strong>$10 COP</strong> para facilitar testing de la plataforma de pagos.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            Calculadora de Precios
+          </h1>
+          <p className="text-xl text-gray-600">
+            Personaliza tu solución según las necesidades de tu empresa
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8 items-start">
-          {/* Configuración */}
-          <div className="lg:col-span-2 grid md:grid-cols-2 gap-6">
-            {/* Deployment Type */}
-            <div className="bg-gray-50 rounded-xl p-4">
-              <h3 className="font-semibold mb-3 flex items-center gap-2 text-gray-800">
-                <Building2 className="w-5 h-5 text-jega-blue-600" />
-                Despliegue
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Panel Izquierdo - Configuración */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Tipo de Despliegue */}
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-blue-600" />
+                Tipo de Despliegue
               </h3>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-4">
                 <button
                   onClick={() => setDeploymentType("saas")}
-                  className={`p-3 rounded-lg border text-center text-sm transition-all h-full ${
+                  className={`p-4 rounded-lg border-2 transition-all ${
                     deploymentType === "saas"
-                      ? "border-jega-blue-500 bg-jega-blue-50 text-jega-blue-700 font-semibold"
-                      : "border-gray-200 hover:border-jega-blue-300"
+                      ? "border-blue-600 bg-blue-50"
+                      : "border-gray-200 hover:border-blue-300"
                   }`}
                 >
-                  <div>
-                    <div className="font-bold">SaaS (Nube)</div>
-                    <div className="text-xs text-gray-500 font-normal mt-1">
-                      Suscripción mensual/anual
-                    </div>
-                  </div>
+                  <Cpu className="w-8 h-8 mx-auto mb-2 text-blue-600" />
+                  <p className="font-semibold">SaaS</p>
+                  <p className="text-sm text-gray-600">Nube (mensual)</p>
                 </button>
                 <button
                   onClick={() => setDeploymentType("onpremise")}
-                  className={`p-3 rounded-lg border text-center text-sm transition-all h-full ${
+                  className={`p-4 rounded-lg border-2 transition-all ${
                     deploymentType === "onpremise"
-                      ? "border-jega-blue-500 bg-jega-blue-50 text-jega-blue-700 font-semibold"
-                      : "border-gray-200 hover:border-jega-blue-300"
+                      ? "border-blue-600 bg-blue-50"
+                      : "border-gray-200 hover:border-blue-300"
                   }`}
                 >
-                  <div>
-                    <div className="font-bold">On-Premise</div>
-                    <div className="text-xs text-gray-500 font-normal mt-1">
-                      Compra única a perpetuidad
-                    </div>
-                  </div>
+                  <Building2 className="w-8 h-8 mx-auto mb-2 text-blue-600" />
+                  <p className="font-semibold">On-Premise</p>
+                  <p className="text-sm text-gray-600">Licencia perpetua</p>
                 </button>
               </div>
             </div>
 
-            {/* Company Size */}
-            <div className="bg-gray-50 rounded-xl p-4">
-              <h3 className="font-semibold mb-3 flex items-center gap-2 text-gray-800">
-                <Users className="w-5 h-5 text-jega-blue-600" />
-                Tamaño
-              </h3>
-              <select
-                value={companySize}
-                onChange={(e) => handleCompanySizeChange(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white"
-              >
-                {Object.entries(companySizes).map(([size, info]) => (
-                  <option key={size} value={size}>
-                    {info.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Modules */}
-            <div className="bg-gray-50 rounded-xl p-4">
-              <h3 className="font-semibold mb-3 flex items-center gap-2 text-gray-800">
-                <Cpu className="w-5 h-5 text-jega-blue-600" />
-                Módulos
-              </h3>
-              <div className="space-y-2">
-                <div
-                  className={`p-2 rounded-lg border-2 cursor-pointer transition-all ${
-                    selectedModules.extraHours
-                      ? "border-green-500 bg-green-50"
-                      : "border-gray-200"
-                  }`}
-                  onClick={() => handleModuleChange("extraHours")}
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
-                        selectedModules.extraHours
-                          ? "bg-green-500 border-green-500"
-                          : "border-gray-300"
-                      }`}
-                    >
-                      {selectedModules.extraHours && (
-                        <Check className="w-3 h-3 text-white" />
-                      )}
-                    </div>
-                    <span className="font-semibold text-sm">
-                      Gestión de Horas Extra
-                    </span>
+            {/* Tamaño de Empresa */}
+            {deploymentType === "saas" && (
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                  <Users className="w-5 h-5 text-blue-600" />
+                  Tamaño de Empresa
+                </h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Número de empleados
+                    </label>
+                    <input
+                      type="number"
+                      value={customEmployeeCount || employeeCount}
+                      onChange={(e) => setCustomEmployeeCount(e.target.value)}
+                      min="1"
+                      max="5000"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Ingrese número de empleados"
+                    />
                   </div>
-                </div>
-                <div
-                  className={`p-2 rounded-lg border-2 cursor-pointer transition-all ${
-                    selectedModules.reports
-                      ? "border-green-500 bg-green-50"
-                      : "border-gray-200"
-                  }`}
-                  onClick={() => handleModuleChange("reports")}
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
-                        selectedModules.reports
-                          ? "bg-green-500 border-green-500"
-                          : "border-gray-300"
-                      }`}
-                    >
-                      {selectedModules.reports && (
-                        <Check className="w-3 h-3 text-white" />
-                      )}
-                    </div>
-                    <span className="font-semibold text-sm">
-                      Reportes con IA
-                    </span>
+                  <div className="grid grid-cols-2 gap-2">
+                    {Object.entries(companySizes).map(([key, { label }]) => (
+                      <button
+                        key={key}
+                        onClick={() => handleCompanySizeChange(key)}
+                        className={`px-3 py-2 text-sm rounded-lg border transition-all ${
+                          companySize === key
+                            ? "bg-blue-600 text-white border-blue-600"
+                            : "bg-white text-gray-700 border-gray-300 hover:border-blue-400"
+                        }`}
+                      >
+                        {label.split("(")[0]}
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
-            </div>
+            )}
 
-            {/* Employee Count */}
-            <div className="bg-gray-50 rounded-xl p-4">
-              <h3 className="font-semibold mb-3 flex items-center gap-2 text-gray-800">
-                <Calculator className="w-5 h-5 text-jega-blue-600" />
-                Empleados
+            {/* Selección de Módulos */}
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                <FileText className="w-5 h-5 text-blue-600" />
+                Módulos Disponibles
               </h3>
-              <div className="space-y-3">
-                <input
-                  type="range"
-                  min="1"
-                  max="500"
-                  value={customEmployeeCount || employeeCount}
-                  onChange={(e) => handleEmployeeCountChange(e.target.value)}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                />
-                <input
-                  type="number"
-                  placeholder="O cantidad personalizada"
-                  value={customEmployeeCount || employeeCount}
-                  onChange={(e) => setCustomEmployeeCount(e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                />
+              <div className="space-y-4">
+                {/* Módulo Extra Hours */}
+                <div
+                  onClick={() => handleModuleChange("extraHours")}
+                  className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                    selectedModules.extraHours
+                      ? "border-green-500 bg-green-50"
+                      : "border-gray-200 hover:border-green-300"
+                  }`}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-5 h-5 text-green-600" />
+                        <h4 className="font-semibold text-lg">
+                          GestorHorasExtra
+                        </h4>
+                        {selectedModules.extraHours && (
+                          <Check className="w-5 h-5 text-green-600" />
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Control completo de horas extra, reportes automáticos y
+                        cumplimiento normativo
+                      </p>
+                      <div className="mt-2 text-xs text-green-700 font-medium">
+                        🧪 PRUEBA: $10 COP {/* REAL: Desde $390,522 COP/mes */}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Módulo Reports */}
+                <div
+                  onClick={() => handleModuleChange("reports")}
+                  className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                    selectedModules.reports
+                      ? "border-purple-500 bg-purple-50"
+                      : "border-gray-200 hover:border-purple-300"
+                  }`}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <FileText className="w-5 h-5 text-purple-600" />
+                        <h4 className="font-semibold text-lg">
+                          ReportBuilder con IA
+                        </h4>
+                        {selectedModules.reports && (
+                          <Check className="w-5 h-5 text-purple-600" />
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Generación automática de reportes con IA, análisis de
+                        Excel y exportación multi-formato
+                      </p>
+                      <div className="mt-2 text-xs text-purple-700 font-medium">
+                        🧪 PRUEBA: $10 COP {/* REAL: Desde $507,678 COP/mes */}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Resultados */}
+          {/* Panel Derecho - Resumen de Precio */}
           <div className="lg:col-span-1">
-            <div className="bg-gradient-to-br from-jega-blue-50 via-jega-indigo-50 to-jega-blue-100 p-6 rounded-2xl border border-jega-blue-200 h-full flex flex-col">
-              <h3 className="text-2xl font-bold mb-4 text-jega-blue-900 flex items-center gap-2">
-                <Calculator className="w-6 h-6" />
+            <div className="bg-white rounded-xl shadow-lg p-6 sticky top-6">
+              <h3 className="text-2xl font-bold mb-6 text-center flex items-center justify-center gap-2">
+                <Calculator className="w-6 h-6 text-blue-600" />
                 Cotización
               </h3>
 
-              {Object.values(selectedModules).some(Boolean) ? (
-                <div className="space-y-4 flex-grow flex flex-col">
-                  <div className="bg-white/60 rounded-lg p-4 flex-grow">
-                    <div className="text-sm text-gray-600 mb-2">
-                      {companySizes[companySize].label} (
-                      {customEmployeeCount
-                        ? parseInt(customEmployeeCount)
-                        : employeeCount}
-                      )
+              {Object.values(selectedModules).some((v) => v) ? (
+                <div className="space-y-6 flex flex-col h-full">
+                  {/* Módulos Seleccionados */}
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="font-semibold text-sm text-gray-700 mb-2">
+                      Módulos seleccionados:
+                    </h4>
+                    <div className="space-y-1 text-sm">
+                      {selectedModules.extraHours && (
+                        <div className="flex items-center gap-2 text-green-700">
+                          <Check className="w-4 h-4" />
+                          <span>GestorHorasExtra</span>
+                        </div>
+                      )}
+                      {selectedModules.reports && (
+                        <div className="flex items-center gap-2 text-purple-700">
+                          <Check className="w-4 h-4" />
+                          <span>ReportBuilder con IA</span>
+                        </div>
+                      )}
                     </div>
+                  </div>
 
+                  {/* Precio */}
+                  <div className="bg-blue-50 rounded-lg p-4 border-2 border-blue-200">
                     {deploymentType === "saas" ? (
                       <div className="space-y-2">
                         <div className="flex justify-between items-baseline">
@@ -416,7 +468,7 @@ const TESTING_PRICES = {
                           </span>
                         </div>
                         <div className="flex justify-between items-baseline text-green-700">
-                          <span>Anual (15% desc.):</span>
+                          <span>Anual:</span>
                           <span className="font-semibold text-lg">
                             {formatCOP(price.annual)}
                           </span>
@@ -489,7 +541,7 @@ const TESTING_PRICES = {
                   {/* Botón de Pago */}
                   {deploymentType === "saas" && (
                     <PaymentButton
-                      amount={price.monthly} // El monto ya está en COP, Wompi lo necesita en centavos
+                      amount={price.monthly}
                       modules={selectedModules}
                       deploymentType={deploymentType}
                       employeeCount={
