@@ -55,16 +55,16 @@ const PricingCalculator = () => {
   // ==========================================
   const TESTING_PRICES = {
     saas: {
-      micro: { min: 10, max: 10 },
-      small: { min: 10, max: 10 },
-      medium: { min: 10, max: 10 },
-      large: { min: 10, max: 10 },
+      micro: { min: 2000, max: 2000 },
+      small: { min: 2000, max: 2000 },
+      medium: { min: 2000, max: 2000 },
+      large: { min: 2000, max: 2000 },
     },
     onpremise: {
-      micro: { license: 10, maintenance: 0, implementation: 10 },
-      small: { license: 10, maintenance: 0, implementation: 10 },
-      medium: { license: 10, maintenance: 0, implementation: 10 },
-      large: { license: 10, maintenance: 0, implementation: 10 },
+      micro: { license: 2000, maintenance: 0, implementation: 2000 },
+      small: { license: 2000, maintenance: 0, implementation: 2000 },
+      medium: { license: 2000, maintenance: 0, implementation: 2000 },
+      large: { license: 2000, maintenance: 0, implementation: 2000 },
     },
   };
 
@@ -238,7 +238,7 @@ const PricingCalculator = () => {
             </div>
             <div className="ml-3">
               <p className="text-sm text-yellow-700">
-                <strong>🧪 MODO PRUEBA ACTIVADO:</strong> Todos los módulos tienen un precio de <strong>$10 COP</strong> para facilitar testing.
+                <strong>🧪 MODO PRUEBA ACTIVADO:</strong> Todos los módulos tienen un precio de <strong>$2,000 COP</strong> para facilitar testing.
               </p>
             </div>
           </div>
@@ -363,7 +363,7 @@ const PricingCalculator = () => {
                         cumplimiento normativo
                       </p>
                       <div className="mt-2 text-xs text-green-700 font-medium">
-                        🧪 PRUEBA: $10 COP
+                        🧪 PRUEBA: $2,000 COP
                       </div>
                     </div>
                   </div>
@@ -394,7 +394,7 @@ const PricingCalculator = () => {
                         Excel y exportación multi-formato
                       </p>
                       <div className="mt-2 text-xs text-purple-700 font-medium">
-                        🧪 PRUEBA: $10 COP
+                        🧪 PRUEBA: $2,000 COP
                       </div>
                     </div>
                   </div>
