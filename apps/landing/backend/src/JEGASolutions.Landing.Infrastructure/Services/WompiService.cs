@@ -73,44 +73,53 @@ public class WompiService : IWompiService
         _logger.LogInformation("Wompi configured with Environment: {Environment}, BaseUrl: {BaseUrl}", environment, baseUrl);
     }
 
-    public async Task<WompiTransactionResponseDto> CreateTransactionAsync(Payment payment)
+   public async Task<WompiTransactionResponseDto> CreateTransactionAsync(Payment payment)
+{
+    _logger.LogInformation("Creating Wompi checkout for reference {Reference}", payment.Reference);
+
+    var redirectUrl = _configuration["Wompi:RedirectUrl"] 
+        ?? "https://jegasolutions-platform-frontend-95l.vercel.app/payment-success";
+
+    var amountInCents = (int)(payment.Amount * 100);
+    
+    // Determinar si estamos en sandbox
+    var baseUrl = _configuration["Wompi__BaseUrl"] ?? _configuration["Wompi:BaseUrl"] ?? "https://production.wompi.co/v1/";
+    var isSandbox = baseUrl.Contains("sandbox");
+    
+    // Construir URL base
+    var checkoutUrl = "https://checkout.wompi.co/p/" +
+        $"?public-key={_publicKey}" +
+        $"&currency=COP" +
+        $"&amount-in-cents={amountInCents}" +
+        $"&reference={payment.Reference}";
+    
+    // Solo agregar firma en producción
+    if (!isSandbox && !string.IsNullOrEmpty(_webhookSecret))
     {
-        _logger.LogInformation("Creating Wompi checkout for reference {Reference}", payment.Reference);
-
-        var redirectUrl = _configuration["Wompi:RedirectUrl"] 
-            ?? "https://jegasolutions-platform-frontend-95l.vercel.app/payment-success";
-
-        var amountInCents = (int)(payment.Amount * 100);
-        
-        // Generar firma de integridad para checkout (SHA256 simple, NO HMAC)
-        var integrity = ComputeCheckoutIntegrity(
-            payment.Reference, 
-            amountInCents, 
-            "COP"
-        );
-
-        // Generar URL de checkout con firma
-        var checkoutUrl = "https://checkout.wompi.co/p/" +
-            $"?public-key={_publicKey}" +
-            $"&currency=COP" +
-            $"&amount-in-cents={amountInCents}" +
-            $"&reference={payment.Reference}" +
-            $"&signature:integrity={integrity}" +
-            $"&redirect-url={Uri.EscapeDataString(redirectUrl)}";
-
-        var shortId = $"WMP_{DateTime.Now:yyyyMMdd}_{payment.Id}";
-
-        var result = new WompiTransactionResponseDto
-        {
-            Id = shortId,
-            Reference = payment.Reference,
-            CheckoutUrl = checkoutUrl,
-            Status = "PENDING"
-        };
-
-        _logger.LogInformation("Checkout URL created: {CheckoutUrl}", checkoutUrl);
-        return result;
+        var integrity = ComputeCheckoutIntegrity(payment.Reference, amountInCents, "COP");
+        checkoutUrl += $"&signature:integrity={integrity}";
+        _logger.LogInformation("Added integrity signature for production");
     }
+    else
+    {
+        _logger.LogInformation("Skipping integrity signature for sandbox");
+    }
+    
+    checkoutUrl += $"&redirect-url={Uri.EscapeDataString(redirectUrl)}";
+
+    var shortId = $"WMP_{DateTime.Now:yyyyMMdd}_{payment.Id}";
+
+    var result = new WompiTransactionResponseDto
+    {
+        Id = shortId,
+        Reference = payment.Reference,
+        CheckoutUrl = checkoutUrl,
+        Status = "PENDING"
+    };
+
+    _logger.LogInformation("Checkout URL created: {CheckoutUrl}", checkoutUrl);
+    return result;
+}
 
     public Task<bool> ValidateWebhookSignature(string payload, string signature)
     {
