@@ -72,137 +72,140 @@ public class WompiService : IWompiService
     }
 
     public async Task<WompiTransactionResponseDto> CreateTransactionAsync(Payment payment)
+{
+    _logger.LogInformation("Creating Wompi transaction for reference {Reference}", payment.Reference);
+
+    try
     {
-        _logger.LogInformation("Creating Wompi transaction for reference {Reference}", payment.Reference);
+        var redirectUrl = _configuration["Wompi:RedirectUrl"] 
+            ?? "https://jegasolutions-platform-frontend-95l.vercel.app/payment-success";
 
-        try
+        var amountInCents = (int)(payment.Amount * 100);
+        var currency = "COP";
+        var reference = payment.Reference;
+
+        var integritySecret = _configuration["Wompi:IntegritySecret"] 
+            ?? _configuration["Wompi__IntegritySecret"];
+
+        if (string.IsNullOrEmpty(integritySecret))
         {
-            var redirectUrl = _configuration["Wompi:RedirectUrl"] 
-                ?? "https://jegasolutions-platform-frontend-95l.vercel.app/payment-success";
-
-            var amountInCents = (int)(payment.Amount * 100);
-            var currency = "COP";
-            var reference = payment.Reference;
-
-            // Obtener el integrity secret
-            var integritySecret = _configuration["Wompi:IntegritySecret"] 
-                ?? _configuration["Wompi__IntegritySecret"];
-
-            // Si no hay integrity secret, usar fallback a URL directa
-            if (string.IsNullOrEmpty(integritySecret))
-            {
-                _logger.LogWarning("Wompi IntegritySecret not configured, using fallback checkout URL");
-                
-                var checkoutUrl = "https://checkout.wompi.co/p/" +
-                    $"?public-key={_publicKey}" +
-                    $"&currency={currency}" +
-                    $"&amount-in-cents={amountInCents}" +
-                    $"&reference={reference}" +
-                    $"&redirect-url={Uri.EscapeDataString(redirectUrl)}";
-
-                return new WompiTransactionResponseDto
-                {
-                    Id = $"WMP_{DateTime.Now:yyyyMMdd}_{payment.Id}",
-                    Reference = reference,
-                    CheckoutUrl = checkoutUrl,
-                    Status = "PENDING"
-                };
-            }
-
-            // Calcular la firma de integridad
-            var signatureString = $"{reference}{amountInCents}{currency}{integritySecret}";
-            var signature = ComputeSHA256(signatureString);
-
-            _logger.LogInformation("Creating transaction with signature for reference {Reference}", reference);
-
-            // Obtener acceptance token
-            var acceptanceToken = await GetAcceptanceTokenAsync();
-
-            // Crear el objeto de la transacción
-            var transactionRequest = new
-            {
-                acceptance_token = acceptanceToken,
-                amount_in_cents = amountInCents,
-                currency = currency,
-                customer_email = payment.CustomerEmail,
-                payment_method = new { },
-                reference = reference,
-                redirect_url = redirectUrl,
-                customer_data = new
-                {
-                    phone_number = payment.CustomerPhone ?? "",
-                    full_name = payment.CustomerName ?? "",
-                    legal_id = "",
-                    legal_id_type = "CC"
-                }
-            };
-
-            var content = new StringContent(
-                JsonSerializer.Serialize(transactionRequest, JsonUtils.GetJsonSerializerOptions()),
-                Encoding.UTF8,
-                "application/json"
-            );
-
-            _httpClient.DefaultRequestHeaders.Clear();
-            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_privateKey}");
-
-            var response = await _httpClient.PostAsync("transactions", content);
-            var responseContent = await response.Content.ReadAsStringAsync();
-
-            if (!response.IsSuccessStatusCode)
-            {
-                _logger.LogError("Wompi transaction creation failed: {StatusCode} - {Response}", 
-                    response.StatusCode, responseContent);
-                
-                // Fallback a URL directa
-                var checkoutUrl = "https://checkout.wompi.co/p/" +
-                    $"?public-key={_publicKey}" +
-                    $"&currency={currency}" +
-                    $"&amount-in-cents={amountInCents}" +
-                    $"&reference={reference}" +
-                    $"&redirect-url={Uri.EscapeDataString(redirectUrl)}";
-
-                _logger.LogWarning("Using fallback checkout URL due to API error");
-
-                return new WompiTransactionResponseDto
-                {
-                    Id = $"WMP_{DateTime.Now:yyyyMMdd}_{payment.Id}",
-                    Reference = reference,
-                    CheckoutUrl = checkoutUrl,
-                    Status = "PENDING"
-                };
-            }
-
-            var wompiResponse = JsonSerializer.Deserialize<WompiApiResponseDto>(
-                responseContent, 
-                JsonUtils.GetJsonSerializerOptions()
-            );
-
-            if (wompiResponse?.Data == null)
-            {
-                throw new Exception("Invalid response from Wompi API");
-            }
-
-            var widgetUrl = $"https://checkout.wompi.co/l/{wompiResponse.Data.Id}";
-
-            _logger.LogInformation("Transaction created successfully: {TransactionId}, Widget URL: {Url}", 
-                wompiResponse.Data.Id, widgetUrl);
+            _logger.LogWarning("Wompi IntegritySecret not configured, using fallback checkout URL");
+            
+            var checkoutUrl = "https://checkout.wompi.co/p/" +
+                $"?public-key={_publicKey}" +
+                $"&currency={currency}" +
+                $"&amount-in-cents={amountInCents}" +
+                $"&reference={reference}" +
+                $"&redirect-url={Uri.EscapeDataString(redirectUrl)}";
 
             return new WompiTransactionResponseDto
             {
-                Id = wompiResponse.Data.Id ?? "",
-                Reference = wompiResponse.Data.Reference ?? "",
-                CheckoutUrl = widgetUrl,
-                Status = wompiResponse.Data.Status?.ToUpper() ?? "PENDING"
+                Id = $"WMP_{DateTime.Now:yyyyMMdd}_{payment.Id}",
+                Reference = reference,
+                CheckoutUrl = checkoutUrl,
+                Status = "PENDING"
             };
         }
-        catch (Exception ex)
+
+        var signatureString = $"{reference}{amountInCents}{currency}{integritySecret}";
+        var signature = ComputeSHA256(signatureString);
+
+        _logger.LogInformation("Creating transaction with signature for reference {Reference}", reference);
+
+        var acceptanceToken = await GetAcceptanceTokenAsync();
+
+        // Crear customer_data solo si hay teléfono válido
+        object? customerData = null;
+        if (!string.IsNullOrEmpty(payment.CustomerPhone) && payment.CustomerPhone.Length >= 10)
         {
-            _logger.LogError(ex, "Error creating Wompi transaction for reference {Reference}", 
-                payment.Reference);
-            throw;
+            customerData = new
+            {
+                phone_number = payment.CustomerPhone,
+                full_name = payment.CustomerName ?? "Cliente",
+                legal_id = "",
+                legal_id_type = "CC"
+            };
         }
+
+        // Crear el objeto de la transacción
+        var transactionRequest = new
+        {
+            acceptance_token = acceptanceToken,
+            amount_in_cents = amountInCents,
+            currency = currency,
+            customer_email = payment.CustomerEmail,
+            payment_method = new { },
+            reference = reference,
+            redirect_url = redirectUrl,
+            customer_data = customerData  // Será null si no hay teléfono válido
+        };
+
+        var content = new StringContent(
+            JsonSerializer.Serialize(transactionRequest, JsonUtils.GetJsonSerializerOptions()),
+            Encoding.UTF8,
+            "application/json"
+        );
+
+        _httpClient.DefaultRequestHeaders.Clear();
+        _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_privateKey}");
+
+        var response = await _httpClient.PostAsync("transactions", content);
+        var responseContent = await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogError("Wompi transaction creation failed: {StatusCode} - {Response}", 
+                response.StatusCode, responseContent);
+            
+            // Fallback a URL directa
+            var checkoutUrl = "https://checkout.wompi.co/p/" +
+                $"?public-key={_publicKey}" +
+                $"&currency={currency}" +
+                $"&amount-in-cents={amountInCents}" +
+                $"&reference={reference}" +
+                $"&redirect-url={Uri.EscapeDataString(redirectUrl)}";
+
+            _logger.LogWarning("Using fallback checkout URL due to API error");
+
+            return new WompiTransactionResponseDto
+            {
+                Id = $"WMP_{DateTime.Now:yyyyMMdd}_{payment.Id}",
+                Reference = reference,
+                CheckoutUrl = checkoutUrl,
+                Status = "PENDING"
+            };
+        }
+
+        var wompiResponse = JsonSerializer.Deserialize<WompiApiResponseDto>(
+            responseContent, 
+            JsonUtils.GetJsonSerializerOptions()
+        );
+
+        if (wompiResponse?.Data == null)
+        {
+            throw new Exception("Invalid response from Wompi API");
+        }
+
+        var widgetUrl = $"https://checkout.wompi.co/l/{wompiResponse.Data.Id}";
+
+        _logger.LogInformation("Transaction created successfully: {TransactionId}, Widget URL: {Url}", 
+            wompiResponse.Data.Id, widgetUrl);
+
+        return new WompiTransactionResponseDto
+        {
+            Id = wompiResponse.Data.Id ?? "",
+            Reference = wompiResponse.Data.Reference ?? "",
+            CheckoutUrl = widgetUrl,
+            Status = wompiResponse.Data.Status?.ToUpper() ?? "PENDING"
+        };
     }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Error creating Wompi transaction for reference {Reference}", 
+            payment.Reference);
+        throw;
+    }
+}
 
    public Task<bool> ValidateWebhookSignature(string payload, string signature)
 {
