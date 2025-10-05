@@ -28,6 +28,32 @@ builder.Services.AddSwaggerGen();
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 
 // Database
+// 🔹 Si Render define DATABASE_URL, conviértela al formato Npgsql
+var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+if (!string.IsNullOrEmpty(databaseUrl))
+{
+    try
+    {
+        var uri = new Uri(databaseUrl);
+        var userInfo = uri.UserInfo.Split(':');
+        var host = uri.Host;
+        var port = uri.Port != -1 ? uri.Port : 5432;
+        var database = uri.AbsolutePath.TrimStart('/');
+        var username = userInfo[0];
+        var password = userInfo.Length > 1 ? userInfo[1] : string.Empty;
+
+        var npgsqlConnectionString =
+            $"Host={host};Port={port};Database={database};Username={username};Password={password};SSL Mode=Require;Trust Server Certificate=true";
+
+        builder.Configuration["ConnectionStrings:DefaultConnection"] = npgsqlConnectionString;
+
+        Console.WriteLine($"✅ DATABASE_URL detected and parsed for host: {host}");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"⚠️ Failed to parse DATABASE_URL: {ex.Message}");
+    }
+}
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString));
 
