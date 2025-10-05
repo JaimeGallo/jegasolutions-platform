@@ -71,35 +71,41 @@ public class WompiService : IWompiService
     }
 
     public async Task<WompiTransactionResponseDto> CreateTransactionAsync(Payment payment)
+{
+    _logger.LogInformation("Creating Wompi checkout for reference {Reference}", payment.Reference);
+
+    var redirectUrl = _configuration["Wompi:RedirectUrl"] 
+        ?? "https://jegasolutions-platform-frontend-95l.vercel.app/payment-success";
+
+    // Calcular amount en centavos
+    var amountInCents = (int)(payment.Amount * 100);
+    
+    // GENERAR FIRMA DE INTEGRIDAD
+    var signatureString = $"{payment.Reference}{amountInCents}COP{_privateKey}";
+    var integrity = ComputeSignature(signatureString, _privateKey);
+
+    // Generar URL de checkout CON FIRMA
+    var checkoutUrl = "https://checkout.wompi.co/p/" +
+        $"?public-key={_publicKey}" +
+        $"&currency=COP" +
+        $"&amount-in-cents={amountInCents}" +
+        $"&reference={payment.Reference}" +
+        $"&signature:integrity={integrity}" +  // ← FIRMA AGREGADA
+        $"&redirect-url={Uri.EscapeDataString(redirectUrl)}";
+
+    var shortId = $"WMP_{DateTime.Now:yyyyMMdd}_{payment.Id}";
+
+    var result = new WompiTransactionResponseDto
     {
-        _logger.LogInformation("Creating Wompi checkout for reference {Reference}", payment.Reference);
+        Id = shortId,
+        Reference = payment.Reference,
+        CheckoutUrl = checkoutUrl,
+        Status = "PENDING"
+    };
 
-        // URL de redirección después del pago - VERCEL DEVELOPMENT
-        var redirectUrl = _configuration["Wompi:RedirectUrl"] 
-            ?? "https://jegasolutions-platform-frontend-95l.vercel.app/payment-success";
-
-        // Generar URL de checkout directa
-        var checkoutUrl = "https://checkout.wompi.co/p/" +
-            $"?public-key={_publicKey}" +
-            $"&currency=COP" +
-            $"&amount-in-cents={payment.Amount * 100}" +
-            $"&reference={payment.Reference}" +
-            $"&redirect-url={Uri.EscapeDataString(redirectUrl)}";
-
-        // Generar un ID corto para BD (máximo 18 caracteres)
-        var shortId = $"WMP_{DateTime.Now:yyyyMMdd}_{payment.Id}";
-
-        var result = new WompiTransactionResponseDto
-        {
-            Id = shortId,
-            Reference = payment.Reference,
-            CheckoutUrl = checkoutUrl,
-            Status = "PENDING"
-        };
-
-        _logger.LogInformation("Checkout URL created: {CheckoutUrl}", checkoutUrl);
-        return result;
-    }
+    _logger.LogInformation("Checkout URL created: {CheckoutUrl}", checkoutUrl);
+    return result;
+}
 
     public Task<bool> ValidateWebhookSignature(string payload, string signature)
     {
