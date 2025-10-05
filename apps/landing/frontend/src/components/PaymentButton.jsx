@@ -48,7 +48,9 @@ const PaymentButton = ({
 
     try {
       const paymentData = {
-        amount: amount,
+        // 🔹 Monto de prueba para integración (usar 10 COP temporalmente)
+// amount: amount,
+amount: 10,
         reference: generateReference(),
         redirectUrl: `${window.location.origin}/payment-success`,
         customerData: {
