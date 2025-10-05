@@ -26,6 +26,7 @@ public class WompiService : IWompiService
     private readonly IPasswordGenerator _passwordGenerator;
     private readonly string _privateKey;
     private readonly string _publicKey;
+    private readonly string _webhookSecret;
 
     public WompiService(
         HttpClient httpClient,
@@ -62,6 +63,12 @@ public class WompiService : IWompiService
         var baseUrl = _configuration["Wompi__BaseUrl"] ?? _configuration["Wompi:BaseUrl"] ?? "https://production.wompi.co/v1/";
         _httpClient.BaseAddress = new Uri(baseUrl);
 
+         _webhookSecret = _configuration["Wompi__WebhookSecret"] ?? _configuration["Wompi:WebhookSecret"]
+        ?? _privateKey; // Fallback a private key
+    
+    _logger.LogInformation("Wompi WebhookSecret configured: {Configured}", 
+        !string.IsNullOrEmpty(_webhookSecret) ? "Yes" : "No");
+
         var environment = baseUrl.Contains("sandbox") ? "SANDBOX" : "PRODUCTION";
         _logger.LogInformation("Wompi configured with Environment: {Environment}, BaseUrl: {BaseUrl}", environment, baseUrl);
     }
@@ -79,8 +86,7 @@ public class WompiService : IWompiService
         var integrity = ComputeCheckoutIntegrity(
             payment.Reference, 
             amountInCents, 
-            "COP", 
-            _privateKey
+            "COP"
         );
 
         // Generar URL de checkout con firma
@@ -300,14 +306,20 @@ public class WompiService : IWompiService
     }
 
     // Firma de integridad para CHECKOUT WIDGET (SHA256 simple)
-    private string ComputeCheckoutIntegrity(string reference, int amountInCents, string currency, string integrityKey)
-    {
-        var concatenated = $"{reference}{amountInCents}{currency}{integrityKey}";
-        
-        using var sha256 = SHA256.Create();
-        var hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(concatenated));
-        return Convert.ToHexString(hash).ToLower();
-    }
+   private string ComputeCheckoutIntegrity(string reference, int amountInCents, string currency)
+{
+    var concatenated = $"{reference}{amountInCents}{currency}{_webhookSecret}";
+    
+    _logger.LogInformation("Computing integrity for: ref={Reference}, amount={Amount}, currency={Currency}", 
+        reference, amountInCents, currency);
+    
+    using var sha256 = SHA256.Create();
+    var hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(concatenated));
+    var result = Convert.ToHexString(hash).ToLower();
+    
+    _logger.LogInformation("Integrity hash: {Hash}", result);
+    return result;
+}
 
     // Firma para WEBHOOKS (HMAC-SHA256)
     private string ComputeSignature(string payload, string privateKey)
