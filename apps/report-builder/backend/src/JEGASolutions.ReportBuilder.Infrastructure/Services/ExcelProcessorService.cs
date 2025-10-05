@@ -274,7 +274,7 @@ namespace JEGASolutions.ReportBuilder.Infrastructure.Services
             }
         }
 
-        public async Task<object> ExtractDataFromExcelAsync(Stream excelStream, string fileName)
+        public Task<object> ExtractDataFromExcelAsync(Stream excelStream, string fileName)
         {
             try
             {
@@ -288,9 +288,12 @@ namespace JEGASolutions.ReportBuilder.Infrastructure.Services
 
                 // Leer headers (primera fila)
                 var firstRow = worksheet.FirstRowUsed();
-                foreach (var cell in firstRow.CellsUsed())
+                if (firstRow != null)
                 {
-                    headers.Add(cell.GetValue<string>());
+                    foreach (var cell in firstRow.CellsUsed())
+                    {
+                        headers.Add(cell.GetValue<string>());
+                    }
                 }
 
                 // Leer datos (resto de filas)
@@ -336,7 +339,7 @@ namespace JEGASolutions.ReportBuilder.Infrastructure.Services
                 _logger.LogInformation("Datos extraídos exitosamente: {Rows} filas, {Columns} columnas", 
                     data.Count, headers.Count);
 
-                return result;
+                return Task.FromResult<object>(result);
             }
             catch (Exception ex)
             {
@@ -370,7 +373,7 @@ namespace JEGASolutions.ReportBuilder.Infrastructure.Services
                 }
 
                 var firstRow = worksheet.FirstRowUsed();
-                if (!firstRow.CellsUsed().Any())
+                if (firstRow == null || !firstRow.CellsUsed().Any())
                 {
                     errors.Add("La primera fila (headers) está vacía");
                     return (false, errors);
@@ -482,16 +485,19 @@ namespace JEGASolutions.ReportBuilder.Infrastructure.Services
             };
 
             if (extractedData is Dictionary<string, object> dataDict)
-            {
-                if (dataDict.ContainsKey("totalRows"))
-                    metadata["totalRows"] = dataDict["totalRows"];
-                if (dataDict.ContainsKey("totalColumns"))
-                    metadata["totalColumns"] = dataDict["totalColumns"];
-                if (dataDict.ContainsKey("sheetName"))
-                    metadata["sheetName"] = dataDict["sheetName"];
-            }
-
-            return metadata;
+    {
+        metadata["totalRows"] = dataDict.ContainsKey("totalRows") 
+            ? dataDict["totalRows"] 
+            : 0;
+        
+        metadata["totalColumns"] = dataDict.ContainsKey("headers") && 
+                                   dataDict["headers"] is List<string> headers
+            ? headers.Count 
+            : 0;
+    }
+    
+    metadata["extractedAt"] = DateTime.UtcNow;
+    return metadata;
         }
     }
 }

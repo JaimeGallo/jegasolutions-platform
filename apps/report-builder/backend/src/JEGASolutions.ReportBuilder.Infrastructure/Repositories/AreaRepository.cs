@@ -14,10 +14,10 @@ namespace JEGASolutions.ReportBuilder.Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task<Area?> GetByIdAsync(int id)
+        public async Task<Area?> GetByIdAsync(int id, int tenantId)
         {
             return await _context.Areas
-                .FirstOrDefaultAsync(a => a.Id == id && a.DeletedAt == null);
+                .FirstOrDefaultAsync(a => a.Id == id && a.TenantId == tenantId && a.DeletedAt == null);
         }
 
         public async Task<List<Area>> GetAllAsync(int tenantId)
@@ -45,7 +45,7 @@ namespace JEGASolutions.ReportBuilder.Infrastructure.Repositories
 
         public async Task<bool> DeleteAsync(int id, int tenantId)
         {
-            var area = await GetByIdAsync(id);
+            var area = await GetByIdAsync(id,tenantId);
             if (area == null || area.TenantId != tenantId) return false;
 
             area.MarkAsDeleted();

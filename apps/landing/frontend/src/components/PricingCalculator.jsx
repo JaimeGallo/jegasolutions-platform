@@ -51,6 +51,24 @@ const PricingCalculator = () => {
     }
   }, [employeeCount, customEmployeeCount, companySize]);
 
+  // 💰 PRECIOS DE PRUEBA - $10 COP CADA MÓDULO
+// ===========================================
+const TESTING_PRICES = {
+  saas: {
+    micro: { min: 10, max: 10 },
+    small: { min: 10, max: 10 },
+    medium: { min: 10, max: 10 },
+    large: { min: 10, max: 10 },
+  },
+  onpremise: {
+    micro: { license: 10, maintenance: 0.2, implementation: 10 },
+    small: { license: 10, maintenance: 0.22, implementation: 10 },
+    medium: { license: 10, maintenance: 0.23, implementation: 10 },
+    large: { license: 10, maintenance: 0.25, implementation: 10 },
+  },
+};
+
+  /*
   // --- Base de Precios en USD ---
   // Mantener los precios originales en USD facilita el mantenimiento.
   const USD_TO_COP_RATE = 4026; // Tasa de cambio usada para la conversión.
@@ -87,6 +105,9 @@ const PricingCalculator = () => {
   };
 
   const basePricing = convertPricingToCOP(basePricingUSD, USD_TO_COP_RATE);
+  */
+
+  const basePricing = TESTING_PRICES;
 
   const moduleMultipliers = {
     extraHours: { saas: 1.0, onpremise: 1.0 },

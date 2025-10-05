@@ -163,7 +163,7 @@ namespace JEGASolutions.ReportBuilder.Infrastructure.Services
             var sectionDtos = new List<ConsolidatedTemplateSectionDto>();
             foreach (var section in sections)
             {
-                var area = await _areaRepository.GetByIdAsync(section.AreaId);
+                var area = await _areaRepository.GetByIdAsync(section.AreaId, tenantId);
                 var completedBy = section.CompletedByUserId.HasValue 
                     ? await _userRepository.GetByIdAsync(section.CompletedByUserId.Value)
                     : null;
@@ -230,7 +230,7 @@ namespace JEGASolutions.ReportBuilder.Infrastructure.Services
 
             section = await _sectionRepository.CreateAsync(section);
 
-            var area = await _areaRepository.GetByIdAsync(section.AreaId);
+            var area = await _areaRepository.GetByIdAsync(section.AreaId, tenantId);
 
             return new ConsolidatedTemplateSectionDto
             {
@@ -321,7 +321,7 @@ namespace JEGASolutions.ReportBuilder.Infrastructure.Services
             var section = await _sectionRepository.GetByIdAsync(sectionId, tenantId);
             if (section == null) return null;
 
-            var area = await _areaRepository.GetByIdAsync(section.AreaId);
+            var area = await _areaRepository.GetByIdAsync(section.AreaId, tenantId);
             var completedBy = section.CompletedByUserId.HasValue 
                 ? await _userRepository.GetByIdAsync(section.CompletedByUserId.Value)
                 : null;
@@ -375,7 +375,7 @@ namespace JEGASolutions.ReportBuilder.Infrastructure.Services
 
             await _sectionRepository.UpdateAsync(section);
 
-            var area = await _areaRepository.GetByIdAsync(section.AreaId);
+            var area = await _areaRepository.GetByIdAsync(section.AreaId, tenantId);
 
             return new ConsolidatedTemplateSectionDto
             {
@@ -437,7 +437,7 @@ namespace JEGASolutions.ReportBuilder.Infrastructure.Services
             var result = new List<ConsolidatedTemplateSectionDto>();
             foreach (var section in sections)
             {
-                var area = await _areaRepository.GetByIdAsync(section.AreaId);
+                var area = await _areaRepository.GetByIdAsync(section.AreaId, tenantId);
                 
                 result.Add(new ConsolidatedTemplateSectionDto
                 {
@@ -461,7 +461,7 @@ namespace JEGASolutions.ReportBuilder.Infrastructure.Services
             var result = new List<ConsolidatedTemplateSectionDto>();
             foreach (var section in sections)
             {
-                var area = await _areaRepository.GetByIdAsync(section.AreaId);
+                var area = await _areaRepository.GetByIdAsync(section.AreaId, tenantId);
                 
                 result.Add(new ConsolidatedTemplateSectionDto
                 {

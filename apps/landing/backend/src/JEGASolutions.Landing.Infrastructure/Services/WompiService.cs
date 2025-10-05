@@ -49,78 +49,34 @@ public class WompiService : IWompiService
         _emailService = emailService;
         _logger = logger;
         _passwordGenerator = passwordGenerator;
-        // _privateKey = _configuration["Wompi__PrivateKey"] ?? throw new ArgumentNullException("Wompi__PrivateKey");
-        // _publicKey = _configuration["Wompi__PublicKey"] ?? throw new ArgumentNullException("Wompi__PublicKey");
 
-        // var baseUrl = _configuration["Wompi__BaseUrl"] ?? "https://sandbox.wompi.co/v1/";
-        // _httpClient.BaseAddress = new Uri(baseUrl);
+        // ===========================================
+        // CONFIGURACIÓN WOMPI PRODUCCIÓN
+        // ===========================================
+        // Cargar claves de configuración (appsettings.json o variables de entorno)
+        _privateKey = _configuration["Wompi__PrivateKey"] ?? _configuration["Wompi:PrivateKey"] 
+            ?? throw new ArgumentNullException("Wompi__PrivateKey", "Wompi private key is required. Configure in appsettings.json or environment variables.");
+        
+        _publicKey = _configuration["Wompi__PublicKey"] ?? _configuration["Wompi:PublicKey"] 
+            ?? throw new ArgumentNullException("Wompi__PublicKey", "Wompi public key is required. Configure in appsettings.json or environment variables.");
 
-        // // Log para confirmar el ambiente
-        // _logger.LogInformation("Wompi configured with BaseUrl: {BaseUrl}", baseUrl);
-        // _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _publicKey);
-        // Cambio temporal para debugging:
-        _privateKey = _configuration["Wompi__PrivateKey"] ?? _configuration["Wompi:PrivateKey"] ?? "prv_test_gDNaHJY811U2thwFtYXj4vYEqTEgbBo5";
-        _publicKey = _configuration["Wompi__PublicKey"] ?? _configuration["Wompi:PublicKey"] ?? "pub_test_igA8bSRjaCepeDu8dKix4fSF0KgsUqeu";
-
-        var baseUrl = _configuration["Wompi__BaseUrl"] ?? _configuration["Wompi:BaseUrl"] ?? "https://sandbox.wompi.co/v1/";
+        // URL BASE - PRODUCCIÓN (no sandbox)
+        // Para volver a sandbox, cambiar a: "https://sandbox.wompi.co/v1/"
+        var baseUrl = _configuration["Wompi__BaseUrl"] ?? _configuration["Wompi:BaseUrl"] ?? "https://production.wompi.co/v1/";
         _httpClient.BaseAddress = new Uri(baseUrl);
 
-        // Log para debugging
-        _logger.LogInformation("Wompi configured with BaseUrl: {BaseUrl}, PrivateKey exists: {PrivateKeyExists}",
-            baseUrl, !string.IsNullOrEmpty(_privateKey));
-
+        // Log para confirmar configuración
+        var environment = baseUrl.Contains("sandbox") ? "SANDBOX" : "PRODUCTION";
+        _logger.LogInformation("Wompi configured with Environment: {Environment}, BaseUrl: {BaseUrl}", environment, baseUrl);
     }
-
-    // public async Task<WompiTransactionResponseDto> CreateTransactionAsync(Payment payment)
-    // {
-    //     _logger.LogInformation("Creating Wompi payment source for reference {Reference}", payment.Reference);
-
-    //     var request = new HttpRequestMessage(HttpMethod.Post, "payment_sources");
-    //     request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _publicKey); // Usar pública para payment sources
-
-    //     var redirectUrl = _configuration["Wompi:RedirectUrl"] ?? $"https://jegasolutions-platform-frontend.vercel.app/payment-success";
-
-    //     var requestPayload = new
-    //     {
-    //         type = "CARD",
-    //         currency = "COP",
-    //         amount_in_cents = (int)(payment.Amount * 100),
-    //         reference = payment.Reference,
-    //         customer_email = payment.CustomerEmail,
-    //         customer_data = new
-    //         {
-    //             full_name = payment.CustomerName,
-    //             phone_number = payment.CustomerPhone,
-    //             email = payment.CustomerEmail
-    //         },
-    //         redirect_url = redirectUrl
-    //     };
-
-    //     var jsonPayload = JsonSerializer.Serialize(requestPayload, JsonUtils.GetJsonSerializerOptions());
-    //     request.Content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-
-    //     var response = await _httpClient.SendAsync(request);
-    //     var responseBody = await response.Content.ReadAsStringAsync();
-
-    //     if (!response.IsSuccessStatusCode)
-    //     {
-    //         _logger.LogError("Error creating Wompi payment source for reference {Reference}. Status: {StatusCode}, Body: {Body}",
-    //             payment.Reference, response.StatusCode, responseBody);
-    //         throw new ApplicationException($"Error from Wompi API: {responseBody}");
-    //     }
-
-    //     var wompiResponse = JsonSerializer.Deserialize<WompiApiResponse<WompiTransactionResponseDto>>(responseBody, JsonUtils.GetJsonSerializerOptions());
-    //     var transactionData = wompiResponse?.Data ?? throw new ApplicationException("Failed to deserialize Wompi payment source response.");
-
-    //     // Para payment sources, la URL de checkout es diferente
-    //     transactionData.CheckoutUrl = $"https://checkout.wompi.co/p/{transactionData.Id}";
-
-    //     return transactionData;
-    // }
 
     public async Task<WompiTransactionResponseDto> CreateTransactionAsync(Payment payment)
     {
         _logger.LogInformation("Creating Wompi checkout for reference {Reference}", payment.Reference);
+
+        // URL de redirección después del pago - VERCEL DEVELOPMENT
+        var redirectUrl = _configuration["Wompi:RedirectUrl"] 
+            ?? "https://jegasolutions-platform-frontend-95l.vercel.app/payment-success";
 
         // Generar URL de checkout directa
         var checkoutUrl = "https://checkout.wompi.co/p/" +
@@ -128,14 +84,14 @@ public class WompiService : IWompiService
             $"&currency=COP" +
             $"&amount-in-cents={payment.Amount * 100}" +
             $"&reference={payment.Reference}" +
-            $"&redirect-url={Uri.EscapeDataString("https://jegasolutions-platform-frontend.vercel.app/payment-success")}";
+            $"&redirect-url={Uri.EscapeDataString(redirectUrl)}";
 
         // Generar un ID corto para BD (máximo 18 caracteres)
         var shortId = $"WMP_{DateTime.Now:yyyyMMdd}_{payment.Id}";
 
         var result = new WompiTransactionResponseDto
         {
-            Id = shortId, // ID corto que quepa en la BD
+            Id = shortId,
             Reference = payment.Reference,
             CheckoutUrl = checkoutUrl,
             Status = "PENDING"
@@ -149,6 +105,13 @@ public class WompiService : IWompiService
     {
         var expectedSignature = ComputeSignature(payload, _privateKey);
         var isValid = signature.Equals(expectedSignature, StringComparison.OrdinalIgnoreCase);
+        
+        if (!isValid)
+        {
+            _logger.LogWarning("Invalid webhook signature. Expected: {Expected}, Received: {Received}", 
+                expectedSignature, signature);
+        }
+        
         return Task.FromResult(isValid);
     }
 
@@ -167,8 +130,9 @@ public class WompiService : IWompiService
 
             return null;
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Error getting transaction status for {TransactionId}", transactionId);
             return null;
         }
     }
@@ -177,6 +141,9 @@ public class WompiService : IWompiService
     {
         try
         {
+            _logger.LogInformation("Processing webhook for reference {Reference}, status {Status}", 
+                payload.Data.Reference, payload.Data.Status);
+
             var payment = await _paymentRepository.FirstOrDefaultAsync(p => p.Reference == payload.Data.Reference);
 
             if (payment == null)
@@ -195,6 +162,7 @@ public class WompiService : IWompiService
                 };
 
                 await _paymentRepository.AddAsync(payment);
+                _logger.LogInformation("Created new payment record for reference {Reference}", payment.Reference);
             }
             else
             {
@@ -203,6 +171,7 @@ public class WompiService : IWompiService
                 payment.WompiTransactionId = payload.Data.Id;
                 payment.UpdatedAt = DateTime.UtcNow;
                 await _paymentRepository.UpdateAsync(payment);
+                _logger.LogInformation("Updated payment record for reference {Reference}", payment.Reference);
             }
 
             await _unitOfWork.SaveChangesAsync();
@@ -210,6 +179,7 @@ public class WompiService : IWompiService
             // If payment is approved, trigger tenant creation
             if (payment.Status == "APPROVED")
             {
+                _logger.LogInformation("Payment APPROVED - triggering tenant creation for {Reference}", payment.Reference);
                 await CreateTenantFromPayment(payment);
 
                 // Send payment confirmation email
@@ -242,6 +212,9 @@ public class WompiService : IWompiService
             var modules = referenceParts.Skip(1).TakeWhile(p => p != "saas" && p != "onpremise").ToList();
             var deploymentType = referenceParts.FirstOrDefault(p => p == "saas" || p == "onpremise") ?? "saas";
 
+            _logger.LogInformation("Extracted modules: {Modules}, deployment type: {DeploymentType}", 
+                string.Join(", ", modules), deploymentType);
+
             // Generate subdomain
             var baseSubdomain = _passwordGenerator.GenerateSubdomain(payment.CustomerName ?? payment.CustomerEmail ?? "cliente");
             var subdomain = baseSubdomain;
@@ -250,7 +223,6 @@ public class WompiService : IWompiService
             // Check if subdomain already exists
             while (await _tenantRepository.FirstOrDefaultAsync(t => t.Subdomain == subdomain) != null)
             {
-                // Generate a new subdomain if it exists
                 subdomain = $"{baseSubdomain}{counter}";
                 counter++;
             }
@@ -278,6 +250,7 @@ public class WompiService : IWompiService
                     Status = "ACTIVE"
                 };
                 await _tenantModuleRepository.AddAsync(tenantModule);
+                _logger.LogInformation("Added module {ModuleName} to tenant {TenantId}", module, tenant.Id);
             }
 
             // Create admin user for the tenant
