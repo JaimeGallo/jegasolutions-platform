@@ -1,0 +1,229 @@
+/* 
+  Animaciones personalizadas para los componentes mejorados
+  
+*/
+
+/* Fade In Animation */
+@keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  
+  .animate-fadeIn {
+    animation: fadeIn 0.3s ease-out;
+  }
+  
+  /* Slide Up Animation */
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .animate-slideUp {
+    animation: slideUp 0.4s ease-out;
+  }
+  
+  /* Slide Down Animation */
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .animate-slideDown {
+    animation: slideDown 0.3s ease-out;
+  }
+  
+  /* Scale In Animation */
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  
+  .animate-scaleIn {
+    animation: scaleIn 0.3s ease-out;
+  }
+  
+  /* Pulse Animation (for loading states) */
+  @keyframes pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+  
+  .animate-pulse-slow {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  /* Bounce Animation (for attention) */
+  @keyframes bounce {
+    0%,
+    100% {
+      transform: translateY(0);
+      animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+    }
+    50% {
+      transform: translateY(-10px);
+      animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+    }
+  }
+  
+  .animate-bounce-once {
+    animation: bounce 1s;
+  }
+  
+  /* Shake Animation (for errors) */
+  @keyframes shake {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    10%,
+    30%,
+    50%,
+    70%,
+    90% {
+      transform: translateX(-5px);
+    }
+    20%,
+    40%,
+    60%,
+    80% {
+      transform: translateX(5px);
+    }
+  }
+  
+  .animate-shake {
+    animation: shake 0.5s;
+  }
+  
+  /* Gradient Animation (for backgrounds) */
+  @keyframes gradientShift {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+  
+  .animate-gradient {
+    background-size: 200% 200%;
+    animation: gradientShift 3s ease infinite;
+  }
+  
+  /* Progress Bar Fill Animation */
+  @keyframes progressFill {
+    from {
+      width: 0%;
+    }
+  }
+  
+  .animate-progressFill {
+    animation: progressFill 1s ease-out;
+  }
+  
+  /* Utilities for transitions */
+  .transition-all-slow {
+    transition: all 0.5s ease;
+  }
+  
+  .transition-transform {
+    transition: transform 0.3s ease;
+  }
+  
+  /* Hover effects */
+  .hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1),
+      0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+  
+  .hover-glow:hover {
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+  }
+  
+  /* Loading shimmer effect */
+  @keyframes shimmer {
+    0% {
+      background-position: -1000px 0;
+    }
+    100% {
+      background-position: 1000px 0;
+    }
+  }
+  
+  .animate-shimmer {
+    animation: shimmer 2s infinite linear;
+    background: linear-gradient(
+      to right,
+      #eff6ff 4%,
+      #dbeafe 25%,
+      #eff6ff 36%
+    );
+    background-size: 1000px 100%;
+  }
+  
+  /* Card entrance animations with delays */
+  .card-entrance-1 {
+    animation: slideUp 0.4s ease-out 0.1s both;
+  }
+  
+  .card-entrance-2 {
+    animation: slideUp 0.4s ease-out 0.2s both;
+  }
+  
+  .card-entrance-3 {
+    animation: slideUp 0.4s ease-out 0.3s both;
+  }
+  
+  .card-entrance-4 {
+    animation: slideUp 0.4s ease-out 0.4s both;
+  }
+  
+  .card-entrance-5 {
+    animation: slideUp 0.4s ease-out 0.5s both;
+  }
+  
+  .card-entrance-6 {
+    animation: slideUp 0.4s ease-out 0.6s both;
+  }
+  
+  /* Responsive animations - reducir en móviles */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
