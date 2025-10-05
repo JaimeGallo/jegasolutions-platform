@@ -25,6 +25,7 @@ public class WompiService : IWompiService
     private readonly IPasswordGenerator _passwordGenerator;
     private readonly string _privateKey;
     private readonly string _publicKey;
+    private readonly string _eventsSecret;
 
     public WompiService(
         HttpClient httpClient,
@@ -54,6 +55,12 @@ public class WompiService : IWompiService
         
         _publicKey = _configuration["Wompi__PublicKey"] ?? _configuration["Wompi:PublicKey"] 
             ?? throw new ArgumentNullException("Wompi__PublicKey", "Wompi public key is required.");
+
+            _eventsSecret = _configuration["Wompi__EventsSecret"] ?? _configuration["Wompi:EventsSecret"]
+        ?? _privateKey; // Fallback al private key si no existe
+    
+    _logger.LogInformation("Wompi Events Secret configured: {Configured}", 
+        !string.IsNullOrEmpty(_eventsSecret) ? "Yes" : "No");
 
         var baseUrl = _configuration["Wompi__BaseUrl"] ?? _configuration["Wompi:BaseUrl"] 
             ?? "https://production.wompi.co/v1/";
@@ -197,19 +204,20 @@ public class WompiService : IWompiService
         }
     }
 
-    public Task<bool> ValidateWebhookSignature(string payload, string signature)
+   public Task<bool> ValidateWebhookSignature(string payload, string signature)
+{
+    // Usar Events Secret en lugar de Private Key
+    var expectedSignature = ComputeHMAC(payload, _eventsSecret);
+    var isValid = signature.Equals(expectedSignature, StringComparison.OrdinalIgnoreCase);
+    
+    if (!isValid)
     {
-        var expectedSignature = ComputeHMAC(payload, _privateKey);
-        var isValid = signature.Equals(expectedSignature, StringComparison.OrdinalIgnoreCase);
-        
-        if (!isValid)
-        {
-            _logger.LogWarning("Invalid webhook signature. Expected: {Expected}, Received: {Received}", 
-                expectedSignature, signature);
-        }
-        
-        return Task.FromResult(isValid);
+        _logger.LogWarning("Invalid webhook signature. Expected: {Expected}, Received: {Received}", 
+            expectedSignature, signature);
     }
+    
+    return Task.FromResult(isValid);
+}
 
     public async Task<WompiTransactionResponseDto?> GetTransactionStatus(string transactionId)
     {
