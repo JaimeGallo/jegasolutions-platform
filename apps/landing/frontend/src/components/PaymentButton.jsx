@@ -47,19 +47,9 @@ const PaymentButton = ({
     }
 
     try {
-      // ==========================================
-      // 🧪 MODO PRUEBA - MONTO FIJO DE $10 COP
-      // ==========================================
-      // Se ignora el monto calculado y se usa $10 COP para testing
-      const testAmount = 10;
-
-      /* PRODUCCIÓN (comentado):
-       * const productionAmount = amount;
-       * Descomentar cuando se termine el periodo de prueba
-       */
-
+      // 🧪 MODO PRUEBA - Usar el amount que viene (ya es $10)
       const paymentData = {
-        amount: testAmount, // 🧪 Monto de prueba
+        amount: amount, // Ya viene como 10 desde PricingCalculator
         reference: generateReference(),
         redirectUrl: `${window.location.origin}/payment-success`,
         customerData: {
@@ -70,11 +60,10 @@ const PaymentButton = ({
         customerEmail: customerData.email,
         customerFullName: customerData.fullName,
         phoneNumber: customerData.phone,
-        taxInCents: Math.round(testAmount * 0.19 * 100), // IVA 19% sobre monto de prueba
+        taxInCents: Math.round(amount * 0.19 * 100), // IVA 19%
       };
 
-      console.log("🧪 PAGO DE PRUEBA - Monto: $10 COP");
-      console.log("Payment data:", paymentData);
+      console.log("🧪 PAGO DE PRUEBA - Datos:", paymentData);
 
       onPaymentInitiated?.(paymentData);
       await createPayment(paymentData);
@@ -103,7 +92,7 @@ const PaymentButton = ({
           {/* Banner de Modo Prueba en Modal */}
           <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded-r">
             <p className="text-sm text-yellow-700">
-              <strong>🧪 Modo Prueba:</strong> Monto fijo de $10 COP para testing
+              <strong>🧪 Modo Prueba:</strong> Monto de pago: <strong>{formatCOP(amount)}</strong>
             </p>
           </div>
 
@@ -200,13 +189,22 @@ const PaymentButton = ({
         <span>{isLoading ? "Redirigiendo..." : "Proceder al Pago"}</span>
       </motion.button>
 
-      <div className="text-xs text-gray-500 text-center">
-        <p>🧪 Pago de prueba: $10 COP</p>
+      <div className="text-xs text-gray-500 text-center space-y-1">
+        <p className="font-semibold text-yellow-600">🧪 Modo Prueba: {formatCOP(amount)}</p>
         <p>Pago seguro procesado por Wompi</p>
         <p>Tarjetas de crédito, débito, PSE y efectivo</p>
       </div>
     </div>
   );
+};
+
+// Helper para formatear
+const formatCOP = (value) => {
+  return new Intl.NumberFormat("es-CO", {
+    style: "currency",
+    currency: "COP",
+    minimumFractionDigits: 0,
+  }).format(value);
 };
 
 export default PaymentButton;

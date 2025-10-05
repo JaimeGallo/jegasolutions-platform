@@ -19,7 +19,6 @@ const getCompanySizeForEmployees = (count) => {
   return "large";
 };
 
-// Helper para formatear a pesos colombianos
 const formatCOP = (value) => {
   return new Intl.NumberFormat("es-CO", {
     style: "currency",
@@ -52,11 +51,8 @@ const PricingCalculator = () => {
   }, [employeeCount, customEmployeeCount, companySize]);
 
   // ==========================================
-  // 🧪 MODO PRUEBA - TODOS LOS PRECIOS A $10 COP
+  // 🧪 MODO PRUEBA - PRECIOS A $10 COP
   // ==========================================
-  // ⚠️ CONFIGURACIÓN TEMPORAL PARA TESTING
-  // Todos los módulos cuestan $10 COP independientemente del tamaño de empresa
-  
   const TESTING_PRICES = {
     saas: {
       micro: { min: 10, max: 10 },
@@ -74,28 +70,23 @@ const PricingCalculator = () => {
 
   const basePricing = TESTING_PRICES;
 
-  // 🧪 MULTIPLICADORES DE MÓDULOS EN MODO PRUEBA
-  // Fijados en 1.0 para mantener precio único de $10 COP
   const moduleMultipliers = {
     extraHours: { saas: 1.0, onpremise: 1.0 },
     reports: { saas: 1.0, onpremise: 1.0 },
   };
 
   /* ==========================================
-   * 💰 PRECIOS REALES (COMENTADOS TEMPORALMENTE)
+   * 💰 PRECIOS REALES (COMENTADOS)
    * ==========================================
-   * Descomentar esta sección cuando se termine el periodo de prueba
    * 
-   * // --- Tasa de Cambio USD a COP ---
    * const USD_TO_COP_RATE = 4026;
    * 
-   * // --- Precios Base en USD ---
    * const basePricingUSD = {
    *   saas: {
-   *     micro: { min: 97, max: 139 },     // $390,522 - $559,614 COP
-   *     small: { min: 157, max: 189 },    // $632,082 - $761,094 COP
-   *     medium: { min: 199, max: 349 },   // $801,174 - $1,405,074 COP
-   *     large: { min: 499, max: 1999 },   // $2,008,974 - $8,047,974 COP
+   *     micro: { min: 97, max: 139 },
+   *     small: { min: 157, max: 189 },
+   *     medium: { min: 199, max: 349 },
+   *     large: { min: 499, max: 1999 },
    *   },
    *   onpremise: {
    *     micro: { license: 5000, maintenance: 0.2, implementation: 2000 },
@@ -105,7 +96,6 @@ const PricingCalculator = () => {
    *   },
    * };
    * 
-   * // --- Conversión a COP ---
    * const convertPricingToCOP = (pricingUSD, rate) => {
    *   const converted = JSON.parse(JSON.stringify(pricingUSD));
    *   for (const type in converted) {
@@ -122,10 +112,9 @@ const PricingCalculator = () => {
    * 
    * const basePricing = convertPricingToCOP(basePricingUSD, USD_TO_COP_RATE);
    * 
-   * // --- Multiplicadores de Módulos Reales ---
    * const moduleMultipliers = {
    *   extraHours: { saas: 1.0, onpremise: 1.0 },
-   *   reports: { saas: 1.3, onpremise: 1.4 }, // Mayor valor por IA
+   *   reports: { saas: 1.3, onpremise: 1.4 },
    * };
    */
 
@@ -136,7 +125,6 @@ const PricingCalculator = () => {
     large: { label: "Grande (201+ empleados)", range: [201, 5000] },
   };
 
-  // Calcular precio automáticamente
   const calculatePrice = () => {
     const selectedModulesCount =
       Object.values(selectedModules).filter(Boolean).length;
@@ -156,7 +144,6 @@ const PricingCalculator = () => {
     const pricing = basePricing[deploymentType][sizeForPricing];
     const sizeInfo = companySizes[sizeForPricing];
 
-    // Calcular multiplicador por módulos seleccionados
     let moduleMultiplier = 0;
     if (selectedModules.extraHours)
       moduleMultiplier += moduleMultipliers.extraHours[deploymentType];
@@ -182,9 +169,9 @@ const PricingCalculator = () => {
 
       monthlyPrice *= moduleMultiplier;
 
-      // 🧪 MODO PRUEBA: Sin descuento anual ni setup fee
-      const annualPrice = monthlyPrice * 12; // Sin descuento en prueba
-      const setupFee = 10; // Setup también a $10 COP
+      // 🧪 MODO PRUEBA: Sin descuento
+      const annualPrice = monthlyPrice * 12;
+      const setupFee = 10;
 
       return {
         monthly: Math.round(monthlyPrice),
@@ -192,16 +179,6 @@ const PricingCalculator = () => {
         setup: setupFee,
         total3Years: Math.round(annualPrice * 3 + setupFee),
       };
-
-      /* CÁLCULO REAL (comentado):
-       * const annualPrice = monthlyPrice * 12 * 0.85; // 15% descuento anual
-       * return {
-       *   monthly: Math.round(monthlyPrice),
-       *   annual: Math.round(annualPrice),
-       *   setup: 500 * USD_TO_COP_RATE,
-       *   total3Years: Math.round(annualPrice * 3 + 500 * USD_TO_COP_RATE),
-       * };
-       */
     } else {
       const licensePrice = pricing.license * moduleMultiplier;
       const maintenanceAnnual = licensePrice * pricing.maintenance;
@@ -251,8 +228,8 @@ const PricingCalculator = () => {
         transition={{ duration: 0.5 }}
         className="max-w-7xl mx-auto"
       >
-        {/* 🧪 Banner de Modo Prueba */}
-        <div className="mb-8 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg">
+        {/* Banner de Modo Prueba */}
+        <div className="mb-8 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg shadow-md">
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
@@ -261,7 +238,7 @@ const PricingCalculator = () => {
             </div>
             <div className="ml-3">
               <p className="text-sm text-yellow-700">
-                <strong>🧪 MODO PRUEBA ACTIVADO:</strong> Todos los módulos tienen un precio de <strong>$10 COP</strong> para facilitar testing de la plataforma de pagos.
+                <strong>🧪 MODO PRUEBA ACTIVADO:</strong> Todos los módulos tienen un precio de <strong>$10 COP</strong> para facilitar testing.
               </p>
             </div>
           </div>
@@ -386,7 +363,7 @@ const PricingCalculator = () => {
                         cumplimiento normativo
                       </p>
                       <div className="mt-2 text-xs text-green-700 font-medium">
-                        🧪 PRUEBA: $10 COP {/* REAL: Desde $390,522 COP/mes */}
+                        🧪 PRUEBA: $10 COP
                       </div>
                     </div>
                   </div>
@@ -417,7 +394,7 @@ const PricingCalculator = () => {
                         Excel y exportación multi-formato
                       </p>
                       <div className="mt-2 text-xs text-purple-700 font-medium">
-                        🧪 PRUEBA: $10 COP {/* REAL: Desde $507,678 COP/mes */}
+                        🧪 PRUEBA: $10 COP
                       </div>
                     </div>
                   </div>
