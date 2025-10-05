@@ -22,10 +22,12 @@ const PaymentButton = ({
 
   const generateReference = () => {
     const timestamp = Date.now();
+    const random = Math.random().toString(36).substring(2, 15); // Más largo
+    const nanoTime = performance.now().toString().replace('.', ''); // Extra entropía
     const modulesStr = Object.keys(modules)
       .filter((key) => modules[key])
       .join("-");
-    return `JEGA-${modulesStr}-${deploymentType}-${timestamp}`.toUpperCase();
+    return `JEGA-${modulesStr}-${timestamp}-${random}-${nanoTime}`.toUpperCase();
   };
 
   const validateForm = () => {
