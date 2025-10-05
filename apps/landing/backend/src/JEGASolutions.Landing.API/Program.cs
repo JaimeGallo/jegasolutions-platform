@@ -109,14 +109,17 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:3000", "https://jegasolutions-platform-frontend-95l.vercel.app
-")
-              .AllowAnyMethod()
-              .AllowAnyHeader()
-              .AllowCredentials();
+        policy.WithOrigins(
+            "http://localhost:3000",
+            "https://jegasolutions-platform-frontend.vercel.app",
+            "https://jegasolutions-platform-frontend-95l.vercel.app",
+            "https://jegasolutions-platform-fronten-git-8a293d-jaime-gallos-projects.vercel.app"
+        )
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+        .AllowCredentials();
     });
 });
-
 
 
 var app = builder.Build();
