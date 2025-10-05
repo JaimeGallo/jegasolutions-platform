@@ -109,7 +109,8 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:3000", "https://jegasolutions-platform-frontend.vercel.app")
+        policy.WithOrigins("http://localhost:3000", "https://jegasolutions-platform-frontend-95l.vercel.app
+")
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();
