@@ -105,7 +105,7 @@ const TESTING_PRICES = {
   };
 
   const basePricing = convertPricingToCOP(basePricingUSD, USD_TO_COP_RATE);
-  */
+  
 
   const basePricing = TESTING_PRICES;
 
@@ -220,6 +220,7 @@ const TESTING_PRICES = {
     console.log("Payment initiated:", paymentData);
     // Aquí se puede agregar tracking de analytics
   };
+  */
 
   return (
     <div className="section-with-header bg-gradient-to-br from-blue-400 to-blue-800">
