@@ -335,23 +335,28 @@ public class WompiService : IWompiService
     {
         try
         {
-            var existingTenant = await _tenantRepository.FirstOrDefaultAsync(
-                t => t.Email == payment.CustomerEmail
+            // Verificar si ya existe un usuario con este email
+            var existingUser = await _userRepository.FirstOrDefaultAsync(
+                u => u.Email == payment.CustomerEmail
             );
 
-            if (existingTenant != null)
+            if (existingUser != null)
             {
-                _logger.LogInformation("Tenant already exists for email {Email}", payment.CustomerEmail);
+                _logger.LogInformation("User already exists for email {Email}", payment.CustomerEmail);
                 return;
             }
 
-            var subdomain = GenerateSubdomain(payment.CustomerName ?? payment.CustomerEmail ?? "");
-            var temporaryPassword = _passwordGenerator.GeneratePassword();
+            // Generar subdomain usando el servicio
+            var baseName = payment.CustomerName ?? payment.CustomerEmail ?? "cliente";
+            var subdomain = _passwordGenerator.GenerateSubdomain(baseName, 20);
+            
+            // Generar contraseña temporal
+            var temporaryPassword = _passwordGenerator.GenerateSecurePassword(12);
 
+            // Crear el tenant
             var tenant = new Tenant
             {
-                Name = payment.CustomerName ?? "",
-                Email = payment.CustomerEmail ?? "",
+                CompanyName = payment.CustomerName ?? "Empresa",
                 Subdomain = subdomain,
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
@@ -363,17 +368,21 @@ public class WompiService : IWompiService
             _logger.LogInformation("Created tenant {TenantId} with subdomain {Subdomain}", 
                 tenant.Id, subdomain);
 
-            var moduleId = ExtractModuleIdFromReference(payment.Reference);
+            // Determinar el nombre del módulo según la referencia
+            var moduleName = ExtractModuleNameFromReference(payment.Reference);
+            
+            // Crear el módulo para el tenant
             var tenantModule = new TenantModule
             {
                 TenantId = tenant.Id,
-                ModuleId = moduleId,
-                IsActive = true,
-                ActivatedAt = DateTime.UtcNow
+                ModuleName = moduleName,
+                Status = "ACTIVE",
+                PurchasedAt = DateTime.UtcNow
             };
 
             await _tenantModuleRepository.AddAsync(tenantModule);
 
+            // Crear usuario admin
             var nameParts = (payment.CustomerName ?? "")
                 .Trim()
                 .Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -387,7 +396,9 @@ public class WompiService : IWompiService
                 FirstName = firstName,
                 LastName = lastName,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(temporaryPassword),
-                Role = "Admin"
+                Role = "Admin",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
             };
 
             await _userRepository.AddAsync(adminUser);
@@ -396,6 +407,7 @@ public class WompiService : IWompiService
             _logger.LogInformation("Created admin user {UserId} for tenant {TenantId}", 
                 adminUser.Id, tenant.Id);
 
+            // Enviar email de bienvenida
             try
             {
                 await _emailService.SendWelcomeEmailAsync(tenant, temporaryPassword);
@@ -416,31 +428,14 @@ public class WompiService : IWompiService
         }
     }
 
-    private string GenerateSubdomain(string name)
-    {
-        var subdomain = name.ToLower()
-            .Replace(" ", "-")
-            .Replace("á", "a").Replace("é", "e").Replace("í", "i")
-            .Replace("ó", "o").Replace("ú", "u").Replace("ñ", "n");
-
-        subdomain = new string(subdomain.Where(c => char.IsLetterOrDigit(c) || c == '-').ToArray());
-
-        if (string.IsNullOrWhiteSpace(subdomain))
-        {
-            subdomain = "tenant-" + Guid.NewGuid().ToString().Substring(0, 8);
-        }
-
-        return subdomain;
-    }
-
-    private int ExtractModuleIdFromReference(string reference)
+    private string ExtractModuleNameFromReference(string reference)
     {
         if (reference.Contains("EXTRAHOURS", StringComparison.OrdinalIgnoreCase))
-            return 1;
+            return "Extra Hours";
         if (reference.Contains("REPORTBUILDER", StringComparison.OrdinalIgnoreCase))
-            return 2;
+            return "Report Builder";
 
-        return 1;
+        return "Extra Hours"; // Default
     }
 
     private string MapWompiStatus(string wompiStatus)
