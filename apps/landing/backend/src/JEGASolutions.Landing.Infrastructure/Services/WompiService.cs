@@ -237,72 +237,73 @@ public class WompiService : IWompiService
     }
 
     public async Task<bool> ProcessPaymentWebhook(WompiWebhookDto payload)
+{
+    try
     {
-        try
+        // Usar estructura plana - payload.Data directamente
+        var transaction = payload.Data;
+        
+        _logger.LogInformation("Processing webhook for reference {Reference}, status {Status}", 
+            transaction.Reference, transaction.Status);
+
+        var payment = await _paymentRepository.FirstOrDefaultAsync(
+            p => p.Reference == transaction.Reference
+        );
+
+        if (payment == null)
         {
-            var transaction = payload.Data.Transaction;
+            payment = new Payment
+            {
+                Reference = transaction.Reference,
+                Amount = transaction.AmountInCents / 100m,
+                CustomerEmail = transaction.CustomerEmail,
+                CustomerName = transaction.Customer?.FullName ?? "Cliente",
+                CustomerPhone = transaction.Customer?.PhoneNumber,
+                WompiTransactionId = transaction.Id,
+                Status = MapWompiStatus(transaction.Status),
+                CreatedAt = transaction.CreatedAt ?? DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            await _paymentRepository.AddAsync(payment);
+            _logger.LogInformation("Created new payment record for reference {Reference}", 
+                payment.Reference);
+        }
+        else
+        {
+            payment.Status = MapWompiStatus(transaction.Status);
+            payment.WompiTransactionId = transaction.Id;
+            payment.UpdatedAt = DateTime.UtcNow;
             
-            _logger.LogInformation("Processing webhook for reference {Reference}, status {Status}", 
-                transaction.Reference, transaction.Status);
-
-            var payment = await _paymentRepository.FirstOrDefaultAsync(
-                p => p.Reference == transaction.Reference
-            );
-
-            if (payment == null)
+            if (transaction.Customer != null)
             {
-                payment = new Payment
-                {
-                    Reference = transaction.Reference,
-                    Amount = transaction.AmountInCents / 100m,
-                    CustomerEmail = transaction.CustomerEmail,
-                    CustomerName = transaction.Customer?.FullName ?? "Cliente",
-                    CustomerPhone = transaction.Customer?.PhoneNumber,
-                    WompiTransactionId = transaction.Id,
-                    Status = MapWompiStatus(transaction.Status),
-                    CreatedAt = transaction.CreatedAt ?? DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
-                };
-
-                await _paymentRepository.AddAsync(payment);
-                _logger.LogInformation("Created new payment record for reference {Reference}", 
-                    payment.Reference);
+                payment.CustomerEmail = transaction.CustomerEmail;
+                payment.CustomerName = transaction.Customer.FullName;
+                payment.CustomerPhone = transaction.Customer.PhoneNumber;
             }
-            else
-            {
-                payment.Status = MapWompiStatus(transaction.Status);
-                payment.WompiTransactionId = transaction.Id;
-                payment.UpdatedAt = DateTime.UtcNow;
-                
-                if (transaction.Customer != null)
-                {
-                    payment.CustomerEmail = transaction.CustomerEmail;
-                    payment.CustomerName = transaction.Customer.FullName;
-                    payment.CustomerPhone = transaction.Customer.PhoneNumber;
-                }
-                
-                await _paymentRepository.UpdateAsync(payment);
-                _logger.LogInformation("Updated payment record for reference {Reference}", 
-                    payment.Reference);
-            }
-
-            await _unitOfWork.SaveChangesAsync();
-
-            if (transaction.Status.ToUpper() == "APPROVED")
-            {
-                _logger.LogInformation("Payment approved, creating tenant for reference {Reference}", 
-                    transaction.Reference);
-                await CreateTenantFromPayment(payment);
-            }
-
-            return true;
+            
+            await _paymentRepository.UpdateAsync(payment);
+            _logger.LogInformation("Updated payment record for reference {Reference}", 
+                payment.Reference);
         }
-        catch (Exception ex)
+
+        await _unitOfWork.SaveChangesAsync();
+
+        if (transaction.Status.ToUpper() == "APPROVED")
         {
-            _logger.LogError(ex, "Error processing webhook");
-            return false;
+            _logger.LogInformation("Payment approved, creating tenant for reference {Reference}", 
+                transaction.Reference);
+            await CreateTenantFromPayment(payment);
         }
+
+        return true;
     }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Error processing webhook");
+        return false;
+    }
+}
 
     private async Task<string> GetAcceptanceTokenAsync()
     {
