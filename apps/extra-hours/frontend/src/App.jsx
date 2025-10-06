@@ -1,5 +1,6 @@
 import "./App.scss";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import BulkUploadPage from "./pages/Settings/BulkUploadPage";
 
 // Providers
 import { AuthProvider } from "./utils/AuthProvider";
@@ -95,6 +96,10 @@ function App() {
                 element={<EmployeeManagementPage />}
               />
             </Route>
+            <Route
+              path="BulkUpload"
+              element={<BulkUploadPage />}
+            />
             <Route
               path="/solicitud-compensacion"
               element={

@@ -1,0 +1,277 @@
+.bulk-upload-container {
+    padding: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+  
+    .upload-card,
+    .results-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+  
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+  
+    .section-description {
+      text-align: center;
+      color: #6b7280;
+      font-size: 0.95rem;
+      margin-bottom: 0;
+    }
+  
+    .instructions-list {
+      margin: 12px 0 0 0;
+      padding-left: 20px;
+      color: #374151;
+  
+      li {
+        margin-bottom: 8px;
+        line-height: 1.6;
+  
+        strong {
+          color: #1f2937;
+          font-weight: 600;
+        }
+      }
+    }
+  
+    .template-section {
+      text-align: center;
+      margin: 20px 0;
+  
+      .download-template-btn {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        border: none;
+        color: white;
+        font-weight: 600;
+        height: 48px;
+        padding: 0 32px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+        transition: all 0.3s ease;
+  
+        &:hover {
+          background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+          transform: translateY(-2px);
+          box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+        }
+      }
+    }
+  
+    .upload-dragger {
+      border: 2px dashed #d1d5db !important;
+      border-radius: 12px !important;
+      background: #f9fafb !important;
+      transition: all 0.3s ease;
+      padding: 20px;
+  
+      &:hover {
+        border-color: #3b82f6 !important;
+        background: #eff6ff !important;
+      }
+  
+      .ant-upload-drag-icon {
+        margin-bottom: 16px;
+  
+        .anticon {
+          font-size: 64px;
+        }
+      }
+  
+      .ant-upload-text {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 8px;
+      }
+  
+      .ant-upload-hint {
+        color: #6b7280;
+        font-size: 0.9rem;
+      }
+    }
+  
+    .upload-actions {
+      text-align: center;
+      margin-top: 24px;
+  
+      .upload-btn {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        border: none;
+        color: white;
+        font-weight: 600;
+        height: 48px;
+        padding: 0 40px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+        transition: all 0.3s ease;
+  
+        &:hover:not(:disabled) {
+          background: linear-gradient(135deg, #059669 0%, #047857 100%);
+          transform: translateY(-2px);
+          box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
+        }
+  
+        &:disabled {
+          background: #d1d5db;
+          cursor: not-allowed;
+          box-shadow: none;
+        }
+      }
+    }
+  
+    // Estilos de resultados
+    .results-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+  
+    .summary-section {
+      .summary-stats {
+        display: flex;
+        gap: 24px;
+        justify-content: space-around;
+        flex-wrap: wrap;
+  
+        .stat-item {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 12px 24px;
+          background: #f3f4f6;
+          border-radius: 8px;
+          min-width: 140px;
+  
+          .stat-label {
+            font-size: 0.9rem;
+            color: #6b7280;
+            margin-bottom: 4px;
+          }
+  
+          .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #1f2937;
+          }
+  
+          &.success {
+            background: #d1fae5;
+            .stat-value {
+              color: #059669;
+            }
+          }
+  
+          &.error {
+            background: #fee2e2;
+            .stat-value {
+              color: #dc2626;
+            }
+          }
+        }
+      }
+    }
+  
+    .table-section {
+      margin-top: 24px;
+  
+      .table-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 12px;
+  
+        &.error {
+          color: #dc2626;
+        }
+      }
+  
+      .role-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 600;
+  
+        &.empleado {
+          background: #dbeafe;
+          color: #1e40af;
+        }
+  
+        &.manager {
+          background: #fef3c7;
+          color: #92400e;
+        }
+  
+        &.superusuario {
+          background: #fce7f3;
+          color: #9f1239;
+        }
+      }
+  
+      .error-message {
+        color: #dc2626;
+        font-weight: 500;
+        font-size: 0.9rem;
+      }
+    }
+  }
+  
+  // Responsive
+  @media (max-width: 768px) {
+    .bulk-upload-container {
+      padding: 16px;
+  
+      .section-title {
+        font-size: 1.25rem;
+      }
+  
+      .template-section .download-template-btn {
+        width: 100%;
+        max-width: 320px;
+      }
+  
+      .upload-actions .upload-btn {
+        width: 100%;
+        max-width: 320px;
+      }
+  
+      .summary-stats {
+        flex-direction: column;
+        align-items: center;
+  
+        .stat-item {
+          width: 100%;
+          max-width: 280px;
+        }
+      }
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .bulk-upload-container {
+      padding: 12px;
+  
+      .section-title {
+        font-size: 1.1rem;
+      }
+  
+      .upload-dragger {
+        padding: 16px;
+  
+        .ant-upload-drag-icon .anticon {
+          font-size: 48px;
+        }
+      }
+    }
+  }
