@@ -226,7 +226,7 @@ namespace JEGASolutions.ExtraHours.API.Controller
         {
             // Obtener ID del empleado desde el token
             var userId = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
-            var userRole = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+            var userRole = User.Claims.FirstOrDefault(c => c.Type == "role")?.Value;
 
             if (string.IsNullOrEmpty(userId))
             {

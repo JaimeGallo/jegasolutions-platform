@@ -133,7 +133,7 @@ namespace JEGASolutions.ExtraHours.API.Controller
             {
                 // Obtener información del usuario autenticado
                 var userIdStr = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
-                var userRole = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+                var userRole = User.Claims.FirstOrDefault(c => c.Type == "role")?.Value;
 
                 if (string.IsNullOrEmpty(userIdStr))
                 {
@@ -198,7 +198,7 @@ namespace JEGASolutions.ExtraHours.API.Controller
 
             // Solo superusuario puede editar cualquier solicitud, manager solo las de sus empleados
             var userId = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
-            var userRole = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+            var userRole = User.Claims.FirstOrDefault(c => c.Type == "role")?.Value;
             if (userRole?.ToLower() == "manager")
             {
                 var employee = await _employeeService.GetByIdAsync(existing.EmployeeId);
@@ -234,7 +234,7 @@ namespace JEGASolutions.ExtraHours.API.Controller
             {
                 // Obtener ID del empleado desde el token (igual que en ExtraHourController)
                 var userId = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
-                var userRole = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+                var userRole = User.Claims.FirstOrDefault(c => c.Type == "role")?.Value;
 
                 if (string.IsNullOrEmpty(userId))
                 {
@@ -381,7 +381,7 @@ namespace JEGASolutions.ExtraHours.API.Controller
 
                 // Verificar permisos según el rol
                 var userId = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
-                var userRole = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+                var userRole = User.Claims.FirstOrDefault(c => c.Type == "role")?.Value;
 
                 if (userRole?.ToLower() == "manager")
                 {
