@@ -93,10 +93,13 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 
+// ORDEN CRÍTICO DEL PIPELINE:
+// 1. Primero autenticación (valida JWT y establece context.User con claims)
 app.UseAuthentication();
+// 2. Luego autorización (verifica roles usando context.User)
 app.UseAuthorization();
 
-// Add Tenant Middleware
+// 3. Finalmente middleware de tenant (puede leer claims de context.User)
 app.UseMiddleware<TenantMiddleware>();
 
 app.MapControllers();
