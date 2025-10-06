@@ -139,7 +139,7 @@ public class PaymentsController : ControllerBase
         }
     }
 
-    [HttpPost("create")]
+  [HttpPost("create")]
 public async Task<IActionResult> CreatePayment([FromBody] PaymentRequestDto request)
 {
     try
@@ -150,36 +150,21 @@ public async Task<IActionResult> CreatePayment([FromBody] PaymentRequestDto requ
         _logger.LogInformation("CustomerEmail: {Email}", request.CustomerEmail);
         _logger.LogInformation("CustomerName: {Name}", request.CustomerName);
         _logger.LogInformation("================================");
-
+        
         if (!ModelState.IsValid)
         {
             return BadRequest(ModelState);
         }
 
-        // 🧩 1. Crear el registro del pago en tu BD local
-        var payment = await _paymentService.CreatePaymentAsync(request);
+        // Solo llamar al servicio - él internamente ya llama a Wompi
+        var paymentResponse = await _paymentService.CreatePaymentAsync(request);
 
-        // 🧩 2. Crear el link de checkout en Wompi (con token nuevo)
-        var wompiTransaction = await _wompiService.CreateTransactionAsync(payment);
-
-        // 🧩 3. Retornar todo al frontend
-        var response = new
-        {
-            payment.Reference,
-            payment.Amount,
-            payment.Status,
-            payment.CustomerEmail,
-            payment.CustomerName,
-            checkoutUrl = wompiTransaction.CheckoutUrl
-        };
-
-        _logger.LogInformation("Wompi checkout generated successfully for reference {Reference}", payment.Reference);
-
-        return Ok(response); // 🔹 Devolvemos 200 OK con el link del checkout
+        // Retornar la respuesta directamente
+        return Ok(paymentResponse);
     }
     catch (Exception ex)
     {
-        _logger.LogError(ex, "Error creating payment for reference {Reference}", request.Reference);
+        _logger.LogError(ex, "Error creating payment");
         return StatusCode(500, new { message = "Internal server error", error = ex.Message });
     }
 }
