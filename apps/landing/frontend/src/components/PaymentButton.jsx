@@ -43,12 +43,15 @@ const PaymentButton = ({
   const handlePayment = async () => {
     const errors = validateForm();
     setValidationErrors(errors);
-  
-    if (Object.keys(errors).length > 0) return;
-  
+
+    if (Object.keys(errors).length > 0) {
+      return;
+    }
+
     try {
+      // 🧪 MODO PRUEBA - Usar el amount que viene (ya es $10)
       const paymentData = {
-        amount,
+        amount: amount, // Ya viene como 10 desde PricingCalculator
         reference: generateReference(),
         redirectUrl: `${window.location.origin}/payment-success`,
         customerData: {
@@ -59,32 +62,19 @@ const PaymentButton = ({
         customerEmail: customerData.email,
         customerFullName: customerData.fullName,
         phoneNumber: customerData.phone,
-        taxInCents: Math.round(amount * 0.19 * 100),
+        taxInCents: Math.round(amount * 0.19 * 100), // IVA 19%
       };
-  
+
       console.log("🧪 PAGO DE PRUEBA - Datos:", paymentData);
-  
+
       onPaymentInitiated?.(paymentData);
-  
-      // 🔹 Llamada al backend
-      const response = await createPayment(paymentData);
-  
-      // 🧭 IMPORTANTE: usar el checkoutUrl que devuelve el backend
-      if (response?.checkoutUrl) {
-        console.log("🔗 Redirigiendo a Wompi:", response.checkoutUrl);
-        window.location.href = response.checkoutUrl;
-      } else {
-        console.error("No se recibió checkoutUrl de Wompi:", response);
-        alert("No se pudo generar el link de pago. Intenta nuevamente.");
-      }
-  
+      await createPayment(paymentData);
       setIsModalOpen(false);
     } catch (err) {
       console.error("Error initiating payment:", err);
       alert("Error al procesar el pago. Por favor intenta nuevamente.");
     }
   };
-  
 
   return (
     <div className="space-y-4">
