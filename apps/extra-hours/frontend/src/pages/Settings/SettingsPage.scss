@@ -111,6 +111,11 @@ $transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
   text-align: center;
 }
 
+.settings-card-icon.bulk-upload {
+  background-color: #e0f2fe;
+  color: #0369a1;
+}
+
 // Responsive
 @media (max-width: 900px) {
   .settings-grid {

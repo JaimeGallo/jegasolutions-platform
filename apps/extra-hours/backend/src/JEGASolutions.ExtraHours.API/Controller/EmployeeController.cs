@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using JEGASolutions.ExtraHours.Core.Dto;
 using JEGASolutions.ExtraHours.Core.Interfaces;
 using System.Threading.Tasks;
+using System.Text;
+using ClosedXML.Excel;
 
 
 
@@ -312,5 +314,295 @@ namespace JEGASolutions.ExtraHours.API.Controller
                 return "empleado"; // Valor por defecto
             }
         }
+
+        [HttpPost("bulk-upload")]
+        [Authorize(Roles = "superusuario")]
+        public async Task<IActionResult> BulkUploadEmployees([FromForm] IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest(new { error = "No se ha proporcionado ningún archivo" });
+            }
+
+            var extension = Path.GetExtension(file.FileName).ToLower();
+            if (extension != ".csv" && extension != ".xlsx" && extension != ".xls")
+            {
+                return BadRequest(new { error = "Formato de archivo no soportado. Use CSV o Excel (.xlsx, .xls)" });
+            }
+
+            var results = new
+            {
+                successful = new List<object>(),
+                failed = new List<object>(),
+                totalProcessed = 0
+            };
+            
+            int totalProcessed = 0;
+
+            try
+            {
+                List<BulkEmployeeDTO> employees;
+
+                if (extension == ".csv")
+                {
+                    employees = await ParseCSVFile(file);
+                }
+                else
+                {
+                    employees = await ParseExcelFile(file);
+                }
+
+                totalProcessed = employees.Count;
+
+                foreach (var employeeDto in employees)
+                {
+                    try
+                    {
+                        // Validar que el empleado no exista
+                        var existingEmployee = await _employeeService.GetByIdAsync(employeeDto.Id);
+                        if (existingEmployee != null)
+                        {
+                            results.failed.Add(new
+                            {
+                                id = employeeDto.Id,
+                                name = employeeDto.Name,
+                                error = "El empleado ya existe en el sistema"
+                            });
+                            continue;
+                        }
+
+                        // Validar email único
+                        var existingUser = await _userRepository.GetUserByEmailAsync(employeeDto.Email);
+                        if (existingUser != null)
+                        {
+                            results.failed.Add(new
+                            {
+                                id = employeeDto.Id,
+                                name = employeeDto.Name,
+                                error = $"El email {employeeDto.Email} ya está registrado"
+                            });
+                            continue;
+                        }
+
+                        // Validar que el manager exista si se proporciona
+                        if (employeeDto.ManagerId.HasValue)
+                        {
+                            var managerExists = await _managerRepository.GetByIdAsync(employeeDto.ManagerId.Value) != null;
+                            if (!managerExists)
+                            {
+                                results.failed.Add(new
+                                {
+                                    id = employeeDto.Id,
+                                    name = employeeDto.Name,
+                                    error = $"El manager con ID {employeeDto.ManagerId} no existe"
+                                });
+                                continue;
+                            }
+                        }
+
+                        // Crear contraseña hasheada
+                        string plainPassword = string.IsNullOrEmpty(employeeDto.Password) 
+                            ? "password123" 
+                            : employeeDto.Password;
+                        string hashedPassword = BCrypt.Net.BCrypt.HashPassword(plainPassword);
+
+                        // Crear usuario
+                        var user = new User
+                        {
+                            id = (int)employeeDto.Id,
+                            email = employeeDto.Email,
+                            name = employeeDto.Name,
+                            passwordHash = hashedPassword,
+                            role = employeeDto.Role ?? "empleado",
+                            username = employeeDto.Username ?? employeeDto.Name.ToLower().Replace(" ", ".")
+                        };
+                        await _userRepository.SaveAsync(user);
+
+                        // Si el rol es manager, crear registro en tabla managers
+                        if (employeeDto.Role?.ToLower() == "manager")
+                        {
+                            var newManager = new Manager
+                            {
+                                manager_id = employeeDto.Id,
+                                manager_name = employeeDto.Name
+                            };
+                            await _managerRepository.AddAsync(newManager);
+                        }
+
+                        // Crear empleado
+                        var employee = new Employee
+                        {
+                            id = employeeDto.Id,
+                            name = employeeDto.Name,
+                            position = employeeDto.Position,
+                            salary = (double?)employeeDto.Salary,
+                            manager_id = employeeDto.ManagerId
+                        };
+                        await _employeeService.AddEmployeeAsync(employee);
+
+                        results.successful.Add(new
+                        {
+                            id = employeeDto.Id,
+                            name = employeeDto.Name,
+                            email = employeeDto.Email,
+                            role = employeeDto.Role
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        results.failed.Add(new
+                        {
+                            id = employeeDto.Id,
+                            name = employeeDto.Name,
+                            error = $"Error al procesar: {ex.Message}"
+                        });
+                    }
+                }
+
+                return Ok(new
+                {
+                    message = "Proceso de carga masiva completado",
+                    summary = new
+                    {
+                        total = totalProcessed,
+                        successful = results.successful.Count,
+                        failed = results.failed.Count
+                    },
+                    details = results
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    error = "Error al procesar el archivo",
+                    details = ex.Message
+                });
+            }
+        }
+
+        /// <summary>
+        /// Parsea archivo CSV
+        /// </summary>
+        private async Task<List<BulkEmployeeDTO>> ParseCSVFile(IFormFile file)
+        {
+            var employees = new List<BulkEmployeeDTO>();
+
+            using (var reader = new StreamReader(file.OpenReadStream(), System.Text.Encoding.UTF8))
+            {
+                // Leer header
+                var headerLine = await reader.ReadLineAsync();
+                if (string.IsNullOrEmpty(headerLine))
+                {
+                    throw new Exception("El archivo CSV está vacío");
+                }
+
+                // Procesar cada línea
+                while (!reader.EndOfStream)
+                {
+                    var line = await reader.ReadLineAsync();
+                    if (string.IsNullOrWhiteSpace(line)) continue;
+
+                    var values = line.Split(',');
+                    
+                    if (values.Length < 4)
+                    {
+                        continue; // Saltar líneas inválidas
+                    }
+
+                    var employee = new BulkEmployeeDTO
+                    {
+                        Id = long.Parse(values[0].Trim()),
+                        Name = values[1].Trim(),
+                        Email = values[2].Trim(),
+                        Position = values[3].Trim(),
+                        Salary = values.Length > 4 && !string.IsNullOrEmpty(values[4].Trim()) 
+                            ? decimal.Parse(values[4].Trim()) 
+                            : 0,
+                        Role = values.Length > 5 && !string.IsNullOrEmpty(values[5].Trim()) 
+                            ? values[5].Trim() 
+                            : "empleado",
+                        Username = values.Length > 6 && !string.IsNullOrEmpty(values[6].Trim()) 
+                            ? values[6].Trim() 
+                            : null,
+                        Password = values.Length > 7 && !string.IsNullOrEmpty(values[7].Trim()) 
+                            ? values[7].Trim() 
+                            : null,
+                        ManagerId = values.Length > 8 && !string.IsNullOrEmpty(values[8].Trim()) 
+                            ? long.Parse(values[8].Trim()) 
+                            : (long?)null
+                    };
+
+                    employees.Add(employee);
+                }
+            }
+
+            return employees;
+        }
+
+        /// <summary>
+        /// Parsea archivo Excel usando ClosedXML
+        /// </summary>
+        private async Task<List<BulkEmployeeDTO>> ParseExcelFile(IFormFile file)
+        {
+            var employees = new List<BulkEmployeeDTO>();
+
+            using (var stream = new MemoryStream())
+            {
+                await file.CopyToAsync(stream);
+                stream.Position = 0;
+
+                using (var workbook = new ClosedXML.Excel.XLWorkbook(stream))
+                {
+                    var worksheet = workbook.Worksheet(1);
+                    var rows = worksheet.RangeUsed().RowsUsed().Skip(1); // Saltar header
+
+                    foreach (var row in rows)
+                    {
+                        try
+                        {
+                            var employee = new BulkEmployeeDTO
+                            {
+                                Id = long.Parse(row.Cell(1).GetString()),
+                                Name = row.Cell(2).GetString(),
+                                Email = row.Cell(3).GetString(),
+                                Position = row.Cell(4).GetString(),
+                                Salary = row.Cell(5).IsEmpty() ? 0 : decimal.Parse(row.Cell(5).GetString()),
+                                Role = row.Cell(6).IsEmpty() ? "empleado" : row.Cell(6).GetString(),
+                                Username = row.Cell(7).IsEmpty() ? null : row.Cell(7).GetString(),
+                                Password = row.Cell(8).IsEmpty() ? null : row.Cell(8).GetString(),
+                                ManagerId = row.Cell(9).IsEmpty() ? (long?)null : long.Parse(row.Cell(9).GetString())
+                            };
+
+                            employees.Add(employee);
+                        }
+                        catch
+                        {
+                            // Saltar filas con errores
+                            continue;
+                        }
+                    }
+                }
+            }
+
+            return employees;
+        }
     }
+
+    /// <summary>
+    /// DTO para carga masiva de empleados
+    /// </summary>
+    public class BulkEmployeeDTO
+    {
+        public long Id { get; set; }
+        public string Name { get; set; }
+        public string Email { get; set; }
+        public string Position { get; set; }
+        public decimal Salary { get; set; }
+        public string Role { get; set; }
+        public string Username { get; set; }
+        public string Password { get; set; }
+        public long? ManagerId { get; set; }
+    }
+
 }
