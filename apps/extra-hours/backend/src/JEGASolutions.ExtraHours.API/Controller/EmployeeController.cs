@@ -316,7 +316,7 @@ namespace JEGASolutions.ExtraHours.API.Controller
         }
 
         [HttpPost("bulk-upload")]
-        [Authorize(Roles = "superusuario")]
+        [Authorize(Roles = "superusuario,manager")]
         public async Task<IActionResult> BulkUploadEmployees([FromForm] IFormFile file)
         {
             if (file == null || file.Length == 0)

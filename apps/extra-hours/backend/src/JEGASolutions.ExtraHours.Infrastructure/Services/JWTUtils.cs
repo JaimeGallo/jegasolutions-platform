@@ -50,8 +50,8 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Services
             {
                 Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.UtcNow.AddMilliseconds(expiration),
-                Issuer = "ExtraHours.API",
-                Audience = "ExtraHours.Client",
+                Issuer = "JEGASolutions.ExtraHours",
+                Audience = "JEGASolutions.ExtraHours.Users",
                 SigningCredentials = new SigningCredentials(_key, SecurityAlgorithms.HmacSha256Signature)
             };
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -66,9 +66,13 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Services
             {
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = _key,
-                ValidateIssuer = false,
-                ValidateAudience = false,
-                ClockSkew = TimeSpan.Zero
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidIssuer = "JEGASolutions.ExtraHours",
+                ValidAudience = "JEGASolutions.ExtraHours.Users",
+                ClockSkew = TimeSpan.Zero,
+                RoleClaimType = "role",
+                NameClaimType = ClaimTypes.Name
             };
             return tokenHandler.ValidateToken(token, validationParameters, out _);
         }

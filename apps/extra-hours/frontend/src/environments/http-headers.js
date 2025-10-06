@@ -5,3 +5,10 @@ export const getAuthHeaders = () => {
     ...(token && { Authorization: `Bearer ${token}` }),
   };
 };
+
+export const getAuthHeadersForFormData = () => {
+  const token = localStorage.getItem("token");
+  return {
+    ...(token && { Authorization: `Bearer ${token}` }),
+  };
+};
