@@ -95,11 +95,12 @@ function App() {
                 path="EmployeeManagement"
                 element={<EmployeeManagementPage />}
               />
-            </Route>
-            <Route
+               <Route
               path="BulkUpload"
               element={<BulkUploadPage />}
             />
+            </Route>
+           
             <Route
               path="/solicitud-compensacion"
               element={
