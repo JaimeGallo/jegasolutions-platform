@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Upload, Button, message, Alert, Table, Divider, Card } from "antd";
 import { UploadOutlined, DownloadOutlined, InboxOutlined } from "@ant-design/icons";
 import { API_CONFIG } from "../../../environments/api.config";
-import { getAuthHeaders } from "../../../environments/http-headers";
+import { getAuthHeadersForFormData } from "../../../environments/http-headers";
 import "./BulkUserUpload.scss";
 
 const { Dragger } = Upload;
@@ -76,19 +76,23 @@ const BulkUserUpload = () => {
     setUploadResults(null);
 
     try {
-      const authHeaders = getAuthHeaders();
+      const authHeaders = getAuthHeadersForFormData();
       const response = await fetch(
         `${API_CONFIG.BASE_URL}/api/employee/bulk-upload`,
         {
           method: "POST",
-          headers: {
-            Authorization: authHeaders.Authorization,
-          },
+          headers: authHeaders,
           body: formData,
         }
       );
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        console.error("Error parsing JSON response:", jsonError);
+        throw new Error("Error al procesar la respuesta del servidor");
+      }
 
       if (!response.ok) {
         throw new Error(data.error || "Error al procesar el archivo");
