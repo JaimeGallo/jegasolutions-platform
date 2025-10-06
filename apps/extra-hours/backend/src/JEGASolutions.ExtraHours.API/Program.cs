@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Security.Claims;
 using JEGASolutions.ExtraHours.Data;
 using JEGASolutions.ExtraHours.Core.Interfaces;
 using JEGASolutions.ExtraHours.Core.Services;
@@ -91,9 +92,6 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");
-
-// Add JWT Middleware
-app.UseMiddleware<JwtMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();
