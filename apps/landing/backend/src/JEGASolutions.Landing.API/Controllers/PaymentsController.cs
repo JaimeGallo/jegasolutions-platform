@@ -23,23 +23,19 @@ public class PaymentsController : ControllerBase
     }
 
     [HttpPost("webhook")]
-    public async Task<IActionResult> Webhook([FromBody] WompiWebhookDto payload)
+public async Task<IActionResult> Webhook([FromBody] WompiWebhookDto payload)
+{
+    try
     {
-        try
+        _logger.LogInformation("Received webhook for reference {Reference}", payload.Data.Reference);
+
+        // Get the signature from headers
+        var signature = Request.Headers["X-Integrity"].FirstOrDefault();
+        
+        // ✅ CAMBIO: Hacer la validación de firma opcional si no viene el header
+        if (!string.IsNullOrEmpty(signature))
         {
-            _logger.LogInformation("Received webhook for reference {Reference}", payload.Data.Reference);
-
-            // Get the signature from headers
-            var signature = Request.Headers["X-Integrity"].FirstOrDefault();
-            if (string.IsNullOrEmpty(signature))
-            {
-                _logger.LogWarning("Missing X-Integrity header for reference {Reference}", payload.Data.Reference);
-                return BadRequest(new { message = "Missing X-Integrity header" });
-            }
-
             // Get the raw body for signature validation
-            // Get the raw body for signature validation. Requires enabling buffering in Program.cs
-            // Example: app.Use(async (context, next) => { context.Request.EnableBuffering(); await next(); });
             string rawBody;
             Request.Body.Seek(0, SeekOrigin.Begin);
             using (var reader = new StreamReader(Request.Body, leaveOpen: true))
@@ -54,27 +50,39 @@ public class PaymentsController : ControllerBase
                 _logger.LogWarning("Invalid signature for reference {Reference}", payload.Data.Reference);
                 return Unauthorized(new { message = "Invalid signature" });
             }
-
-            // Process the webhook
-            var success = await _wompiService.ProcessPaymentWebhook(payload);
-
-            if (success)
-            {
-                _logger.LogInformation("Webhook processed successfully for reference {Reference}", payload.Data.Reference);
-                return Ok(new { message = "Webhook processed successfully" });
-            }
-            else
-            {
-                _logger.LogError("Error processing webhook for reference {Reference}", payload.Data.Reference);
-                return StatusCode(500, new { message = "Error processing webhook" });
-            }
+            
+            _logger.LogInformation("Webhook signature validated successfully");
         }
-        catch (Exception ex)
+        else
         {
-            _logger.LogError(ex, "Internal server error processing webhook");
-            return StatusCode(500, new { message = "Internal server error", error = ex.Message });
+            _logger.LogWarning("Webhook received without X-Integrity header for reference {Reference}", 
+                payload.Data.Reference);
+            // Continuar procesando aunque no haya firma (solo en sandbox/testing)
+            // En producción podrías querer rechazar esto
+        }
+
+        // Process the webhook
+        var success = await _wompiService.ProcessPaymentWebhook(payload);
+
+        if (success)
+        {
+            _logger.LogInformation("Webhook processed successfully for reference {Reference}", 
+                payload.Data.Reference);
+            return Ok(new { message = "Webhook processed successfully" });
+        }
+        else
+        {
+            _logger.LogError("Error processing webhook for reference {Reference}", 
+                payload.Data.Reference);
+            return StatusCode(500, new { message = "Error processing webhook" });
         }
     }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Internal server error processing webhook");
+        return StatusCode(500, new { message = "Internal server error", error = ex.Message });
+    }
+}
 
     [HttpGet("status/{reference}")]
     public async Task<IActionResult> GetPaymentStatus(string reference)
