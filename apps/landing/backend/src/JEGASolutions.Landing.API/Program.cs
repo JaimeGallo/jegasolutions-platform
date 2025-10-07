@@ -137,6 +137,12 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+app.Use(async (context, next) =>
+{
+    context.Request.EnableBuffering();
+    await next();
+});
+
 // Ejecutar migraciones automáticamente en startup
 using (var scope = app.Services.CreateScope())
 {
@@ -175,6 +181,6 @@ app.MapGet("/", () => new
 
 app.MapGet("/health", () => new { status = "OK" });
 
-Console.WriteLine("=== BACKEND READY V4 ===");
+Console.WriteLine("=== BACKEND READY V5 - PRODUCTION ===");
 app.Run();
 
