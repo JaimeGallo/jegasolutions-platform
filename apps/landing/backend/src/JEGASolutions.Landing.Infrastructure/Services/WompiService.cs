@@ -26,6 +26,7 @@ public class WompiService : IWompiService
     private readonly string _privateKey;
     private readonly string _publicKey;
     private readonly string _eventsSecret;
+    private readonly string _integritySecret; 
 
     public WompiService(
         HttpClient httpClient,
@@ -58,6 +59,9 @@ public class WompiService : IWompiService
 
             _eventsSecret = _configuration["Wompi__EventsSecret"] ?? _configuration["Wompi:EventsSecret"]
         ?? _privateKey; // Fallback al private key si no existe
+
+        _integritySecret = _configuration["Wompi__IntegritySecret"] ?? _configuration["Wompi:IntegritySecret"]
+            ?? throw new ArgumentNullException("Wompi__IntegritySecret", "Wompi integrity secret is required.");
     
     _logger.LogInformation("Wompi Events Secret configured: {Configured}", 
         !string.IsNullOrEmpty(_eventsSecret) ? "Yes" : "No");
@@ -71,6 +75,29 @@ public class WompiService : IWompiService
             environment, baseUrl);
     }
 
+    private string GenerateIntegritySignature(string reference, int amountInCents, string currency, string? expirationTime = null)
+    {
+        // Concatenar según la documentación de Wompi
+        string concatenatedString;
+        
+        if (!string.IsNullOrEmpty(expirationTime))
+        {
+            // Con expiration-time: referencia + monto + moneda + fecha + secreto
+            concatenatedString = $"{reference}{amountInCents}{currency}{expirationTime}{_integritySecret}";
+        }
+        else
+        {
+            // Sin expiration-time: referencia + monto + moneda + secreto
+            concatenatedString = $"{reference}{amountInCents}{currency}{_integritySecret}";
+        }
+        
+        _logger.LogInformation("Generating signature for concatenated string (length: {Length})", 
+            concatenatedString.Length);
+        
+        // Generar hash SHA256
+        return ComputeSHA256(concatenatedString);
+    }
+
  public async Task<WompiTransactionResponseDto> CreateTransactionAsync(Payment payment)
 {
     _logger.LogInformation("Creating Wompi checkout for reference {Reference}", payment.Reference);
@@ -82,15 +109,20 @@ public class WompiService : IWompiService
     var currency = "COP";
     var reference = payment.Reference;
 
+     var signature = GenerateIntegritySignature(reference, amountInCents, currency);
+        
+        _logger.LogInformation("Generated integrity signature: {Signature}", signature);
+
     // URL directa del widget (permite TODOS los métodos de pago)
     var checkoutUrl = "https://checkout.wompi.co/p/" +
-        $"?public-key={_publicKey}" +
-        $"&currency={currency}" +
-        $"&amount-in-cents={amountInCents}" +
-        $"&reference={reference}" +
-        $"&redirect-url={Uri.EscapeDataString(redirectUrl)}";
+            $"?public-key={_publicKey}" +
+            $"&currency={currency}" +
+            $"&amount-in-cents={amountInCents}" +
+            $"&reference={reference}" +
+            $"&signature:integrity={signature}" + // ⚠️ CRÍTICO: Agregar la firma
+            $"&redirect-url={Uri.EscapeDataString(redirectUrl)}";
 
-    _logger.LogInformation("Checkout URL created: {CheckoutUrl}", checkoutUrl);
+        _logger.LogInformation("Checkout URL created: {CheckoutUrl}", checkoutUrl);
 
     return new WompiTransactionResponseDto
     {
