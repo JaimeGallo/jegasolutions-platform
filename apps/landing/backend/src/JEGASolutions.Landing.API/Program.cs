@@ -175,7 +175,7 @@ app.MapControllers();
 app.MapGet("/", () => new
 {
     message = "JEGASolutions Backend is working!",
-    version = "v4",
+    version = "v5-production-ready",
     timestamp = DateTime.UtcNow
 });
 
