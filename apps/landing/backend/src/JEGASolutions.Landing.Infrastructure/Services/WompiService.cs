@@ -308,6 +308,21 @@ public class WompiService : IWompiService
 
             // Determinar el nombre del módulo según la referencia
             var moduleName = ExtractModuleNameFromReference(payment.Reference);
+
+            // Determinar URL del módulo (NO usar subdomain del tenant)
+        string moduleUrl;
+        switch (moduleName.ToLower())
+        {
+            case "extra hours":
+                moduleUrl = "https://extrahours.jegasolutions.co";
+                break;
+            case "report builder":
+                moduleUrl = "https://reportbuilder.jegasolutions.co"; // Cuando esté desplegado
+                break;
+            default:
+                moduleUrl = "https://extrahours.jegasolutions.co";
+                break;
+        }
             
             // Crear el módulo para el tenant
             var tenantModule = new TenantModule
@@ -345,6 +360,7 @@ public class WompiService : IWompiService
             _logger.LogInformation("Created admin user {UserId} for tenant {TenantId}", 
                 adminUser.Id, tenant.Id);
 
+            /*
             // Enviar email de bienvenida
             try
             {
@@ -365,6 +381,212 @@ public class WompiService : IWompiService
             throw;
         }
     }
+    */
+
+     // ============================================
+        // NUEVO EMAIL DE BIENVENIDA (Con URL correcta)
+        // ============================================
+        try
+        {
+            // Construir email HTML profesional
+            var emailSubject = "🎉 ¡Bienvenido a JEGASolutions!";
+            var emailBody = $@"
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <style>
+        body {{ font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; }}
+        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+        .header {{ 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            color: white; 
+            padding: 30px; 
+            text-align: center; 
+            border-radius: 10px 10px 0 0;
+        }}
+        .content {{ 
+            background: white; 
+            padding: 30px; 
+            border: 1px solid #e5e7eb;
+            border-top: none;
+        }}
+        .credentials-box {{ 
+            background: #f9fafb; 
+            border-left: 4px solid #667eea; 
+            padding: 20px; 
+            margin: 20px 0;
+            border-radius: 4px;
+        }}
+        .credential-item {{ margin: 15px 0; }}
+        .credential-label {{ 
+            font-weight: bold; 
+            color: #4b5563; 
+            display: block; 
+            margin-bottom: 5px;
+        }}
+        .credential-value {{ 
+            background: white; 
+            padding: 10px; 
+            border-radius: 4px; 
+            border: 1px solid #d1d5db;
+            font-family: 'Courier New', monospace;
+            color: #1f2937;
+        }}
+        .button {{ 
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            color: white !important; 
+            padding: 15px 40px; 
+            text-decoration: none; 
+            border-radius: 6px; 
+            font-weight: bold;
+            margin: 20px 0;
+        }}
+        .warning-box {{ 
+            background: #fef2f2; 
+            border-left: 4px solid #ef4444; 
+            padding: 15px; 
+            margin: 20px 0;
+            border-radius: 4px;
+        }}
+        .info-box {{ 
+            background: #eff6ff; 
+            border-left: 4px solid #3b82f6; 
+            padding: 15px; 
+            margin: 20px 0;
+            border-radius: 4px;
+        }}
+        .footer {{ 
+            background: #1f2937; 
+            color: #9ca3af; 
+            padding: 20px; 
+            text-align: center;
+            border-radius: 0 0 10px 10px;
+            font-size: 12px;
+        }}
+        .highlight {{ 
+            color: #667eea; 
+            font-weight: bold;
+        }}
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <div class='header'>
+            <h1 style='margin: 0;'>¡Bienvenido a JEGASolutions! 🚀</h1>
+            <p style='margin: 10px 0 0 0; opacity: 0.9;'>Tu módulo {moduleName} está listo</p>
+        </div>
+        
+        <div class='content'>
+            <h2 style='color: #1f2937;'>Hola {firstName},</h2>
+            
+            <p style='font-size: 16px;'>
+                ¡Gracias por confiar en nosotros! Tu cuenta ha sido creada exitosamente y ya puedes 
+                empezar a usar <strong class='highlight'>{moduleName}</strong>.
+            </p>
+
+            <div class='info-box'>
+                <strong>📋 Información de tu Empresa</strong>
+                <p style='margin: 10px 0 0 0;'>
+                    <strong>Empresa:</strong> {tenant.CompanyName}<br/>
+                    <strong>Módulo Adquirido:</strong> {moduleName}<br/>
+                    <strong>Fecha de Activación:</strong> {DateTime.UtcNow:dd/MM/yyyy HH:mm}
+                </p>
+            </div>
+
+            <div class='credentials-box'>
+                <h3 style='margin-top: 0; color: #667eea;'>🔑 Tus Credenciales de Acceso</h3>
+                
+                <div class='credential-item'>
+                    <span class='credential-label'>URL de Acceso:</span>
+                    <div class='credential-value'>{moduleUrl}</div>
+                </div>
+
+                <div class='credential-item'>
+                    <span class='credential-label'>Usuario (Email):</span>
+                    <div class='credential-value'>{payment.CustomerEmail}</div>
+                </div>
+
+                <div class='credential-item'>
+                    <span class='credential-label'>Contraseña Temporal:</span>
+                    <div class='credential-value'>{temporaryPassword}</div>
+                </div>
+            </div>
+
+            <div class='warning-box'>
+                <strong>⚠️ Importante - Seguridad</strong>
+                <p style='margin: 10px 0 0 0;'>
+                    Por tu seguridad, te recomendamos <strong>cambiar tu contraseña</strong> 
+                    después de iniciar sesión por primera vez.
+                </p>
+            </div>
+
+            <div style='text-align: center; margin: 30px 0;'>
+                <a href='{moduleUrl}' class='button'>
+                    Acceder Ahora →
+                </a>
+            </div>
+
+            <div class='info-box'>
+                <strong>💡 Próximos Pasos</strong>
+                <ol style='margin: 10px 0 0 0; padding-left: 20px;'>
+                    <li>Haz click en el botón "Acceder Ahora"</li>
+                    <li>Inicia sesión con tus credenciales</li>
+                    <li>Cambia tu contraseña temporal</li>
+                    <li>Configura tu perfil y empresa</li>
+                    <li>¡Empieza a usar el sistema!</li>
+                </ol>
+            </div>
+
+            <p style='margin-top: 30px;'>
+                Si tienes alguna pregunta o necesitas ayuda, no dudes en contactarnos. 
+                Estamos aquí para ayudarte a sacar el máximo provecho de tu inversión.
+            </p>
+
+            <p style='color: #6b7280;'>
+                ¡Gracias por elegirnos!<br/>
+                <strong>El Equipo de JEGASolutions</strong>
+            </p>
+        </div>
+
+        <div class='footer'>
+            <p style='margin: 0 0 10px 0;'>
+                © 2025 JEGASolutions. Todos los derechos reservados.
+            </p>
+            <p style='margin: 0;'>
+                📧 soporte@jegasolutions.co | 🌐 www.jegasolutions.co
+            </p>
+        </div>
+    </div>
+</body>
+</html>";
+
+            await _emailService.SendWelcomeEmailAsync(
+                payment.CustomerEmail ?? "",
+                emailSubject,
+                emailBody
+            );
+
+            _logger.LogInformation("Welcome email sent to {Email} with module URL {ModuleUrl}", 
+                payment.CustomerEmail, moduleUrl);
+        }
+        catch (Exception emailEx)
+        {
+            _logger.LogWarning(emailEx, "Failed to send welcome email to {Email}", 
+                payment.CustomerEmail);
+        }
+
+        _logger.LogInformation(
+            "Tenant setup completed for {CompanyName}. Module: {ModuleName}, URL: {ModuleUrl}", 
+            tenant.CompanyName, moduleName, moduleUrl);
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Error creating tenant for payment {Reference}", payment.Reference);
+        throw;
+    }
+}
 
     private string ExtractModuleNameFromReference(string reference)
     {

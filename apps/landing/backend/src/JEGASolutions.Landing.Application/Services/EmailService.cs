@@ -19,6 +19,32 @@ public class EmailService : IEmailService
         _logger = logger;
     }
 
+    // ============================================
+    // NUEVO: Método sobrecargado con subject y body personalizados
+    // ============================================
+    public async Task<bool> SendWelcomeEmailAsync(string toEmail, string subject, string htmlBody)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(toEmail))
+            {
+                _logger.LogWarning("Cannot send email: toEmail is null or empty");
+                return false;
+            }
+
+            await SendEmailAsync(toEmail, subject, htmlBody);
+            _logger.LogInformation("Welcome email sent to {Email}", toEmail);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send welcome email to {Email}", toEmail);
+            return false;
+        }
+    }
+
+
+
     public async Task<bool> SendWelcomeEmailAsync(Tenant tenant, string temporaryPassword)
     {
         try
