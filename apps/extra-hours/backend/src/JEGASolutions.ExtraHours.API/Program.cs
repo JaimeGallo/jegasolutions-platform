@@ -71,13 +71,33 @@ builder.Services.AddScoped<ICompensationRequestService, CompensationRequestServi
 builder.Services.AddScoped<IEmailService, JEGASolutions.ExtraHours.Infrastructure.Services.EmailService>();
 
 // Add CORS
+// Add CORS - CONFIGURACIÓN ACTUALIZADA
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+        policy.SetIsOriginAllowed(origin => 
+        {
+            if (string.IsNullOrEmpty(origin))
+                return false;
+
+            // Permitir localhost
+            if (origin.StartsWith("http://localhost:") || origin.StartsWith("https://localhost:"))
+                return true;
+
+            // Permitir todos los dominios de Vercel
+            if (origin.Contains(".vercel.app"))
+                return true;
+
+            // Permitir dominios personalizados
+            if (origin.Contains("jegasolutions.co"))
+                return true;
+
+            return false;
+        })
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+        .AllowCredentials();
     });
 });
 

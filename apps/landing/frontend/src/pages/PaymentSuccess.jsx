@@ -280,7 +280,7 @@ const PaymentSuccess = () => {
           
           {isApproved && (
             <button
-              onClick={() => window.open('mailto:support@jegasolutions.co', '_blank')}
+              onClick={() => window.open('mailto:JaimeGallo@jegasolutions.co', '_blank')}
               className="inline-flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
             >
               <Mail className="w-5 h-5" />
