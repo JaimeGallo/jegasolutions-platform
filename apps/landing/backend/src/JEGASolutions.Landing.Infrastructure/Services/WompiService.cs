@@ -98,7 +98,7 @@ public class WompiService : IWompiService
         return ComputeSHA256(concatenatedString);
     }
 
- public async Task<WompiTransactionResponseDto> CreateTransactionAsync(Payment payment)
+ public Task<WompiTransactionResponseDto> CreateTransactionAsync(Payment payment)
 {
     _logger.LogInformation("Creating Wompi checkout for reference {Reference}", payment.Reference);
 
@@ -124,13 +124,13 @@ public class WompiService : IWompiService
 
         _logger.LogInformation("Checkout URL created: {CheckoutUrl}", checkoutUrl);
 
-    return new WompiTransactionResponseDto
+    return Task.FromResult(new WompiTransactionResponseDto
     {
         Id = $"WMP_{DateTime.Now:yyyyMMdd}_{payment.Id}",
         Reference = reference,
         CheckoutUrl = checkoutUrl,
         Status = "PENDING"
-    };
+    });
 }
 
    public Task<bool> ValidateWebhookSignature(string payload, string signature)
@@ -531,7 +531,7 @@ public class WompiService : IWompiService
             <div class='info-box'>
                 <strong>💡 Próximos Pasos</strong>
                 <ol style='margin: 10px 0 0 0; padding-left: 20px;'>
-                    <li>Haz click en el botón "Acceder Ahora"</li>
+                    <li>Haz click en el botón 'Acceder Ahora'</li>
                     <li>Inicia sesión con tus credenciales</li>
                     <li>Cambia tu contraseña temporal</li>
                     <li>Configura tu perfil y empresa</li>
