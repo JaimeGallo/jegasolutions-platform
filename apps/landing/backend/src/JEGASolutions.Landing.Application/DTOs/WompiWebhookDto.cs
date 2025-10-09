@@ -11,7 +11,7 @@ public class WompiWebhookDto
     public string Event { get; set; } = string.Empty;
 
     [JsonPropertyName("data")]
-    public WompiWebhookTransactionDto Data { get; set; } = new();
+    public WompiWebhookDataDto Data { get; set; } = new();
 
     [JsonPropertyName("environment")]
     public string Environment { get; set; } = string.Empty;
@@ -21,6 +21,15 @@ public class WompiWebhookDto
 
     [JsonPropertyName("sent_at")]
     public string SentAt { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Wrapper para el objeto "data" del webhook que contiene "transaction"
+/// </summary>
+public class WompiWebhookDataDto
+{
+    [JsonPropertyName("transaction")]
+    public WompiWebhookTransactionDto Transaction { get; set; } = new();
 }
 
 /// <summary>
