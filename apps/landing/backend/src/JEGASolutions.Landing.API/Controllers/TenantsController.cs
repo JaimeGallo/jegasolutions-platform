@@ -105,9 +105,11 @@ namespace JEGASolutions.Landing.API.Controllers
                         status = tm.Status,
                         purchasedAt = tm.PurchasedAt,
                         expiresAt = (DateTime?)null,
-                        // URLs y metadata dinámicas basadas en el subdomain del tenant
+                        // URLs y metadata
                         route = GetModuleRoute(tm.ModuleName),
-                        url = $"https://{tenant.Subdomain}.jegasolutions.co{GetModuleRoute(tm.ModuleName)}",
+                        // TEMPORAL: Usar URLs de las apps desplegadas actualmente
+                        // TODO: Cambiar cuando se implemente routing en tenant-dashboard
+                        url = GetModuleUrl(tm.ModuleName),
                         description = GetModuleDescription(tm.ModuleName),
                         icon = GetModuleIcon(tm.ModuleName)
                     })
@@ -169,6 +171,16 @@ namespace JEGASolutions.Landing.API.Controllers
                 "Extra Hours" => "/extra-hours",
                 "Report Builder" => "/report-builder",
                 _ => "/"
+            };
+        }
+
+        private static string GetModuleUrl(string moduleName)
+        {
+            return moduleName switch
+            {
+                "Extra Hours" => "https://extrahours.jegasolutions.co",
+                "Report Builder" => "https://reportbuilder.jegasolutions.co",
+                _ => "https://www.jegasolutions.co"
             };
         }
 
