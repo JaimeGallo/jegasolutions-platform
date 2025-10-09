@@ -188,8 +188,8 @@ EMAIL_FROM=noreply@jegasolutions.co
 
 ```jsx
 ✅ PricingSection.jsx         // Pricing cards con 2 módulos
-   ├─ Extra Hours: COP $150,000/mes
-   └─ Report Builder: COP $250,000/mes
+   ├─ Extra Hours
+   └─ Report Builder
 
 ✅ WompiCheckoutButton.jsx    // Integración Wompi Widget
    ├─ Genera signature de integridad
