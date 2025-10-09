@@ -37,7 +37,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidIssuer = jwtSettings["Issuer"],
             ValidAudience = jwtSettings["Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
-            
+
             // ✅ MAPEO DE CLAIMS
             RoleClaimType = "role",
             NameClaimType = ClaimTypes.Name
@@ -76,7 +76,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.SetIsOriginAllowed(origin => 
+        policy.SetIsOriginAllowed(origin =>
         {
             if (string.IsNullOrEmpty(origin))
                 return false;
@@ -110,18 +110,26 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+// ⚠️ ORDEN CRÍTICO DEL PIPELINE (muy importante para CORS):
+// 1. HTTPS Redirection
 app.UseHttpsRedirection();
+
+// 2. Routing (NECESARIO para que CORS funcione con endpoints)
+app.UseRouting();
+
+// 3. CORS (debe ir DESPUÉS de UseRouting y ANTES de UseAuthentication)
 app.UseCors("AllowAll");
 
-// ORDEN CRÍTICO DEL PIPELINE:
-// 1. Primero autenticación (valida JWT y establece context.User con claims)
+// 4. Authentication (valida JWT y establece context.User con claims)
 app.UseAuthentication();
-// 2. Luego autorización (verifica roles usando context.User)
+
+// 5. Authorization (verifica roles usando context.User)
 app.UseAuthorization();
 
-// 3. Finalmente middleware de tenant (puede leer claims de context.User)
+// 6. Middleware personalizado de tenant (puede leer claims de context.User)
 app.UseMiddleware<TenantMiddleware>();
 
+// 7. Map Controllers
 app.MapControllers();
 
 // Wait for database to be ready (health check) but DO NOT create tables
@@ -131,24 +139,24 @@ using (var scope = app.Services.CreateScope())
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     var maxRetries = 30;
     var delay = TimeSpan.FromSeconds(2);
-    
+
     for (int i = 0; i < maxRetries; i++)
     {
         try
         {
             // Just test the connection, don't create database
             await context.Database.CanConnectAsync();
-            Console.WriteLine("Database connection successful");
+            Console.WriteLine("✅ Database connection successful");
             break;
         }
         catch (Exception ex)
         {
             if (i == maxRetries - 1)
             {
-                Console.WriteLine($"Failed to connect to database after {maxRetries} attempts: {ex.Message}");
+                Console.WriteLine($"❌ Failed to connect to database after {maxRetries} attempts: {ex.Message}");
                 throw;
             }
-            Console.WriteLine($"Database connection attempt {i + 1} failed, retrying in {delay.TotalSeconds} seconds...");
+            Console.WriteLine($"⏳ Database connection attempt {i + 1}/{maxRetries} failed, retrying in {delay.TotalSeconds} seconds...");
             await Task.Delay(delay);
         }
     }

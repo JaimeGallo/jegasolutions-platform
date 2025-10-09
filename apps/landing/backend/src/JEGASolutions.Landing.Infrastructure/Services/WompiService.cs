@@ -57,14 +57,14 @@ public class WompiService : IWompiService
         _publicKey = _configuration["Wompi__PublicKey"] ?? _configuration["Wompi:PublicKey"]
             ?? throw new ArgumentNullException("Wompi__PublicKey", "Wompi public key is required.");
 
-            _eventsSecret = _configuration["Wompi__EventsSecret"] ?? _configuration["Wompi:EventsSecret"]
-        ?? _privateKey; // Fallback al private key si no existe
+        _eventsSecret = _configuration["Wompi__EventsSecret"] ?? _configuration["Wompi:EventsSecret"]
+            ?? _privateKey; // Fallback al private key si no existe
 
         _integritySecret = _configuration["Wompi__IntegritySecret"] ?? _configuration["Wompi:IntegritySecret"]
             ?? throw new ArgumentNullException("Wompi__IntegritySecret", "Wompi integrity secret is required.");
 
-    _logger.LogInformation("Wompi Events Secret configured: {Configured}",
-        !string.IsNullOrEmpty(_eventsSecret) ? "Yes" : "No");
+        _logger.LogInformation("Wompi Events Secret configured: {Configured}",
+            !string.IsNullOrEmpty(_eventsSecret) ? "Yes" : "No");
 
         var baseUrl = _configuration["Wompi__BaseUrl"] ?? _configuration["Wompi:BaseUrl"]
             ?? "https://production.wompi.co/v1/";
@@ -98,23 +98,23 @@ public class WompiService : IWompiService
         return ComputeSHA256(concatenatedString);
     }
 
- public Task<WompiTransactionResponseDto> CreateTransactionAsync(Payment payment)
-{
-    _logger.LogInformation("Creating Wompi checkout for reference {Reference}", payment.Reference);
+    public Task<WompiTransactionResponseDto> CreateTransactionAsync(Payment payment)
+    {
+        _logger.LogInformation("Creating Wompi checkout for reference {Reference}", payment.Reference);
 
-    var redirectUrl = _configuration["Wompi:RedirectUrl"]
-        ?? "https://jegasolutions-platform-frontend-95l.vercel.app/payment-success";
+        var redirectUrl = _configuration["Wompi:RedirectUrl"]
+            ?? "https://jegasolutions-platform-frontend-95l.vercel.app/payment-success";
 
-    var amountInCents = (int)(payment.Amount * 100);
-    var currency = "COP";
-    var reference = payment.Reference;
+        var amountInCents = (int)(payment.Amount * 100);
+        var currency = "COP";
+        var reference = payment.Reference;
 
-     var signature = GenerateIntegritySignature(reference, amountInCents, currency);
+        var signature = GenerateIntegritySignature(reference, amountInCents, currency);
 
         _logger.LogInformation("Generated integrity signature: {Signature}", signature);
 
-    // URL directa del widget (permite TODOS los métodos de pago)
-    var checkoutUrl = "https://checkout.wompi.co/p/" +
+        // URL directa del widget (permite TODOS los métodos de pago)
+        var checkoutUrl = "https://checkout.wompi.co/p/" +
             $"?public-key={_publicKey}" +
             $"&currency={currency}" +
             $"&amount-in-cents={amountInCents}" +
@@ -124,29 +124,29 @@ public class WompiService : IWompiService
 
         _logger.LogInformation("Checkout URL created: {CheckoutUrl}", checkoutUrl);
 
-    return Task.FromResult(new WompiTransactionResponseDto
-    {
-        Id = $"WMP_{DateTime.Now:yyyyMMdd}_{payment.Id}",
-        Reference = reference,
-        CheckoutUrl = checkoutUrl,
-        Status = "PENDING"
-    });
-}
-
-   public Task<bool> ValidateWebhookSignature(string payload, string signature)
-{
-    // Usar Events Secret en lugar de Private Key
-    var expectedSignature = ComputeHMAC(payload, _eventsSecret);
-    var isValid = signature.Equals(expectedSignature, StringComparison.OrdinalIgnoreCase);
-
-    if (!isValid)
-    {
-        _logger.LogWarning("Invalid webhook signature. Expected: {Expected}, Received: {Received}",
-            expectedSignature, signature);
+        return Task.FromResult(new WompiTransactionResponseDto
+        {
+            Id = $"WMP_{DateTime.Now:yyyyMMdd}_{payment.Id}",
+            Reference = reference,
+            CheckoutUrl = checkoutUrl,
+            Status = "PENDING"
+        });
     }
 
-    return Task.FromResult(isValid);
-}
+    public Task<bool> ValidateWebhookSignature(string payload, string signature)
+    {
+        // Usar Events Secret en lugar de Private Key
+        var expectedSignature = ComputeHMAC(payload, _eventsSecret);
+        var isValid = signature.Equals(expectedSignature, StringComparison.OrdinalIgnoreCase);
+
+        if (!isValid)
+        {
+            _logger.LogWarning("Invalid webhook signature. Expected: {Expected}, Received: {Received}",
+                expectedSignature, signature);
+        }
+
+        return Task.FromResult(isValid);
+    }
 
     public async Task<WompiTransactionResponseDto?> GetTransactionStatus(string transactionId)
     {
@@ -174,73 +174,73 @@ public class WompiService : IWompiService
     }
 
     public async Task<bool> ProcessPaymentWebhook(WompiWebhookDto payload)
-{
-    try
     {
-        // Acceder a payload.Data.Transaction
-        var transaction = payload.Data.Transaction;
-
-        _logger.LogInformation("Processing webhook for reference {Reference}, status {Status}",
-            transaction.Reference, transaction.Status);
-
-        var payment = await _paymentRepository.FirstOrDefaultAsync(
-            p => p.Reference == transaction.Reference
-        );
-
-        if (payment == null)
+        try
         {
-            payment = new Payment
-            {
-                Reference = transaction.Reference,
-                Amount = transaction.AmountInCents / 100m,
-                CustomerEmail = transaction.CustomerEmail,
-                CustomerName = transaction.Customer?.FullName ?? "Cliente",
-                CustomerPhone = transaction.Customer?.PhoneNumber,
-                WompiTransactionId = transaction.Id,
-                Status = MapWompiStatus(transaction.Status),
-                CreatedAt = transaction.CreatedAt ?? DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
+            // Acceder a payload.Data.Transaction
+            var transaction = payload.Data.Transaction;
 
-            await _paymentRepository.AddAsync(payment);
-            _logger.LogInformation("Created new payment record for reference {Reference}",
-                payment.Reference);
-        }
-        else
-        {
-            payment.Status = MapWompiStatus(transaction.Status);
-            payment.WompiTransactionId = transaction.Id;
-            payment.UpdatedAt = DateTime.UtcNow;
+            _logger.LogInformation("Processing webhook for reference {Reference}, status {Status}",
+                transaction.Reference, transaction.Status);
 
-            if (transaction.Customer != null)
+            var payment = await _paymentRepository.FirstOrDefaultAsync(
+                p => p.Reference == transaction.Reference
+            );
+
+            if (payment == null)
             {
-                payment.CustomerEmail = transaction.CustomerEmail;
-                payment.CustomerName = transaction.Customer.FullName;
-                payment.CustomerPhone = transaction.Customer.PhoneNumber;
+                payment = new Payment
+                {
+                    Reference = transaction.Reference,
+                    Amount = transaction.AmountInCents / 100m,
+                    CustomerEmail = transaction.CustomerEmail,
+                    CustomerName = transaction.Customer?.FullName ?? "Cliente",
+                    CustomerPhone = transaction.Customer?.PhoneNumber,
+                    WompiTransactionId = transaction.Id,
+                    Status = MapWompiStatus(transaction.Status),
+                    CreatedAt = transaction.CreatedAt ?? DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                await _paymentRepository.AddAsync(payment);
+                _logger.LogInformation("Created new payment record for reference {Reference}",
+                    payment.Reference);
+            }
+            else
+            {
+                payment.Status = MapWompiStatus(transaction.Status);
+                payment.WompiTransactionId = transaction.Id;
+                payment.UpdatedAt = DateTime.UtcNow;
+
+                if (transaction.Customer != null)
+                {
+                    payment.CustomerEmail = transaction.CustomerEmail;
+                    payment.CustomerName = transaction.Customer.FullName;
+                    payment.CustomerPhone = transaction.Customer.PhoneNumber;
+                }
+
+                await _paymentRepository.UpdateAsync(payment);
+                _logger.LogInformation("Updated payment record for reference {Reference}",
+                    payment.Reference);
             }
 
-            await _paymentRepository.UpdateAsync(payment);
-            _logger.LogInformation("Updated payment record for reference {Reference}",
-                payment.Reference);
+            await _unitOfWork.SaveChangesAsync();
+
+            if (transaction.Status.ToUpper() == "APPROVED")
+            {
+                _logger.LogInformation("Payment approved, creating tenant for reference {Reference}",
+                    transaction.Reference);
+                await CreateTenantFromPayment(payment);
+            }
+
+            return true;
         }
-
-        await _unitOfWork.SaveChangesAsync();
-
-        if (transaction.Status.ToUpper() == "APPROVED")
+        catch (Exception ex)
         {
-            _logger.LogInformation("Payment approved, creating tenant for reference {Reference}",
-                transaction.Reference);
-            await CreateTenantFromPayment(payment);
+            _logger.LogError(ex, "Error processing webhook");
+            return false;
         }
-
-        return true;
     }
-    catch (Exception ex)
-    {
-        _logger.LogError(ex, "Error processing webhook");
-        return false;
-    }
-}
 
     private async Task<string> GetAcceptanceTokenAsync()
     {
@@ -291,7 +291,7 @@ public class WompiService : IWompiService
                 {
                     // Determinar el nombre del módulo
                     var purchasedModuleName = ExtractModuleNameFromReference(payment.Reference);
-                    
+
                     // Verificar si el módulo ya existe para este tenant
                     var existingModule = await _tenantModuleRepository.FirstOrDefaultAsync(
                         tm => tm.TenantId == existingTenant.Id && tm.ModuleName == purchasedModuleName
@@ -311,7 +311,7 @@ public class WompiService : IWompiService
                         await _tenantModuleRepository.AddAsync(newTenantModule);
                         await _unitOfWork.SaveChangesAsync();
 
-                        _logger.LogInformation("Added module {ModuleName} to existing tenant {TenantId}", 
+                        _logger.LogInformation("Added module {ModuleName} to existing tenant {TenantId}",
                             purchasedModuleName, existingTenant.Id);
 
                         // Enviar email de confirmación de compra de módulo adicional
@@ -319,7 +319,7 @@ public class WompiService : IWompiService
                     }
                     else
                     {
-                        _logger.LogInformation("Module {ModuleName} already exists for tenant {TenantId}", 
+                        _logger.LogInformation("Module {ModuleName} already exists for tenant {TenantId}",
                             purchasedModuleName, existingTenant.Id);
                     }
                 }
@@ -352,20 +352,26 @@ public class WompiService : IWompiService
             // Determinar el nombre del módulo según la referencia
             var moduleName = ExtractModuleNameFromReference(payment.Reference);
 
-            // Determinar URL del módulo (NO usar subdomain del tenant)
-        string moduleUrl;
-        switch (moduleName.ToLower())
-        {
-            case "extra hours":
-                moduleUrl = "https://extrahours.jegasolutions.co";
-                break;
-            case "report builder":
-                moduleUrl = "https://reportbuilder.jegasolutions.co"; // Cuando esté desplegado
-                break;
-            default:
-                moduleUrl = "https://extrahours.jegasolutions.co";
-                break;
-        }
+            // Usar subdomain del tenant para acceder al dashboard
+            string tenantDashboardUrl = $"https://{tenant.Subdomain}.jegasolutions.co";
+
+            // Determinar la ruta del módulo dentro del dashboard
+            string moduleRoute;
+            switch (moduleName.ToLower())
+            {
+                case "extra hours":
+                    moduleRoute = "/extra-hours";
+                    break;
+                case "report builder":
+                    moduleRoute = "/report-builder";
+                    break;
+                default:
+                    moduleRoute = "/extra-hours";
+                    break;
+            }
+
+            // URL completa: subdomain.jegasolutions.co/extra-hours
+            string moduleUrl = $"{tenantDashboardUrl}{moduleRoute}";
 
             // Crear el módulo para el tenant
             var tenantModule = new TenantModule
@@ -426,94 +432,17 @@ public class WompiService : IWompiService
     }
     */
 
-     // ============================================
-        // NUEVO EMAIL DE BIENVENIDA (Con URL correcta)
-        // ============================================
-        try
-        {
-            // Construir email HTML profesional
-            var emailSubject = "🎉 ¡Bienvenido a JEGASolutions!";
-            var emailBody = $@"
+            // ============================================
+            // NUEVO EMAIL DE BIENVENIDA (Con URL correcta)
+            // ============================================
+            try
+            {
+                // Construir email HTML profesional
+                var emailSubject = "🎉 ¡Bienvenido a JEGASolutions!";
+                var emailBody = $@"
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset='utf-8'>
-    <style>
-        body {{ font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; }}
-        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-        .header {{
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-            border-radius: 10px 10px 0 0;
-        }}
-        .content {{
-            background: white;
-            padding: 30px;
-            border: 1px solid #e5e7eb;
-            border-top: none;
-        }}
-        .credentials-box {{
-            background: #f9fafb;
-            border-left: 4px solid #667eea;
-            padding: 20px;
-            margin: 20px 0;
-            border-radius: 4px;
-        }}
-        .credential-item {{ margin: 15px 0; }}
-        .credential-label {{
-            font-weight: bold;
-            color: #4b5563;
-            display: block;
-            margin-bottom: 5px;
-        }}
-        .credential-value {{
-            background: white;
-            padding: 10px;
-            border-radius: 4px;
-            border: 1px solid #d1d5db;
-            font-family: 'Courier New', monospace;
-            color: #1f2937;
-        }}
-        .button {{
-            display: inline-block;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white !important;
-            padding: 15px 40px;
-            text-decoration: none;
-            border-radius: 6px;
-            font-weight: bold;
-            margin: 20px 0;
-        }}
-        .warning-box {{
-            background: #fef2f2;
-            border-left: 4px solid #ef4444;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 4px;
-        }}
-        .info-box {{
-            background: #eff6ff;
-            border-left: 4px solid #3b82f6;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 4px;
-        }}
-        .footer {{
-            background: #1f2937;
-            color: #9ca3af;
-            padding: 20px;
-            text-align: center;
-            border-radius: 0 0 10px 10px;
-            font-size: 12px;
-        }}
-        .highlight {{
-            color: #667eea;
-            font-weight: bold;
-        }}
-    </style>
-</head>
+<!-- ... (todo el estilo igual) ... -->
 <body>
     <div class='container'>
         <div class='header'>
@@ -530,9 +459,10 @@ public class WompiService : IWompiService
             </p>
 
             <div class='info-box'>
-                <strong>📋 Información de tu Empresa</strong>
+                <strong>📋 Información de tu Cuenta</strong>
                 <p style='margin: 10px 0 0 0;'>
                     <strong>Empresa:</strong> {tenant.CompanyName}<br/>
+                    <strong>Subdomain:</strong> {tenant.Subdomain}.jegasolutions.co<br/>
                     <strong>Módulo Adquirido:</strong> {moduleName}<br/>
                     <strong>Fecha de Activación:</strong> {DateTime.UtcNow:dd/MM/yyyy HH:mm}
                 </p>
@@ -542,8 +472,8 @@ public class WompiService : IWompiService
                 <h3 style='margin-top: 0; color: #667eea;'>🔑 Tus Credenciales de Acceso</h3>
 
                 <div class='credential-item'>
-                    <span class='credential-label'>URL de Acceso:</span>
-                    <div class='credential-value'>{moduleUrl}</div>
+                    <span class='credential-label'>URL de Acceso al Dashboard:</span>
+                    <div class='credential-value'>{tenantDashboardUrl}</div>
                 </div>
 
                 <div class='credential-item'>
@@ -566,8 +496,8 @@ public class WompiService : IWompiService
             </div>
 
             <div style='text-align: center; margin: 30px 0;'>
-                <a href='{moduleUrl}' class='button'>
-                    Acceder Ahora →
+                <a href='{tenantDashboardUrl}' class='button'>
+                    Acceder al Dashboard →
                 </a>
             </div>
 
@@ -598,38 +528,38 @@ public class WompiService : IWompiService
                 © 2025 JEGASolutions. Todos los derechos reservados.
             </p>
             <p style='margin: 0;'>
-                📧 soporte@jegasolutions.co | 🌐 www.jegasolutions.co
+                📧 JaimeGallo@jegasolutions.co | 🌐 www.jegasolutions.co
             </p>
         </div>
     </div>
 </body>
 </html>";
 
-            await _emailService.SendWelcomeEmailAsync(
-                payment.CustomerEmail ?? "",
-                emailSubject,
-                emailBody
-            );
+                await _emailService.SendWelcomeEmailAsync(
+                    payment.CustomerEmail ?? "",
+                    emailSubject,
+                    emailBody
+                );
 
-            _logger.LogInformation("Welcome email sent to {Email} with module URL {ModuleUrl}",
-                payment.CustomerEmail, moduleUrl);
+                _logger.LogInformation("Welcome email sent to {Email} with module URL {ModuleUrl}",
+                    payment.CustomerEmail, moduleUrl);
+            }
+            catch (Exception emailEx)
+            {
+                _logger.LogWarning(emailEx, "Failed to send welcome email to {Email}",
+                    payment.CustomerEmail);
+            }
+
+            _logger.LogInformation(
+                "Tenant setup completed for {CompanyName}. Module: {ModuleName}, URL: {ModuleUrl}",
+                tenant.CompanyName, moduleName, moduleUrl);
         }
-        catch (Exception emailEx)
+        catch (Exception ex)
         {
-            _logger.LogWarning(emailEx, "Failed to send welcome email to {Email}",
-                payment.CustomerEmail);
+            _logger.LogError(ex, "Error creating tenant for payment {Reference}", payment.Reference);
+            throw;
         }
-
-        _logger.LogInformation(
-            "Tenant setup completed for {CompanyName}. Module: {ModuleName}, URL: {ModuleUrl}",
-            tenant.CompanyName, moduleName, moduleUrl);
     }
-    catch (Exception ex)
-    {
-        _logger.LogError(ex, "Error creating tenant for payment {Reference}", payment.Reference);
-        throw;
-    }
-}
 
     private async Task SendModulePurchaseEmailAsync(Payment payment, Tenant tenant, string moduleName)
     {

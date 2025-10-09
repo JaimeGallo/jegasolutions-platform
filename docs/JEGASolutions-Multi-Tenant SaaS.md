@@ -1716,11 +1716,11 @@ Semana 3: E2E Tests
 ### Capacidades Comercializables HOY:
 
 ```
-✅ GestorHorasExtra - 
+✅ GestorHorasExtra -
    └─ 100% listo para venta inmediata
    └─ Value proposition: Ahorra 10+ horas/mes en gestión de horas extra
 
-🟢 ReportBuilder con IA - COP 
+🟢 ReportBuilder con IA -
    └─ 96% funcional (backend 100%, frontend 88%)
    └─ Comercializable con nota de "algunas features en beta"
    └─ Value proposition: Reportes consolidados con IA en 50% menos tiempo
