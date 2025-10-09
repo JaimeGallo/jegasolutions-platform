@@ -673,11 +673,11 @@ public class WompiService : IWompiService
     private string ExtractModuleNameFromReference(string reference)
     {
         if (reference.Contains("EXTRAHOURS", StringComparison.OrdinalIgnoreCase))
-            return "Extra Hours";
+            return "extra-hours";  // ✅ CORREGIDO
         if (reference.Contains("REPORTBUILDER", StringComparison.OrdinalIgnoreCase))
-            return "Report Builder";
+            return "report-builder";  // ✅ CORREGIDO
 
-        return "Extra Hours"; // Default
+        return "extra-hours"; // ✅ CORREGIDO - Default
     }
 
     private string MapWompiStatus(string wompiStatus)
