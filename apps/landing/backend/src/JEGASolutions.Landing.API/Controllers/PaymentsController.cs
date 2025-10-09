@@ -51,11 +51,11 @@ public async Task<IActionResult> Webhook()
         _logger.LogInformation("Event: {Event}", payload?.Event ?? "NULL");
         _logger.LogInformation("Environment: {Environment}", payload?.Environment ?? "NULL");
         _logger.LogInformation("Timestamp: {Timestamp}", payload?.Timestamp);
-        _logger.LogInformation("Data.Id: {Id}", payload?.Data?.Id ?? "NULL");
-        _logger.LogInformation("Data.Reference: {Reference}", payload?.Data?.Reference ?? "NULL");
-        _logger.LogInformation("Data.Status: {Status}", payload?.Data?.Status ?? "NULL");
-        _logger.LogInformation("Data.AmountInCents: {Amount}", payload?.Data?.AmountInCents);
-        _logger.LogInformation("Data.CustomerEmail: {Email}", payload?.Data?.CustomerEmail ?? "NULL");
+        _logger.LogInformation("Transaction.Id: {Id}", payload?.Data?.Transaction?.Id ?? "NULL");
+        _logger.LogInformation("Transaction.Reference: {Reference}", payload?.Data?.Transaction?.Reference ?? "NULL");
+        _logger.LogInformation("Transaction.Status: {Status}", payload?.Data?.Transaction?.Status ?? "NULL");
+        _logger.LogInformation("Transaction.AmountInCents: {Amount}", payload?.Data?.Transaction?.AmountInCents);
+        _logger.LogInformation("Transaction.CustomerEmail: {Email}", payload?.Data?.Transaction?.CustomerEmail ?? "NULL");
         _logger.LogInformation("=====================================");
 
         // Get the signature from headers
@@ -68,7 +68,7 @@ public async Task<IActionResult> Webhook()
             var isValidSignature = await _wompiService.ValidateWebhookSignature(rawBody, signature);
             if (!isValidSignature)
             {
-                _logger.LogWarning("Invalid signature for reference {Reference}", payload?.Data?.Reference ?? "NULL");
+                _logger.LogWarning("Invalid signature for reference {Reference}", payload?.Data?.Transaction?.Reference ?? "NULL");
                 return Unauthorized(new { message = "Invalid signature" });
             }
 
@@ -77,7 +77,7 @@ public async Task<IActionResult> Webhook()
         else
         {
             _logger.LogWarning("Webhook received without X-Integrity header for reference {Reference}",
-                payload?.Data?.Reference ?? "NULL");
+                payload?.Data?.Transaction?.Reference ?? "NULL");
             // Continuar procesando aunque no haya firma (solo en sandbox/testing)
             // En producción podrías querer rechazar esto
         }
@@ -95,13 +95,13 @@ public async Task<IActionResult> Webhook()
         if (success)
         {
             _logger.LogInformation("Webhook processed successfully for reference {Reference}",
-                payload?.Data?.Reference ?? "NULL");
+                payload?.Data?.Transaction?.Reference ?? "NULL");
             return Ok(new { message = "Webhook processed successfully" });
         }
         else
         {
             _logger.LogError("Error processing webhook for reference {Reference}",
-                payload?.Data?.Reference ?? "NULL");
+                payload?.Data?.Transaction?.Reference ?? "NULL");
             return StatusCode(500, new { message = "Error processing webhook" });
         }
     }

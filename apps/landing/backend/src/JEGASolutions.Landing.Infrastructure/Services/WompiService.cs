@@ -26,7 +26,7 @@ public class WompiService : IWompiService
     private readonly string _privateKey;
     private readonly string _publicKey;
     private readonly string _eventsSecret;
-    private readonly string _integritySecret; 
+    private readonly string _integritySecret;
 
     public WompiService(
         HttpClient httpClient,
@@ -51,10 +51,10 @@ public class WompiService : IWompiService
         _logger = logger;
         _passwordGenerator = passwordGenerator;
 
-        _privateKey = _configuration["Wompi__PrivateKey"] ?? _configuration["Wompi:PrivateKey"] 
+        _privateKey = _configuration["Wompi__PrivateKey"] ?? _configuration["Wompi:PrivateKey"]
             ?? throw new ArgumentNullException("Wompi__PrivateKey", "Wompi private key is required.");
-        
-        _publicKey = _configuration["Wompi__PublicKey"] ?? _configuration["Wompi:PublicKey"] 
+
+        _publicKey = _configuration["Wompi__PublicKey"] ?? _configuration["Wompi:PublicKey"]
             ?? throw new ArgumentNullException("Wompi__PublicKey", "Wompi public key is required.");
 
             _eventsSecret = _configuration["Wompi__EventsSecret"] ?? _configuration["Wompi:EventsSecret"]
@@ -62,16 +62,16 @@ public class WompiService : IWompiService
 
         _integritySecret = _configuration["Wompi__IntegritySecret"] ?? _configuration["Wompi:IntegritySecret"]
             ?? throw new ArgumentNullException("Wompi__IntegritySecret", "Wompi integrity secret is required.");
-    
-    _logger.LogInformation("Wompi Events Secret configured: {Configured}", 
+
+    _logger.LogInformation("Wompi Events Secret configured: {Configured}",
         !string.IsNullOrEmpty(_eventsSecret) ? "Yes" : "No");
 
-        var baseUrl = _configuration["Wompi__BaseUrl"] ?? _configuration["Wompi:BaseUrl"] 
+        var baseUrl = _configuration["Wompi__BaseUrl"] ?? _configuration["Wompi:BaseUrl"]
             ?? "https://production.wompi.co/v1/";
         _httpClient.BaseAddress = new Uri(baseUrl);
 
         var environment = baseUrl.Contains("sandbox") ? "SANDBOX" : "PRODUCTION";
-        _logger.LogInformation("Wompi configured with Environment: {Environment}, BaseUrl: {BaseUrl}", 
+        _logger.LogInformation("Wompi configured with Environment: {Environment}, BaseUrl: {BaseUrl}",
             environment, baseUrl);
     }
 
@@ -79,7 +79,7 @@ public class WompiService : IWompiService
     {
         // Concatenar según la documentación de Wompi
         string concatenatedString;
-        
+
         if (!string.IsNullOrEmpty(expirationTime))
         {
             // Con expiration-time: referencia + monto + moneda + fecha + secreto
@@ -90,10 +90,10 @@ public class WompiService : IWompiService
             // Sin expiration-time: referencia + monto + moneda + secreto
             concatenatedString = $"{reference}{amountInCents}{currency}{_integritySecret}";
         }
-        
-        _logger.LogInformation("Generating signature for concatenated string (length: {Length})", 
+
+        _logger.LogInformation("Generating signature for concatenated string (length: {Length})",
             concatenatedString.Length);
-        
+
         // Generar hash SHA256
         return ComputeSHA256(concatenatedString);
     }
@@ -102,7 +102,7 @@ public class WompiService : IWompiService
 {
     _logger.LogInformation("Creating Wompi checkout for reference {Reference}", payment.Reference);
 
-    var redirectUrl = _configuration["Wompi:RedirectUrl"] 
+    var redirectUrl = _configuration["Wompi:RedirectUrl"]
         ?? "https://jegasolutions-platform-frontend-95l.vercel.app/payment-success";
 
     var amountInCents = (int)(payment.Amount * 100);
@@ -110,7 +110,7 @@ public class WompiService : IWompiService
     var reference = payment.Reference;
 
      var signature = GenerateIntegritySignature(reference, amountInCents, currency);
-        
+
         _logger.LogInformation("Generated integrity signature: {Signature}", signature);
 
     // URL directa del widget (permite TODOS los métodos de pago)
@@ -138,13 +138,13 @@ public class WompiService : IWompiService
     // Usar Events Secret en lugar de Private Key
     var expectedSignature = ComputeHMAC(payload, _eventsSecret);
     var isValid = signature.Equals(expectedSignature, StringComparison.OrdinalIgnoreCase);
-    
+
     if (!isValid)
     {
-        _logger.LogWarning("Invalid webhook signature. Expected: {Expected}, Received: {Received}", 
+        _logger.LogWarning("Invalid webhook signature. Expected: {Expected}, Received: {Received}",
             expectedSignature, signature);
     }
-    
+
     return Task.FromResult(isValid);
 }
 
@@ -158,7 +158,7 @@ public class WompiService : IWompiService
             {
                 var content = await response.Content.ReadAsStringAsync();
                 var result = JsonSerializer.Deserialize<WompiApiResponse<WompiTransactionResponseDto>>(
-                    content, 
+                    content,
                     JsonUtils.GetJsonSerializerOptions()
                 );
                 return result?.Data;
@@ -177,10 +177,10 @@ public class WompiService : IWompiService
 {
     try
     {
-        // Usar estructura plana - payload.Data directamente
-        var transaction = payload.Data;
-        
-        _logger.LogInformation("Processing webhook for reference {Reference}, status {Status}", 
+        // Acceder a payload.Data.Transaction
+        var transaction = payload.Data.Transaction;
+
+        _logger.LogInformation("Processing webhook for reference {Reference}, status {Status}",
             transaction.Reference, transaction.Status);
 
         var payment = await _paymentRepository.FirstOrDefaultAsync(
@@ -203,7 +203,7 @@ public class WompiService : IWompiService
             };
 
             await _paymentRepository.AddAsync(payment);
-            _logger.LogInformation("Created new payment record for reference {Reference}", 
+            _logger.LogInformation("Created new payment record for reference {Reference}",
                 payment.Reference);
         }
         else
@@ -211,16 +211,16 @@ public class WompiService : IWompiService
             payment.Status = MapWompiStatus(transaction.Status);
             payment.WompiTransactionId = transaction.Id;
             payment.UpdatedAt = DateTime.UtcNow;
-            
+
             if (transaction.Customer != null)
             {
                 payment.CustomerEmail = transaction.CustomerEmail;
                 payment.CustomerName = transaction.Customer.FullName;
                 payment.CustomerPhone = transaction.Customer.PhoneNumber;
             }
-            
+
             await _paymentRepository.UpdateAsync(payment);
-            _logger.LogInformation("Updated payment record for reference {Reference}", 
+            _logger.LogInformation("Updated payment record for reference {Reference}",
                 payment.Reference);
         }
 
@@ -228,7 +228,7 @@ public class WompiService : IWompiService
 
         if (transaction.Status.ToUpper() == "APPROVED")
         {
-            _logger.LogInformation("Payment approved, creating tenant for reference {Reference}", 
+            _logger.LogInformation("Payment approved, creating tenant for reference {Reference}",
                 transaction.Reference);
             await CreateTenantFromPayment(payment);
         }
@@ -247,12 +247,12 @@ public class WompiService : IWompiService
         try
         {
             var response = await _httpClient.GetAsync("merchants/" + _publicKey);
-            
+
             if (response.IsSuccessStatusCode)
             {
                 var content = await response.Content.ReadAsStringAsync();
                 var merchantData = JsonSerializer.Deserialize<WompiMerchantResponseDto>(
-                    content, 
+                    content,
                     JsonUtils.GetJsonSerializerOptions()
                 );
 
@@ -287,7 +287,7 @@ public class WompiService : IWompiService
             // Generar subdomain usando el servicio
             var baseName = payment.CustomerName ?? payment.CustomerEmail ?? "cliente";
             var subdomain = _passwordGenerator.GenerateSubdomain(baseName, 20);
-            
+
             // Generar contraseña temporal
             var temporaryPassword = _passwordGenerator.GenerateSecurePassword(12);
 
@@ -303,7 +303,7 @@ public class WompiService : IWompiService
             await _tenantRepository.AddAsync(tenant);
             await _unitOfWork.SaveChangesAsync();
 
-            _logger.LogInformation("Created tenant {TenantId} with subdomain {Subdomain}", 
+            _logger.LogInformation("Created tenant {TenantId} with subdomain {Subdomain}",
                 tenant.Id, subdomain);
 
             // Determinar el nombre del módulo según la referencia
@@ -323,7 +323,7 @@ public class WompiService : IWompiService
                 moduleUrl = "https://extrahours.jegasolutions.co";
                 break;
         }
-            
+
             // Crear el módulo para el tenant
             var tenantModule = new TenantModule
             {
@@ -357,7 +357,7 @@ public class WompiService : IWompiService
             await _userRepository.AddAsync(adminUser);
             await _unitOfWork.SaveChangesAsync();
 
-            _logger.LogInformation("Created admin user {UserId} for tenant {TenantId}", 
+            _logger.LogInformation("Created admin user {UserId} for tenant {TenantId}",
                 adminUser.Id, tenant.Id);
 
             /*
@@ -369,7 +369,7 @@ public class WompiService : IWompiService
             }
             catch (Exception emailEx)
             {
-                _logger.LogWarning(emailEx, "Failed to send welcome email to {Email}", 
+                _logger.LogWarning(emailEx, "Failed to send welcome email to {Email}",
                     payment.CustomerEmail);
             }
 
@@ -398,75 +398,75 @@ public class WompiService : IWompiService
     <style>
         body {{ font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; }}
         .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-        .header {{ 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-            color: white; 
-            padding: 30px; 
-            text-align: center; 
+        .header {{
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
             border-radius: 10px 10px 0 0;
         }}
-        .content {{ 
-            background: white; 
-            padding: 30px; 
+        .content {{
+            background: white;
+            padding: 30px;
             border: 1px solid #e5e7eb;
             border-top: none;
         }}
-        .credentials-box {{ 
-            background: #f9fafb; 
-            border-left: 4px solid #667eea; 
-            padding: 20px; 
+        .credentials-box {{
+            background: #f9fafb;
+            border-left: 4px solid #667eea;
+            padding: 20px;
             margin: 20px 0;
             border-radius: 4px;
         }}
         .credential-item {{ margin: 15px 0; }}
-        .credential-label {{ 
-            font-weight: bold; 
-            color: #4b5563; 
-            display: block; 
+        .credential-label {{
+            font-weight: bold;
+            color: #4b5563;
+            display: block;
             margin-bottom: 5px;
         }}
-        .credential-value {{ 
-            background: white; 
-            padding: 10px; 
-            border-radius: 4px; 
+        .credential-value {{
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
             border: 1px solid #d1d5db;
             font-family: 'Courier New', monospace;
             color: #1f2937;
         }}
-        .button {{ 
+        .button {{
             display: inline-block;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-            color: white !important; 
-            padding: 15px 40px; 
-            text-decoration: none; 
-            border-radius: 6px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white !important;
+            padding: 15px 40px;
+            text-decoration: none;
+            border-radius: 6px;
             font-weight: bold;
             margin: 20px 0;
         }}
-        .warning-box {{ 
-            background: #fef2f2; 
-            border-left: 4px solid #ef4444; 
-            padding: 15px; 
+        .warning-box {{
+            background: #fef2f2;
+            border-left: 4px solid #ef4444;
+            padding: 15px;
             margin: 20px 0;
             border-radius: 4px;
         }}
-        .info-box {{ 
-            background: #eff6ff; 
-            border-left: 4px solid #3b82f6; 
-            padding: 15px; 
+        .info-box {{
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
             margin: 20px 0;
             border-radius: 4px;
         }}
-        .footer {{ 
-            background: #1f2937; 
-            color: #9ca3af; 
-            padding: 20px; 
+        .footer {{
+            background: #1f2937;
+            color: #9ca3af;
+            padding: 20px;
             text-align: center;
             border-radius: 0 0 10px 10px;
             font-size: 12px;
         }}
-        .highlight {{ 
-            color: #667eea; 
+        .highlight {{
+            color: #667eea;
             font-weight: bold;
         }}
     </style>
@@ -477,12 +477,12 @@ public class WompiService : IWompiService
             <h1 style='margin: 0;'>¡Bienvenido a JEGASolutions! 🚀</h1>
             <p style='margin: 10px 0 0 0; opacity: 0.9;'>Tu módulo {moduleName} está listo</p>
         </div>
-        
+
         <div class='content'>
             <h2 style='color: #1f2937;'>Hola {firstName},</h2>
-            
+
             <p style='font-size: 16px;'>
-                ¡Gracias por confiar en nosotros! Tu cuenta ha sido creada exitosamente y ya puedes 
+                ¡Gracias por confiar en nosotros! Tu cuenta ha sido creada exitosamente y ya puedes
                 empezar a usar <strong class='highlight'>{moduleName}</strong>.
             </p>
 
@@ -497,7 +497,7 @@ public class WompiService : IWompiService
 
             <div class='credentials-box'>
                 <h3 style='margin-top: 0; color: #667eea;'>🔑 Tus Credenciales de Acceso</h3>
-                
+
                 <div class='credential-item'>
                     <span class='credential-label'>URL de Acceso:</span>
                     <div class='credential-value'>{moduleUrl}</div>
@@ -517,7 +517,7 @@ public class WompiService : IWompiService
             <div class='warning-box'>
                 <strong>⚠️ Importante - Seguridad</strong>
                 <p style='margin: 10px 0 0 0;'>
-                    Por tu seguridad, te recomendamos <strong>cambiar tu contraseña</strong> 
+                    Por tu seguridad, te recomendamos <strong>cambiar tu contraseña</strong>
                     después de iniciar sesión por primera vez.
                 </p>
             </div>
@@ -540,7 +540,7 @@ public class WompiService : IWompiService
             </div>
 
             <p style='margin-top: 30px;'>
-                Si tienes alguna pregunta o necesitas ayuda, no dudes en contactarnos. 
+                Si tienes alguna pregunta o necesitas ayuda, no dudes en contactarnos.
                 Estamos aquí para ayudarte a sacar el máximo provecho de tu inversión.
             </p>
 
@@ -568,17 +568,17 @@ public class WompiService : IWompiService
                 emailBody
             );
 
-            _logger.LogInformation("Welcome email sent to {Email} with module URL {ModuleUrl}", 
+            _logger.LogInformation("Welcome email sent to {Email} with module URL {ModuleUrl}",
                 payment.CustomerEmail, moduleUrl);
         }
         catch (Exception emailEx)
         {
-            _logger.LogWarning(emailEx, "Failed to send welcome email to {Email}", 
+            _logger.LogWarning(emailEx, "Failed to send welcome email to {Email}",
                 payment.CustomerEmail);
         }
 
         _logger.LogInformation(
-            "Tenant setup completed for {CompanyName}. Module: {ModuleName}, URL: {ModuleUrl}", 
+            "Tenant setup completed for {CompanyName}. Module: {ModuleName}, URL: {ModuleUrl}",
             tenant.CompanyName, moduleName, moduleUrl);
     }
     catch (Exception ex)
