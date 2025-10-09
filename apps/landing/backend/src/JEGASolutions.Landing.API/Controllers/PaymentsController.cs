@@ -64,19 +64,11 @@ public async Task<IActionResult> Webhook()
         // ✅ CAMBIO: Hacer la validación de firma opcional si no viene el header
         if (!string.IsNullOrEmpty(signature))
         {
-            // Get the raw body for signature validation
-            string rawBody;
-            Request.Body.Seek(0, SeekOrigin.Begin);
-            using (var reader = new StreamReader(Request.Body, leaveOpen: true))
-            {
-                rawBody = await reader.ReadToEndAsync();
-            }
-
-            // Validate signature
+            // Validate signature usando el rawBody que ya leímos
             var isValidSignature = await _wompiService.ValidateWebhookSignature(rawBody, signature);
             if (!isValidSignature)
             {
-                _logger.LogWarning("Invalid signature for reference {Reference}", payload.Data.Reference);
+                _logger.LogWarning("Invalid signature for reference {Reference}", payload?.Data?.Reference ?? "NULL");
                 return Unauthorized(new { message = "Invalid signature" });
             }
 
@@ -85,9 +77,16 @@ public async Task<IActionResult> Webhook()
         else
         {
             _logger.LogWarning("Webhook received without X-Integrity header for reference {Reference}",
-                payload.Data.Reference);
+                payload?.Data?.Reference ?? "NULL");
             // Continuar procesando aunque no haya firma (solo en sandbox/testing)
             // En producción podrías querer rechazar esto
+        }
+
+        // Validar que el payload no sea null
+        if (payload == null)
+        {
+            _logger.LogError("Failed to deserialize webhook payload");
+            return BadRequest(new { message = "Invalid webhook payload" });
         }
 
         // Process the webhook
@@ -96,13 +95,13 @@ public async Task<IActionResult> Webhook()
         if (success)
         {
             _logger.LogInformation("Webhook processed successfully for reference {Reference}",
-                payload.Data.Reference);
+                payload?.Data?.Reference ?? "NULL");
             return Ok(new { message = "Webhook processed successfully" });
         }
         else
         {
             _logger.LogError("Error processing webhook for reference {Reference}",
-                payload.Data.Reference);
+                payload?.Data?.Reference ?? "NULL");
             return StatusCode(500, new { message = "Error processing webhook" });
         }
     }
