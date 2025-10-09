@@ -27,11 +27,21 @@ public async Task<IActionResult> Webhook([FromBody] WompiWebhookDto payload)
 {
     try
     {
-        _logger.LogInformation("Received webhook for reference {Reference}", payload.Data.Reference);
+        // 🔍 LOGGING DETALLADO DEL WEBHOOK
+        _logger.LogInformation("========== WEBHOOK RECEIVED ==========");
+        _logger.LogInformation("Event: {Event}", payload?.Event ?? "NULL");
+        _logger.LogInformation("Environment: {Environment}", payload?.Environment ?? "NULL");
+        _logger.LogInformation("Timestamp: {Timestamp}", payload?.Timestamp);
+        _logger.LogInformation("Data.Id: {Id}", payload?.Data?.Id ?? "NULL");
+        _logger.LogInformation("Data.Reference: {Reference}", payload?.Data?.Reference ?? "NULL");
+        _logger.LogInformation("Data.Status: {Status}", payload?.Data?.Status ?? "NULL");
+        _logger.LogInformation("Data.AmountInCents: {Amount}", payload?.Data?.AmountInCents);
+        _logger.LogInformation("Data.CustomerEmail: {Email}", payload?.Data?.CustomerEmail ?? "NULL");
+        _logger.LogInformation("=====================================");
 
         // Get the signature from headers
         var signature = Request.Headers["X-Integrity"].FirstOrDefault();
-        
+
         // ✅ CAMBIO: Hacer la validación de firma opcional si no viene el header
         if (!string.IsNullOrEmpty(signature))
         {
@@ -50,12 +60,12 @@ public async Task<IActionResult> Webhook([FromBody] WompiWebhookDto payload)
                 _logger.LogWarning("Invalid signature for reference {Reference}", payload.Data.Reference);
                 return Unauthorized(new { message = "Invalid signature" });
             }
-            
+
             _logger.LogInformation("Webhook signature validated successfully");
         }
         else
         {
-            _logger.LogWarning("Webhook received without X-Integrity header for reference {Reference}", 
+            _logger.LogWarning("Webhook received without X-Integrity header for reference {Reference}",
                 payload.Data.Reference);
             // Continuar procesando aunque no haya firma (solo en sandbox/testing)
             // En producción podrías querer rechazar esto
@@ -66,13 +76,13 @@ public async Task<IActionResult> Webhook([FromBody] WompiWebhookDto payload)
 
         if (success)
         {
-            _logger.LogInformation("Webhook processed successfully for reference {Reference}", 
+            _logger.LogInformation("Webhook processed successfully for reference {Reference}",
                 payload.Data.Reference);
             return Ok(new { message = "Webhook processed successfully" });
         }
         else
         {
-            _logger.LogError("Error processing webhook for reference {Reference}", 
+            _logger.LogError("Error processing webhook for reference {Reference}",
                 payload.Data.Reference);
             return StatusCode(500, new { message = "Error processing webhook" });
         }
@@ -158,7 +168,7 @@ public async Task<IActionResult> CreatePayment([FromBody] PaymentRequestDto requ
         _logger.LogInformation("CustomerEmail: {Email}", request.CustomerEmail);
         _logger.LogInformation("CustomerName: {Name}", request.CustomerName);
         _logger.LogInformation("================================");
-        
+
         if (!ModelState.IsValid)
         {
             return BadRequest(ModelState);
