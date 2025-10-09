@@ -188,8 +188,8 @@ EMAIL_FROM=noreply@jegasolutions.co
 
 ```jsx
 ✅ PricingSection.jsx         // Pricing cards con 2 módulos
-   ├─ Extra Hours: COP $150,000/mes
-   └─ Report Builder: COP $250,000/mes
+   ├─ Extra Hours
+   └─ Report Builder
 
 ✅ WompiCheckoutButton.jsx    // Integración Wompi Widget
    ├─ Genera signature de integridad
@@ -1716,11 +1716,11 @@ Semana 3: E2E Tests
 ### Capacidades Comercializables HOY:
 
 ```
-✅ GestorHorasExtra - COP $150,000/mes
+✅ GestorHorasExtra -
    └─ 100% listo para venta inmediata
    └─ Value proposition: Ahorra 10+ horas/mes en gestión de horas extra
 
-🟢 ReportBuilder con IA - COP $250,000/mes
+🟢 ReportBuilder con IA -
    └─ 96% funcional (backend 100%, frontend 88%)
    └─ Comercializable con nota de "algunas features en beta"
    └─ Value proposition: Reportes consolidados con IA en 50% menos tiempo
