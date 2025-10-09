@@ -24,8 +24,6 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Configuration
-builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 
 // Database
 var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
@@ -64,6 +62,9 @@ if (!string.IsNullOrEmpty(databaseUrl))
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString));
+
+// ===== CONFIGURAR SMTP SETTINGS =====
+builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("Email"));
 
 // Repositories
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
@@ -104,7 +105,7 @@ builder.Services.AddAuthentication(options =>
 // HTTP Clients
 builder.Services.AddHttpClient<IWompiService, WompiService>();
 
-// CORS - ACTUALIZADO para permitir todos los deployments de Vercel
+// CORS - ACTUALIZADO para permitir todos los deployments de Vercel + Tenant Dashboard Wildcard
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
@@ -122,8 +123,14 @@ builder.Services.AddCors(options =>
             if (origin.Contains(".vercel.app"))
                 return true;
 
-            // Permitir dominio personalizado si lo tienes
+            // Permitir dominio principal
             if (origin == "https://jegasolutions.co" || origin == "https://www.jegasolutions.co")
+                return true;
+
+            // ✅ NUEVO: Permitir TODOS los subdominios de jegasolutions.co (Tenant Dashboard)
+            // Ejemplos: https://cliente-a.jegasolutions.co, https://techcorp.jegasolutions.co
+            var uri = new Uri(origin);
+            if (uri.Host.EndsWith(".jegasolutions.co"))
                 return true;
 
             return false;
@@ -165,22 +172,89 @@ if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
     app.UseSwaggerUI();
 }
 
+// ===== MIDDLEWARE PIPELINE =====
+
+// 1. HTTPS Redirection (antes de CORS)
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+
+// 2. CORS (debe estar temprano en el pipeline)
 app.UseCors("AllowFrontend");
-//app.UseHttpsRedirection();
+
+// 3. Authentication & Authorization
 app.UseAuthentication();
 app.UseAuthorization();
+
+// 4. Map Controllers
 app.MapControllers();
 
-// Endpoint básico para testing
+// ===== HEALTH CHECK ENDPOINTS =====
 app.MapGet("/", () => new
 {
     message = "JEGASolutions Backend is working!",
     version = "v5-production-ready",
+    timestamp = DateTime.UtcNow,
+    environment = app.Environment.EnvironmentName
+});
+
+app.MapGet("/health", () => new
+{
+    status = "OK",
     timestamp = DateTime.UtcNow
 });
 
-app.MapGet("/health", () => new { status = "OK" });
+// ===== ENDPOINT DE PRUEBA DE EMAIL =====
+app.MapGet("/test-email", async (IServiceProvider serviceProvider) =>
+{
+    try
+    {
+        var emailService = serviceProvider.GetRequiredService<IEmailService>();
 
-Console.WriteLine("=== BACKEND READY V5 - PRODUCTION ===");
+        var htmlBody = @"<div style='font-family: Arial, sans-serif; padding: 20px;'>
+                <h1 style='color: #2563eb;'>¡Funciona!</h1>
+                <p>El SMTP de Microsoft 365 está configurado correctamente.</p>
+                <p>Fecha: " + DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + @"</p>
+              </div>";
+
+        var result = await emailService.SendWelcomeEmailAsync(
+            "JaimeGallo@jegasolutions.co",
+            "🧪 Test SMTP Microsoft 365",
+            htmlBody
+        );
+
+        if (result)
+        {
+            return Results.Ok(new {
+                success = true,
+                message = "✅ Email enviado correctamente a JaimeGallo@jegasolutions.co"
+            });
+        }
+        else
+        {
+            return Results.BadRequest(new {
+                success = false,
+                error = "No se pudo enviar el email (método devolvió false)"
+            });
+        }
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(new {
+            success = false,
+            error = ex.Message,
+            details = ex.InnerException?.Message
+        });
+    }
+});
+
+// ===== START SERVER =====
+Console.WriteLine("╔════════════════════════════════════════════╗");
+Console.WriteLine("║  JEGASOLUTIONS BACKEND V5 - READY! 🚀     ║");
+Console.WriteLine("║  Environment: " + app.Environment.EnvironmentName.PadRight(27) + " ║");
+Console.WriteLine("║  Tenant Dashboard: ENABLED ✅              ║");
+Console.WriteLine("╚════════════════════════════════════════════╝");
+
 app.Run();
 

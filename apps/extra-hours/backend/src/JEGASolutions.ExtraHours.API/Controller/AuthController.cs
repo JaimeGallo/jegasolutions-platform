@@ -100,5 +100,12 @@ namespace JEGASolutions.ExtraHours.API.Controller
             }
         }
 
+        [HttpGet("debug/token-claims")]
+        [Authorize]
+        public IActionResult GetTokenClaims()
+        {
+            var claims = User.Claims.Select(c => new { c.Type, c.Value });
+            return Ok(claims);
+        }
     }
 }
