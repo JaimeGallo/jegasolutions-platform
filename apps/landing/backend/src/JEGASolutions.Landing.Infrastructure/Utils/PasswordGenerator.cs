@@ -1,6 +1,7 @@
 using JEGASolutions.Landing.Application.Interfaces;
 using System.Security.Cryptography;
 using System.Text;
+using System.Globalization;
 
 namespace JEGASolutions.Landing.Infrastructure.Utils;
 
@@ -59,27 +60,62 @@ public class PasswordGenerator : IPasswordGenerator
         if (string.IsNullOrWhiteSpace(input))
             return "cliente";
 
+        // ✅ PASO 1: Normalizar y remover acentos
+        var normalized = RemoveAccents(input);
+
         var cleaned = new StringBuilder();
 
-        foreach (char c in input.ToLower())
+        // ✅ PASO 2: Limpiar caracteres especiales
+        foreach (char c in normalized.ToLower())
         {
-            if (char.IsLetterOrDigit(c))
+            // Solo permitir letras ASCII (a-z) y dígitos (0-9)
+            if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9'))
             {
                 cleaned.Append(c);
             }
             else if (c == ' ' || c == '.' || c == '@' || c == '-' || c == '_')
             {
+                // Convertir espacios y caracteres especiales en guiones
                 if (cleaned.Length > 0 && cleaned[cleaned.Length - 1] != '-')
                 {
                     cleaned.Append('-');
                 }
             }
+            // ✅ Todos los demás caracteres se ignoran (emojis, símbolos, etc.)
         }
 
         // Remove trailing dash
         var result = cleaned.ToString().TrimEnd('-');
 
         return string.IsNullOrEmpty(result) ? "cliente" : result;
+    }
+
+    /// <summary>
+    /// Remueve acentos y diacríticos de caracteres Unicode.
+    /// Ejemplos: é→e, ñ→n, ü→u, á→a, ç→c
+    /// </summary>
+    private string RemoveAccents(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+            return input;
+
+        // Normalizar a FormD (descomponer caracteres compuestos)
+        // Ejemplo: 'é' se descompone en 'e' + acento combinado
+        var normalizedString = input.Normalize(NormalizationForm.FormD);
+        var stringBuilder = new StringBuilder();
+
+        foreach (char c in normalizedString)
+        {
+            // Filtrar solo caracteres que NO sean marcas diacríticas
+            var unicodeCategory = CharUnicodeInfo.GetUnicodeCategory(c);
+            if (unicodeCategory != UnicodeCategory.NonSpacingMark)
+            {
+                stringBuilder.Append(c);
+            }
+        }
+
+        // Normalizar de vuelta a FormC (composición canónica)
+        return stringBuilder.ToString().Normalize(NormalizationForm.FormC);
     }
 
     private char GenerateRandomChar(char min, char max)
