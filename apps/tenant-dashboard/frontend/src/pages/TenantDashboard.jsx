@@ -72,7 +72,7 @@ const TenantDashboard = () => {
     icon: module.icon === 'clock' ? Clock : FileText,
     color: module.icon === 'clock' ? 'bg-blue-500' : 'bg-purple-500',
     features: getModuleFeatures(module.moduleName),
-    isActive: module.status === 'active',
+    isActive: module.status.toUpperCase() === 'ACTIVE', // ✅ Fix: Case-insensitive comparison
     url: module.url,
   }));
 
@@ -310,8 +310,16 @@ const TenantDashboard = () => {
           </div>
         </motion.div>
 
-        {/* Quick Actions */}
-        <motion.div
+        {/*
+        ==========================================
+        SECCIÓN COMENTADA: Acciones Rápidas
+        ==========================================
+        Razón: Cada módulo tiene sus propias configuraciones y opciones para agregar usuarios.
+        Las acciones generales aquí son redundantes.
+        Fecha: 2025-10-09
+        ==========================================
+        */}
+        {/* <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
@@ -355,7 +363,7 @@ const TenantDashboard = () => {
               <button className="btn-secondary w-full">Ver Reportes</button>
             </div>
           </div>
-        </motion.div>
+        </motion.div> */}
       </main>
     </div>
   );
