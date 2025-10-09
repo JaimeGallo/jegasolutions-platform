@@ -280,7 +280,50 @@ public class WompiService : IWompiService
 
             if (existingUser != null)
             {
-                _logger.LogInformation("User already exists for email {Email}", payment.CustomerEmail);
+                _logger.LogInformation("User already exists for email {Email}. Adding module to existing tenant.", payment.CustomerEmail);
+
+                // Buscar tenant del usuario existente
+                var existingTenant = await _tenantRepository.FirstOrDefaultAsync(
+                    t => t.Id == existingUser.TenantId
+                );
+
+                if (existingTenant != null)
+                {
+                    // Determinar el nombre del módulo
+                    var moduleName = ExtractModuleNameFromReference(payment.Reference);
+
+                    // Verificar si el módulo ya existe para este tenant
+                    var existingModule = await _tenantModuleRepository.FirstOrDefaultAsync(
+                        tm => tm.TenantId == existingTenant.Id && tm.ModuleName == moduleName
+                    );
+
+                    if (existingModule == null)
+                    {
+                        // Agregar el nuevo módulo
+                        var tenantModule = new TenantModule
+                        {
+                            TenantId = existingTenant.Id,
+                            ModuleName = moduleName,
+                            Status = "ACTIVE",
+                            PurchasedAt = DateTime.UtcNow
+                        };
+
+                        await _tenantModuleRepository.AddAsync(tenantModule);
+                        await _unitOfWork.SaveChangesAsync();
+
+                        _logger.LogInformation("Added module {ModuleName} to existing tenant {TenantId}",
+                            moduleName, existingTenant.Id);
+
+                        // Enviar email de confirmación de compra de módulo adicional
+                        await SendModulePurchaseEmailAsync(payment, existingTenant, moduleName);
+                    }
+                    else
+                    {
+                        _logger.LogInformation("Module {ModuleName} already exists for tenant {TenantId}",
+                            moduleName, existingTenant.Id);
+                    }
+                }
+
                 return;
             }
 
@@ -587,6 +630,115 @@ public class WompiService : IWompiService
         throw;
     }
 }
+
+    private async Task SendModulePurchaseEmailAsync(Payment payment, Tenant tenant, string moduleName)
+    {
+        try
+        {
+            // Determinar URL del módulo
+            string moduleUrl = moduleName.ToLower() switch
+            {
+                "extra hours" => "https://extrahours.jegasolutions.co",
+                "report builder" => "https://reportbuilder.jegasolutions.co",
+                _ => "https://extrahours.jegasolutions.co"
+            };
+
+            var emailSubject = $"✅ Módulo {moduleName} Activado - JEGASolutions";
+            var emailBody = $@"
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <style>
+        body {{ font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; }}
+        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+        .header {{
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-radius: 10px 10px 0 0;
+        }}
+        .content {{
+            background: white;
+            padding: 30px;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }}
+        .button {{
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-weight: bold;
+        }}
+        .info-box {{
+            background: #f8f9fa;
+            padding: 20px;
+            border-left: 4px solid #667eea;
+            margin: 20px 0;
+        }}
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <div class='header'>
+            <h1 style='margin: 0;'>¡Nuevo Módulo Activado!</h1>
+        </div>
+
+        <div class='content'>
+            <h2>¡Hola {payment.CustomerName}!</h2>
+
+            <p>Tu pago ha sido procesado exitosamente y el módulo <strong>{moduleName}</strong> ha sido agregado a tu cuenta.</p>
+
+            <div class='info-box'>
+                <p style='margin: 5px 0;'><strong>📦 Módulo:</strong> {moduleName}</p>
+                <p style='margin: 5px 0;'><strong>🏢 Empresa:</strong> {tenant.CompanyName}</p>
+                <p style='margin: 5px 0;'><strong>💰 Monto:</strong> ${payment.Amount:N0} COP</p>
+                <p style='margin: 5px 0;'><strong>📅 Fecha:</strong> {DateTime.Now:dd/MM/yyyy HH:mm}</p>
+            </div>
+
+            <p>Puedes acceder al módulo ahora mismo haciendo clic en el siguiente botón:</p>
+
+            <center>
+                <a href='{moduleUrl}' class='button'>
+                    🚀 Acceder a {moduleName}
+                </a>
+            </center>
+
+            <p style='color: #666; font-size: 14px; margin-top: 30px;'>
+                Si tienes alguna pregunta o necesitas ayuda, no dudes en contactarnos.
+            </p>
+
+            <hr style='border: none; border-top: 1px solid #eee; margin: 30px 0;'>
+
+            <p style='text-align: center; color: #999; font-size: 12px;'>
+                © 2025 JEGASolutions. Todos los derechos reservados.<br>
+                📧 soporte@jegasolutions.co | 🌐 www.jegasolutions.co
+            </p>
+        </div>
+    </div>
+</body>
+</html>";
+
+            await _emailService.SendWelcomeEmailAsync(
+                payment.CustomerEmail ?? "",
+                emailSubject,
+                emailBody
+            );
+
+            _logger.LogInformation("Module purchase email sent to {Email} for module {ModuleName}",
+                payment.CustomerEmail, moduleName);
+        }
+        catch (Exception emailEx)
+        {
+            _logger.LogWarning(emailEx, "Failed to send module purchase email to {Email}",
+                payment.CustomerEmail);
+        }
+    }
 
     private string ExtractModuleNameFromReference(string reference)
     {
