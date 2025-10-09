@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
-import { useAuth } from "../contexts/AuthContext";
-import { useTenant } from "../contexts/TenantContext";
-import { motion } from "framer-motion";
+import { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { useTenant } from '../contexts/TenantContext';
+import { motion } from 'framer-motion';
 import {
   Building2,
   Clock,
@@ -13,7 +13,7 @@ import {
   ExternalLink,
   CheckCircle,
   XCircle,
-} from "lucide-react";
+} from 'lucide-react';
 
 const TenantDashboard = () => {
   const { user, logout } = useAuth();
@@ -36,54 +36,54 @@ const TenantDashboard = () => {
     if (modules) {
       setStats({
         totalModules: modules.length,
-        activeModules: modules.filter((m) => m.status === "ACTIVE").length,
+        activeModules: modules.filter(m => m.status === 'ACTIVE').length,
         totalUsers: 0, // This would come from API
         lastActivity: new Date().toLocaleDateString(),
       });
     }
   }, [modules]);
 
-  const availableModules = [
-    {
-      id: "extra-hours",
-      name: "GestorHorasExtra",
-      description: "Gestión completa de horas extra y compensaciones",
-      icon: Clock,
-      color: "bg-blue-500",
-      features: [
-        "Control de horas extra",
-        "Gestión de colaboradores",
-        "Reportes automáticos",
-        "Cumplimiento normativo",
-      ],
-      isActive: getModuleStatus("extra-hours"),
-      url: getModuleUrl("extra-hours"),
-    },
-    {
-      id: "report-builder",
-      name: "ReportBuilder con IA",
-      description: "Generación inteligente de reportes con análisis automático",
-      icon: FileText,
-      color: "bg-purple-500",
-      features: [
-        "Análisis con IA",
-        "Narrativas ejecutivas",
-        "Exportación múltiples formatos",
-        "Dashboards interactivos",
-      ],
-      isActive: getModuleStatus("report-builder"),
-      url: getModuleUrl("report-builder"),
-    },
-  ];
+  const getModuleFeatures = moduleName => {
+    switch (moduleName) {
+      case 'Extra Hours':
+        return [
+          'Control de horas extra',
+          'Gestión de colaboradores',
+          'Reportes automáticos',
+          'Cumplimiento normativo',
+        ];
+      case 'Report Builder':
+        return [
+          'Análisis con IA',
+          'Narrativas ejecutivas',
+          'Exportación múltiples formatos',
+          'Dashboards interactivos',
+        ];
+      default:
+        return [];
+    }
+  };
+
+  // DESPUÉS: Usar la función (línea ~47-56)
+  const availableModules = modules.map(module => ({
+    id: module.moduleName.toLowerCase().replace(/ /g, '-'),
+    name: module.moduleName,
+    description: module.description,
+    icon: module.icon === 'clock' ? Clock : FileText,
+    color: module.icon === 'clock' ? 'bg-blue-500' : 'bg-purple-500',
+    features: getModuleFeatures(module.moduleName),
+    isActive: module.status === 'active',
+    url: module.url,
+  }));
 
   const handleLogout = () => {
     logout();
-    window.location.href = "/login";
+    window.location.href = '/login';
   };
 
-  const handleModuleClick = (module) => {
+  const handleModuleClick = module => {
     if (module.isActive) {
-      window.open(module.url, "_blank");
+      window.open(module.url, '_blank');
     }
   };
 
@@ -241,8 +241,8 @@ const TenantDashboard = () => {
                 transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
                 className={`card cursor-pointer transition-all duration-200 ${
                   module.isActive
-                    ? "hover:shadow-lg hover:scale-105 border-jega-blue-200"
-                    : "opacity-60 cursor-not-allowed"
+                    ? 'hover:shadow-lg hover:scale-105 border-jega-blue-200'
+                    : 'opacity-60 cursor-not-allowed'
                 }`}
                 onClick={() => handleModuleClick(module)}
               >
@@ -294,11 +294,11 @@ const TenantDashboard = () => {
                   <span
                     className={`px-3 py-1 rounded-full text-xs font-medium ${
                       module.isActive
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-red-100 text-red-800'
                     }`}
                   >
-                    {module.isActive ? "Activo" : "No disponible"}
+                    {module.isActive ? 'Activo' : 'No disponible'}
                   </span>
 
                   {module.isActive && (
