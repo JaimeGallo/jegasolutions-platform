@@ -23,12 +23,31 @@ public class PaymentsController : ControllerBase
     }
 
     [HttpPost("webhook")]
-public async Task<IActionResult> Webhook([FromBody] WompiWebhookDto payload)
+public async Task<IActionResult> Webhook()
 {
     try
     {
+        // 🔍 LEER EL RAW BODY PRIMERO
+        string rawBody;
+        Request.Body.Seek(0, SeekOrigin.Begin);
+        using (var reader = new StreamReader(Request.Body, leaveOpen: true))
+        {
+            rawBody = await reader.ReadToEndAsync();
+        }
+        Request.Body.Seek(0, SeekOrigin.Begin);
+
+        _logger.LogInformation("========== WEBHOOK RAW BODY ==========");
+        _logger.LogInformation(rawBody);
+        _logger.LogInformation("=====================================");
+
+        // Deserializar manualmente
+        var payload = System.Text.Json.JsonSerializer.Deserialize<WompiWebhookDto>(rawBody, new System.Text.Json.JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        });
+
         // 🔍 LOGGING DETALLADO DEL WEBHOOK
-        _logger.LogInformation("========== WEBHOOK RECEIVED ==========");
+        _logger.LogInformation("========== WEBHOOK PARSED ==========");
         _logger.LogInformation("Event: {Event}", payload?.Event ?? "NULL");
         _logger.LogInformation("Environment: {Environment}", payload?.Environment ?? "NULL");
         _logger.LogInformation("Timestamp: {Timestamp}", payload?.Timestamp);
