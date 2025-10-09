@@ -290,37 +290,37 @@ public class WompiService : IWompiService
                 if (existingTenant != null)
                 {
                     // Determinar el nombre del módulo
-                    var moduleName = ExtractModuleNameFromReference(payment.Reference);
-
+                    var purchasedModuleName = ExtractModuleNameFromReference(payment.Reference);
+                    
                     // Verificar si el módulo ya existe para este tenant
                     var existingModule = await _tenantModuleRepository.FirstOrDefaultAsync(
-                        tm => tm.TenantId == existingTenant.Id && tm.ModuleName == moduleName
+                        tm => tm.TenantId == existingTenant.Id && tm.ModuleName == purchasedModuleName
                     );
 
                     if (existingModule == null)
                     {
                         // Agregar el nuevo módulo
-                        var tenantModule = new TenantModule
+                        var newTenantModule = new TenantModule
                         {
                             TenantId = existingTenant.Id,
-                            ModuleName = moduleName,
+                            ModuleName = purchasedModuleName,
                             Status = "ACTIVE",
                             PurchasedAt = DateTime.UtcNow
                         };
 
-                        await _tenantModuleRepository.AddAsync(tenantModule);
+                        await _tenantModuleRepository.AddAsync(newTenantModule);
                         await _unitOfWork.SaveChangesAsync();
 
-                        _logger.LogInformation("Added module {ModuleName} to existing tenant {TenantId}",
-                            moduleName, existingTenant.Id);
+                        _logger.LogInformation("Added module {ModuleName} to existing tenant {TenantId}", 
+                            purchasedModuleName, existingTenant.Id);
 
                         // Enviar email de confirmación de compra de módulo adicional
-                        await SendModulePurchaseEmailAsync(payment, existingTenant, moduleName);
+                        await SendModulePurchaseEmailAsync(payment, existingTenant, purchasedModuleName);
                     }
                     else
                     {
-                        _logger.LogInformation("Module {ModuleName} already exists for tenant {TenantId}",
-                            moduleName, existingTenant.Id);
+                        _logger.LogInformation("Module {ModuleName} already exists for tenant {TenantId}", 
+                            purchasedModuleName, existingTenant.Id);
                     }
                 }
 
