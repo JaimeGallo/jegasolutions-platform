@@ -62,7 +62,13 @@ apps/tenant-dashboard/backend/
 
 ## 🔧 Configuración
 
-### **Variables de Entorno:**
+### 📚 **Documentación Completa:**
+
+- **[Guía de Configuración DNS/Vercel](./VERCEL_SETUP_GUIDE.md)** - Guía paso a paso para configurar DNS wildcard o path-based routing
+- **[Configuración DNS Detallada](./DNS_CONFIGURATION.md)** - Explicación técnica completa de las opciones de DNS
+- **[Variables de Entorno](./frontend/ENV_SETUP.md)** - Configuración de variables de entorno para desarrollo y producción
+
+### **Variables de Entorno Backend:**
 
 ```env
 # Database
@@ -76,6 +82,18 @@ JWT_AUDIENCE=JEGASolutions-Users
 # CORS
 ALLOWED_ORIGINS=https://jegasolutions.co,https://*.jegasolutions.co
 ```
+
+### **Variables de Entorno Frontend:**
+
+```env
+# API URL
+VITE_API_URL=http://localhost:5014/api
+
+# Tenant por defecto (solo desarrollo)
+VITE_DEV_TENANT=test-tenant
+```
+
+Ver **[ENV_SETUP.md](./frontend/ENV_SETUP.md)** para más detalles.
 
 ### **Base de Datos:**
 
@@ -144,7 +162,9 @@ dotnet ef database update --project src/JEGASolutions.TenantDashboard.API
 
 ## 🌐 Rutas y URLs
 
-### **Estructura de URLs:**
+### **Estructura de URLs (Soporta Ambos Métodos):**
+
+#### **Opción A: DNS Wildcard (Subdominios) - Requiere Vercel Pro**
 
 ```
 Landing: jegasolutions.co
@@ -163,6 +183,27 @@ Módulos:
 └── cliente.jegasolutions.co/report-builder  # ReportBuilder
 ```
 
+#### **Opción B: Path-Based (Sin DNS especial) - Plan Gratuito**
+
+```
+Landing: jegasolutions.co
+├── /login                    # Login global
+├── /pricing                  # Precios y módulos
+└── /contact                  # Contacto
+
+Tenant Dashboard: jegasolutions.co/t/cliente
+├── /t/cliente                # Dashboard principal
+├── /t/cliente/dashboard      # Dashboard principal
+├── /t/cliente/login          # Login del tenant
+└── /t/cliente/settings       # Configuración
+
+Módulos:
+├── jegasolutions.co/t/cliente/extra-hours      # GestorHorasExtra
+└── jegasolutions.co/t/cliente/report-builder  # ReportBuilder
+```
+
+> 💡 **El código soporta ambos métodos automáticamente.** Ver [VERCEL_SETUP_GUIDE.md](./VERCEL_SETUP_GUIDE.md) para configuración.
+
 ### **APIs Disponibles:**
 
 ```http
@@ -175,10 +216,21 @@ GET /api/tenants/{subdomain}/stats      # Estadísticas del tenant
 
 ### **1. Acceso al Dashboard:**
 
+**Con Subdomain (DNS Wildcard):**
+
 1. Usuario accede a `cliente.jegasolutions.co`
 2. Sistema detecta subdomain automáticamente
 3. Carga datos del tenant y módulos
 4. Muestra dashboard con módulos disponibles
+
+**Con Path-Based:**
+
+1. Usuario accede a `jegasolutions.co/t/cliente`
+2. Sistema detecta tenant desde el path
+3. Carga datos del tenant y módulos
+4. Muestra dashboard con módulos disponibles
+
+> 💡 La detección es automática, el sistema intenta subdomain primero, luego path, luego query param.
 
 ### **2. Navegación entre Módulos:**
 
@@ -229,11 +281,28 @@ GET /api/tenants/{subdomain}/stats      # Estadísticas del tenant
 
 ## 🚀 Despliegue
 
+### **📖 Guía Completa de Despliegue:**
+
+Ver **[VERCEL_SETUP_GUIDE.md](./VERCEL_SETUP_GUIDE.md)** para instrucciones detalladas paso a paso.
+
 ### **Frontend (Vercel):**
 
 ```bash
+cd apps/tenant-dashboard/frontend
+
+# Configurar variables de entorno en Vercel Dashboard:
+# VITE_API_URL=https://api.jegasolutions.co/api
+
+# Deploy
 vercel --prod
 ```
+
+**Opciones DNS:**
+
+- **Sin wildcard (Gratis):** Usa URLs como `jegasolutions.co/t/cliente`
+- **Con wildcard (Pro $20/mes):** Usa URLs como `cliente.jegasolutions.co`
+
+Ver [DNS_CONFIGURATION.md](./DNS_CONFIGURATION.md) para más detalles.
 
 ### **Backend (Render):**
 

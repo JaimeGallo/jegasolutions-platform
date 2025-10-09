@@ -23,33 +23,54 @@ export const TenantProvider = ({ children }) => {
 
   const detectAndLoadTenant = async () => {
     try {
-      // Detectar subdomain de la URL
-      const hostname = window.location.hostname;
       let subdomain = null;
+      const hostname = window.location.hostname;
+      const pathname = window.location.pathname;
+      const searchParams = new URLSearchParams(window.location.search);
 
       console.log('🌐 Hostname:', hostname);
+      console.log('📍 Pathname:', pathname);
 
-      // Detectar subdomain en producción
+      // MÉTODO 1: Detectar desde subdomain (requiere DNS wildcard)
       if (hostname.includes('jegasolutions.co')) {
         const parts = hostname.split('.');
-        console.log('📍 Parts:', parts);
-
         if (parts.length >= 3 && parts[0] !== 'www') {
           subdomain = parts[0];
+          console.log('✅ Tenant detectado desde subdomain:', subdomain);
         }
       }
 
-      // En desarrollo, usar variable de entorno
+      // MÉTODO 2: Detectar desde path (/t/tenant-name)
+      if (!subdomain) {
+        const pathMatch = pathname.match(/^\/t\/([^\/]+)/);
+        if (pathMatch) {
+          subdomain = pathMatch[1];
+          console.log('✅ Tenant detectado desde path:', subdomain);
+        }
+      }
+
+      // MÉTODO 3: Detectar desde query param (?tenant=tenant-name)
+      if (!subdomain) {
+        const tenantParam = searchParams.get('tenant');
+        if (tenantParam) {
+          subdomain = tenantParam;
+          console.log('✅ Tenant detectado desde query:', subdomain);
+        }
+      }
+
+      // MÉTODO 4: En desarrollo, usar variable de entorno
       if (!subdomain && import.meta.env.DEV) {
         subdomain = import.meta.env.VITE_DEV_TENANT || 'test-tenant';
         console.log('🔧 Modo desarrollo - tenant:', subdomain);
       }
 
       if (!subdomain) {
-        throw new Error('No se pudo detectar el tenant desde la URL');
+        throw new Error(
+          'No se pudo detectar el tenant. Usa: subdomain, /t/tenant-name, o ?tenant=tenant-name'
+        );
       }
 
-      console.log('✅ Subdomain detectado:', subdomain);
+      console.log('✅ Tenant final:', subdomain);
 
       // Llamar a API del Landing Backend
       const apiUrl =
