@@ -105,7 +105,23 @@ export const TenantProvider = ({ children }) => {
   };
 
   const getModuleStatus = moduleName => {
-    return modules.find(m => m.moduleName === moduleName)?.status === 'active';
+    // Normalizar para comparación insensible a mayúsculas y guiones/espacios
+    const normalizedSearch = moduleName.toLowerCase().replace(/-/g, ' ');
+
+    const isActive = modules.some(m => {
+      const normalizedModule = m.moduleName.toLowerCase();
+      return normalizedModule === normalizedSearch && m.status === 'ACTIVE';
+    });
+
+    console.log(
+      `🔍 Checking module: ${moduleName}, normalized: ${normalizedSearch}, found: ${isActive}`
+    );
+    console.log(
+      `📦 Available modules:`,
+      modules.map(m => ({ name: m.moduleName, status: m.status }))
+    );
+
+    return isActive;
   };
 
   const getModuleUrl = moduleName => {
