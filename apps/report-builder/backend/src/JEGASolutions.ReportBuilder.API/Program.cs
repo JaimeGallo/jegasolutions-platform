@@ -4,64 +4,123 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using JEGASolutions.ReportBuilder.Data;
 using JEGASolutions.ReportBuilder.Core.Interfaces;
-using JEGASolutions.ReportBuilder.Core.Services;
 using JEGASolutions.ReportBuilder.Infrastructure.Repositories;
+using JEGASolutions.ReportBuilder.Core.Services;
 using JEGASolutions.ReportBuilder.Infrastructure.Services;
+using JEGASolutions.ReportBuilder.Infrastructure.Services.AI;
+using Azure.AI.OpenAI;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
+
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// ========================================
-// DATABASE CONFIGURATION - Snake Case
-// ========================================
+// Configure DbContext
 builder.Services.AddDbContext<AppDbContext>(options =>
-{
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    options.UseNpgsql(
+        Environment.GetEnvironmentVariable("DB_HOST") != null &&
+        Environment.GetEnvironmentVariable("DB_NAME") != null &&
+        Environment.GetEnvironmentVariable("DB_USER") != null &&
+        Environment.GetEnvironmentVariable("DB_PASSWORD") != null
+            ? $"Host={Environment.GetEnvironmentVariable("DB_HOST")};Database={Environment.GetEnvironmentVariable("DB_NAME")};Username={Environment.GetEnvironmentVariable("DB_USER")};Password={Environment.GetEnvironmentVariable("DB_PASSWORD")}"
+            : builder.Configuration.GetConnectionString("DefaultConnection")
+    )
+);
 
-    options.UseNpgsql(connectionString, npgsqlOptions =>
-    {
-        npgsqlOptions.MapToSnakeCase();
-    });
-});
-
-// Repositories
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IAreaRepository, AreaRepository>();
+// Register repositories
 builder.Services.AddScoped<ITemplateRepository, TemplateRepository>();
 builder.Services.AddScoped<IReportSubmissionRepository, ReportSubmissionRepository>();
-builder.Services.AddScoped<IAiInsightRepository, AiInsightRepository>();
+builder.Services.AddScoped<IUserRepository, JEGASolutions.ReportBuilder.Infrastructure.Repositories.UserRepository>();
+builder.Services.AddScoped<IAreaRepository, AreaRepository>();
+builder.Services.AddScoped<IConsolidatedTemplateRepository, ConsolidatedTemplateRepository>();
+builder.Services.AddScoped<IConsolidatedTemplateSectionRepository, ConsolidatedTemplateSectionRepository>();
+builder.Services.AddScoped<IExcelUploadRepository, ExcelUploadRepository>();
 
-// Services
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
-builder.Services.AddScoped<IOpenAiService, OpenAiService>();
+// Register services
+builder.Services.AddScoped<ITemplateService, TemplateService>();
+builder.Services.AddScoped<IReportSubmissionService, ReportSubmissionService>();
+builder.Services.AddScoped<IAIAnalysisService, OpenAIService>();
+builder.Services.AddScoped<IAuthService, JEGASolutions.ReportBuilder.Infrastructure.Services.AuthService>();
+builder.Services.AddScoped<IConsolidatedTemplateService, ConsolidatedTemplateService>();
+builder.Services.AddScoped<IExcelProcessorService, ExcelProcessorService>();
 
-// ========================================
-// JWT AUTHENTICATION
-// ========================================
-var jwtKey = Environment.GetEnvironmentVariable("JWT_SECRET") ??
-             builder.Configuration["JwtSettings:SecretKey"];
+// Register OpenAI client
+builder.Services.AddSingleton<OpenAIClient>(provider =>
+{
+    var apiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY") ??
+                 builder.Configuration["OpenAI:ApiKey"];
+    return new OpenAIClient(apiKey);
+});
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+// Register HttpClient for AI services
+builder.Services.AddHttpClient();
+
+// Register AI providers
+builder.Services.AddScoped<IAIProvider, OpenAIProviderService>(provider =>
+{
+    var httpClientFactory = provider.GetRequiredService<IHttpClientFactory>();
+    var httpClient = httpClientFactory.CreateClient();
+    var config = provider.GetRequiredService<IConfiguration>();
+    var logger = provider.GetRequiredService<ILogger<OpenAIProviderService>>();
+    return new OpenAIProviderService(httpClient, config, logger);
+});
+
+builder.Services.AddScoped<IAIProvider, AnthropicService>(provider =>
+{
+    var httpClientFactory = provider.GetRequiredService<IHttpClientFactory>();
+    var httpClient = httpClientFactory.CreateClient();
+    var config = provider.GetRequiredService<IConfiguration>();
+    var logger = provider.GetRequiredService<ILogger<AnthropicService>>();
+    return new AnthropicService(httpClient, config, logger);
+});
+
+builder.Services.AddScoped<IAIProvider, DeepSeekService>(provider =>
+{
+    var httpClientFactory = provider.GetRequiredService<IHttpClientFactory>();
+    var httpClient = httpClientFactory.CreateClient();
+    var config = provider.GetRequiredService<IConfiguration>();
+    var logger = provider.GetRequiredService<ILogger<DeepSeekService>>();
+    return new DeepSeekService(httpClient, config, logger);
+});
+
+builder.Services.AddScoped<IAIProvider, GroqService>(provider =>
+{
+    var httpClientFactory = provider.GetRequiredService<IHttpClientFactory>();
+    var httpClient = httpClientFactory.CreateClient();
+    var config = provider.GetRequiredService<IConfiguration>();
+    var logger = provider.GetRequiredService<ILogger<GroqService>>();
+    return new GroqService(httpClient, config, logger);
+});
+
+// Register MultiAI coordinator service
+builder.Services.AddScoped<IMultiAIService, MultiAIService>();
+
+// Configure JWT Authentication
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
 .AddJwtBearer(options =>
 {
+    var jwtKey = Environment.GetEnvironmentVariable("JWT_SECRET") ??
+                 builder.Configuration["JwtSettings:SecretKey"];
+
     options.TokenValidationParameters = new TokenValidationParameters
     {
-        ValidateIssuerSigningKey = true,
         ValidateIssuer = true,
         ValidateAudience = true,
         ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
         ValidIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ??
                       builder.Configuration["JwtSettings:Issuer"],
         ValidAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ??
                         builder.Configuration["JwtSettings:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(jwtKey ?? throw new InvalidOperationException("JWT secret key is required"))
-        ),
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey ?? throw new InvalidOperationException("JWT secret key is required"))),
         ClockSkew = TimeSpan.Zero
     };
 });
@@ -85,7 +144,7 @@ builder.Services.AddCors(options =>
             if (uri.Host == "localhost" || uri.Host == "127.0.0.1")
                 return true;
 
-            // Permitir dominios de producción
+            // Permitir dominios de producción JEGASolutions
             if (uri.Host.EndsWith(".jegasolutions.co"))
                 return true;
 
@@ -95,17 +154,15 @@ builder.Services.AddCors(options =>
 
             return false;
         })
-        .AllowAnyMethod()
         .AllowAnyHeader()
+        .AllowAnyMethod()
         .AllowCredentials();
     });
 });
 
 var app = builder.Build();
 
-// ========================================
-// MIGRATIONS - Development Only
-// ========================================
+// Apply migrations automatically in Development
 if (app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();
@@ -114,6 +171,7 @@ if (app.Environment.IsDevelopment())
 
     logger.LogInformation("Checking database connection...");
 
+    // Wait for database to be ready (retry logic)
     var retryCount = 0;
     var maxRetries = 10;
     var delayMs = 2000;
@@ -131,10 +189,8 @@ if (app.Environment.IsDevelopment())
         catch (Exception ex)
         {
             retryCount++;
-            logger.LogWarning(
-                "Database connection attempt {Retry}/{MaxRetries} failed: {Error}",
-                retryCount, maxRetries, ex.Message
-            );
+            logger.LogWarning("Database connection attempt {Retry}/{MaxRetries} failed: {Error}",
+                retryCount, maxRetries, ex.Message);
 
             if (retryCount >= maxRetries)
             {
@@ -146,6 +202,7 @@ if (app.Environment.IsDevelopment())
         }
     }
 
+    // Apply pending migrations
     logger.LogInformation("Applying database migrations...");
     try
     {
@@ -159,9 +216,7 @@ if (app.Environment.IsDevelopment())
     }
 }
 
-// ========================================
-// MIDDLEWARE PIPELINE
-// ========================================
+// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -184,4 +239,5 @@ app.MapGet("/health", () => new
 
 app.Run();
 
+// Make Program class accessible for testing
 public partial class Program { }
