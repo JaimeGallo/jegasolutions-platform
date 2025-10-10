@@ -273,6 +273,9 @@ public class WompiService : IWompiService
     {
         try
         {
+            // Determinar los módulos desde el inicio (puede ser uno o varios si es bundle)
+            var purchasedModules = ExtractModulesFromReference(payment.Reference);
+
             // Verificar si ya existe un usuario con este email
             var existingUser = await _userRepository.FirstOrDefaultAsync(
                 u => u.Email == payment.CustomerEmail
@@ -289,8 +292,7 @@ public class WompiService : IWompiService
 
                 if (existingTenant != null)
                 {
-                    // Determinar los módulos (puede ser uno o varios si es bundle)
-                    var purchasedModules = ExtractModulesFromReference(payment.Reference);
+                    // Usar los módulos ya determinados arriba
 
                     foreach (var purchasedModuleName in purchasedModules)
                     {
@@ -351,9 +353,6 @@ public class WompiService : IWompiService
 
             _logger.LogInformation("Created tenant {TenantId} with subdomain {Subdomain}",
                 tenant.Id, subdomain);
-
-            // Determinar los módulos según la referencia (puede ser uno o varios si es bundle)
-            var purchasedModules = ExtractModulesFromReference(payment.Reference);
 
             // Usar subdomain del tenant para acceder al dashboard
             string tenantDashboardUrl = $"https://{tenant.Subdomain}.jegasolutions.co";
@@ -748,8 +747,8 @@ public class WompiService : IWompiService
             }
 
             _logger.LogInformation(
-                "Tenant setup completed for {CompanyName}. Module: {ModuleName}, Dashboard: {DashboardUrl}",
-                tenant.CompanyName, moduleName, tenantDashboardUrl);
+                "Tenant setup completed for {CompanyName}. Modules: {Modules}, Dashboard: {DashboardUrl}",
+                tenant.CompanyName, string.Join(", ", purchasedModules), tenantDashboardUrl);
         }
         catch (Exception ex)
         {
