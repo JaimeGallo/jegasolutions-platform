@@ -708,7 +708,7 @@ public class WompiService : IWompiService
 
             <!-- Botón de Acceso -->
             <div class='button-container'>
-                <a href='{tenantDashboardUrl}' class='button'>Acceder Ahora →</a>
+                <a href='{tenantDashboardUrl}/login' class='button'>Acceder Ahora →</a>
             </div>
 
             <!-- Próximos Pasos -->
