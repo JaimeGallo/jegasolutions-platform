@@ -4,88 +4,72 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using JEGASolutions.ReportBuilder.Data;
 using JEGASolutions.ReportBuilder.Core.Interfaces;
-using JEGASolutions.ReportBuilder.Infrastructure.Repositories;
 using JEGASolutions.ReportBuilder.Core.Services;
+using JEGASolutions.ReportBuilder.Infrastructure.Repositories;
 using JEGASolutions.ReportBuilder.Infrastructure.Services;
-using JEGASolutions.ReportBuilder.Infrastructure.Services.AI;
-using Azure.AI.OpenAI;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
-
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // ========================================
-// 🔧 Configure DbContext with Snake Case Naming
+// DATABASE CONFIGURATION - Snake Case
 // ========================================
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(
-        Environment.GetEnvironmentVariable("DB_HOST") != null &&
-        Environment.GetEnvironmentVariable("DB_NAME") != null &&
-        Environment.GetEnvironmentVariable("DB_USER") != null &&
-        Environment.GetEnvironmentVariable("DB_PASSWORD") != null
-            ? $"Host={Environment.GetEnvironmentVariable("DB_HOST")};Database={Environment.GetEnvironmentVariable("DB_NAME")};Username={Environment.GetEnvironmentVariable("DB_USER")};Password={Environment.GetEnvironmentVariable("DB_PASSWORD")}"
-            : builder.Configuration.GetConnectionString("DefaultConnection")
-    )
-    .UseSnakeCaseNamingConvention() // ✅ AGREGADO: Snake case naming
-);
-
-// Register repositories
-builder.Services.AddScoped<ITemplateRepository, TemplateRepository>();
-builder.Services.AddScoped<IReportSubmissionRepository, ReportSubmissionRepository>();
-builder.Services.AddScoped<IUserRepository, JEGASolutions.ReportBuilder.Infrastructure.Repositories.UserRepository>();
-builder.Services.AddScoped<IAreaRepository, AreaRepository>();
-builder.Services.AddScoped<IConsolidatedTemplateRepository, ConsolidatedTemplateRepository>();
-builder.Services.AddScoped<IConsolidatedTemplateSectionRepository, ConsolidatedTemplateSectionRepository>();
-builder.Services.AddScoped<IExcelUploadRepository, ExcelUploadRepository>();
-
-// Register services
-builder.Services.AddScoped<ITemplateService, TemplateService>();
-builder.Services.AddScoped<IReportSubmissionService, ReportSubmissionService>();
-builder.Services.AddScoped<IAIAnalysisService, OpenAIService>();
-builder.Services.AddScoped<IAuthService, JEGASolutions.ReportBuilder.Infrastructure.Services.AuthService>();
-builder.Services.AddScoped<IConsolidatedTemplateService, ConsolidatedTemplateService>();
-builder.Services.AddScoped<IExcelProcessorService, ExcelProcessorService>();
-
-// Register OpenAI client
-builder.Services.AddSingleton<OpenAIClient>(provider =>
 {
-    var apiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY") ??
-                 builder.Configuration["OpenAI:ApiKey"] ??
-                 "placeholder";
-    return new OpenAIClient(apiKey, new OpenAIClientOptions());
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+    options.UseNpgsql(connectionString, npgsqlOptions =>
+    {
+        npgsqlOptions.MapToSnakeCase();
+    });
 });
 
-// JWT Authentication
+// Repositories
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IAreaRepository, AreaRepository>();
+builder.Services.AddScoped<ITemplateRepository, TemplateRepository>();
+builder.Services.AddScoped<IReportSubmissionRepository, ReportSubmissionRepository>();
+builder.Services.AddScoped<IAiInsightRepository, AiInsightRepository>();
+
+// Services
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
+builder.Services.AddScoped<IOpenAiService, OpenAiService>();
+
+// ========================================
+// JWT AUTHENTICATION
+// ========================================
 var jwtKey = Environment.GetEnvironmentVariable("JWT_SECRET") ??
              builder.Configuration["JwtSettings:SecretKey"];
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
     {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ??
-                          builder.Configuration["JwtSettings:Issuer"],
-            ValidAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ??
-                            builder.Configuration["JwtSettings:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey ?? throw new InvalidOperationException("JWT secret key is required"))),
-            ClockSkew = TimeSpan.Zero
-        };
-    });
+        ValidateIssuerSigningKey = true,
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ??
+                      builder.Configuration["JwtSettings:Issuer"],
+        ValidAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ??
+                        builder.Configuration["JwtSettings:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(jwtKey ?? throw new InvalidOperationException("JWT secret key is required"))
+        ),
+        ClockSkew = TimeSpan.Zero
+    };
+});
 
 builder.Services.AddAuthorization();
 
 // ========================================
-// 🔧 Configure CORS for Production
+// CORS - FIXED FOR PRODUCTION
 // ========================================
 builder.Services.AddCors(options =>
 {
@@ -102,24 +86,26 @@ builder.Services.AddCors(options =>
                 return true;
 
             // Permitir dominios de producción
-            if (uri.Host.EndsWith(".jegasolutions.co") || uri.Host == "jegasolutions.co")
+            if (uri.Host.EndsWith(".jegasolutions.co"))
                 return true;
 
-            // Frontend específico de Report Builder
-            if (origin == "https://reportbuilder.jegasolutions.co")
+            // Permitir Vercel deployments
+            if (uri.Host.EndsWith(".vercel.app"))
                 return true;
 
             return false;
         })
-        .AllowAnyHeader()
         .AllowAnyMethod()
-        .AllowCredentials(); // ✅ Funciona con SetIsOriginAllowed
+        .AllowAnyHeader()
+        .AllowCredentials();
     });
 });
 
 var app = builder.Build();
 
-// Apply migrations automatically in Development
+// ========================================
+// MIGRATIONS - Development Only
+// ========================================
 if (app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();
@@ -128,7 +114,6 @@ if (app.Environment.IsDevelopment())
 
     logger.LogInformation("Checking database connection...");
 
-    // Wait for database to be ready (retry logic)
     var retryCount = 0;
     var maxRetries = 10;
     var delayMs = 2000;
@@ -146,8 +131,10 @@ if (app.Environment.IsDevelopment())
         catch (Exception ex)
         {
             retryCount++;
-            logger.LogWarning("Database connection attempt {Retry}/{MaxRetries} failed: {Error}",
-                retryCount, maxRetries, ex.Message);
+            logger.LogWarning(
+                "Database connection attempt {Retry}/{MaxRetries} failed: {Error}",
+                retryCount, maxRetries, ex.Message
+            );
 
             if (retryCount >= maxRetries)
             {
@@ -159,7 +146,6 @@ if (app.Environment.IsDevelopment())
         }
     }
 
-    // Apply pending migrations
     logger.LogInformation("Applying database migrations...");
     try
     {
@@ -173,22 +159,29 @@ if (app.Environment.IsDevelopment())
     }
 }
 
-// Configure the HTTP request pipeline.
+// ========================================
+// MIDDLEWARE PIPELINE
+// ========================================
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-// ✅ CORS PRIMERO
+// CRITICAL: CORS must be before Authentication/Authorization
 app.UseCors("AllowFrontend");
-
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-Console.WriteLine("🚀 Report Builder API is running!");
+// Health check endpoint
+app.MapGet("/health", () => new
+{
+    status = "OK",
+    timestamp = DateTime.UtcNow,
+    service = "ReportBuilder API"
+});
+
 app.Run();
 
-// Make Program class accessible for testing
 public partial class Program { }
