@@ -19,17 +19,22 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Configure DbContext
+// ========================================
+// DATABASE CONFIGURATION with Snake Case
+// ========================================
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(
-        Environment.GetEnvironmentVariable("DB_HOST") != null &&
+{
+    var connectionString = Environment.GetEnvironmentVariable("DB_HOST") != null &&
         Environment.GetEnvironmentVariable("DB_NAME") != null &&
         Environment.GetEnvironmentVariable("DB_USER") != null &&
         Environment.GetEnvironmentVariable("DB_PASSWORD") != null
             ? $"Host={Environment.GetEnvironmentVariable("DB_HOST")};Database={Environment.GetEnvironmentVariable("DB_NAME")};Username={Environment.GetEnvironmentVariable("DB_USER")};Password={Environment.GetEnvironmentVariable("DB_PASSWORD")}"
-            : builder.Configuration.GetConnectionString("DefaultConnection")
-    )
-);
+            : builder.Configuration.GetConnectionString("DefaultConnection");
+
+    // CRITICAL: Apply snake_case naming convention
+    options.UseNpgsql(connectionString)
+           .UseSnakeCaseNamingConvention();
+});
 
 // Register repositories
 builder.Services.AddScoped<ITemplateRepository, TemplateRepository>();

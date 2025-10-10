@@ -16,15 +16,6 @@ namespace JEGASolutions.ReportBuilder.Data
         public DbSet<ConsolidatedTemplateSection> ConsolidatedTemplateSections { get; set; }
         public DbSet<ExcelUpload> ExcelUploads { get; set; }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            // CRITICAL: Enable snake_case naming convention
-            if (!optionsBuilder.IsConfigured)
-            {
-                optionsBuilder.UseSnakeCaseNamingConvention();
-            }
-        }
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
