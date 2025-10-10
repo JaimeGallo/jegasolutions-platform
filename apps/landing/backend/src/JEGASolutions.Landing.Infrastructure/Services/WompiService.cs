@@ -433,46 +433,248 @@ public class WompiService : IWompiService
     */
 
             // ============================================
-            // NUEVO EMAIL DE BIENVENIDA (Con URL correcta)
+            // EMAIL DE BIENVENIDA CON DISEÑO MEJORADO
             // ============================================
             try
             {
-                // Construir email HTML profesional
+                // Obtener nombre amigable del módulo
+                string moduleFriendlyName = moduleName switch
+                {
+                    "extra-hours" => "Extra Hours",
+                    "report-builder" => "Report Builder",
+                    _ => moduleName
+                };
+
                 var emailSubject = "🎉 ¡Bienvenido a JEGASolutions!";
                 var emailBody = $@"
 <!DOCTYPE html>
 <html>
-<!-- ... (todo el estilo igual) ... -->
+<head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        body {{
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+            line-height: 1.6;
+            color: #1f2937;
+            background-color: #f3f4f6;
+            padding: 20px;
+        }}
+        .email-container {{
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }}
+        .header {{
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }}
+        .header h1 {{
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }}
+        .header p {{
+            font-size: 16px;
+            opacity: 0.95;
+        }}
+        .content {{
+            padding: 40px 30px;
+        }}
+        .greeting {{
+            font-size: 24px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 20px;
+        }}
+        .intro-text {{
+            font-size: 16px;
+            color: #4b5563;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }}
+        .info-box {{
+            background-color: #f8fafc;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 4px;
+        }}
+        .info-box-title {{
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+        }}
+        .info-box-content {{
+            font-size: 14px;
+            color: #4b5563;
+            line-height: 1.8;
+        }}
+        .info-box-content strong {{
+            color: #1f2937;
+            font-weight: 600;
+        }}
+        .credentials-box {{
+            background: linear-gradient(to bottom, #f0f4ff, #ffffff);
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 30px;
+        }}
+        .credentials-title {{
+            font-size: 18px;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }}
+        .credential-item {{
+            margin-bottom: 16px;
+        }}
+        .credential-label {{
+            font-size: 13px;
+            font-weight: 600;
+            color: #6b7280;
+            display: block;
+            margin-bottom: 6px;
+        }}
+        .credential-value {{
+            background-color: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 12px;
+            font-size: 14px;
+            font-family: 'Courier New', monospace;
+            color: #1f2937;
+            word-break: break-all;
+        }}
+        .warning-box {{
+            background-color: #fef2f2;
+            border-left: 4px solid #ef4444;
+            padding: 16px;
+            margin-bottom: 30px;
+            border-radius: 4px;
+        }}
+        .warning-box strong {{
+            color: #991b1b;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 8px;
+        }}
+        .warning-box p {{
+            color: #7f1d1d;
+            font-size: 14px;
+            line-height: 1.5;
+            margin: 0;
+        }}
+        .button-container {{
+            text-align: center;
+            margin: 30px 0;
+        }}
+        .button {{
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            padding: 16px 40px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);
+        }}
+        .steps-box {{
+            background-color: #f8fafc;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }}
+        .steps-title {{
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 16px;
+        }}
+        .steps-box ol {{
+            margin-left: 20px;
+            color: #4b5563;
+        }}
+        .steps-box li {{
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }}
+        .footer-text {{
+            font-size: 14px;
+            color: #6b7280;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }}
+        .signature {{
+            font-size: 14px;
+            color: #4b5563;
+        }}
+        .signature strong {{
+            color: #1f2937;
+        }}
+        .footer {{
+            background-color: #f9fafb;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e5e7eb;
+        }}
+        .footer p {{
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }}
+        .footer a {{
+            color: #667eea;
+            text-decoration: none;
+        }}
+    </style>
+</head>
 <body>
-    <div class='container'>
+    <div class='email-container'>
+        <!-- Header -->
         <div class='header'>
-            <h1 style='margin: 0;'>¡Bienvenido a JEGASolutions! 🚀</h1>
-            <p style='margin: 10px 0 0 0; opacity: 0.9;'>Tu módulo {moduleName} está listo</p>
+            <h1>¡Bienvenido a JEGASolutions! 🚀</h1>
+            <p>Tu módulo {moduleFriendlyName} está listo</p>
         </div>
 
+        <!-- Content -->
         <div class='content'>
-            <h2 style='color: #1f2937;'>Hola {firstName},</h2>
+            <p class='greeting'>Hola {firstName},</p>
 
-            <p style='font-size: 16px;'>
-                ¡Gracias por confiar en nosotros! Tu cuenta ha sido creada exitosamente y ya puedes
-                empezar a usar <strong class='highlight'>{moduleName}</strong>.
+            <p class='intro-text'>
+                ¡Gracias por confiar en nosotros! Tu cuenta ha sido creada exitosamente y
+                ya puedes empezar a usar <strong>{moduleFriendlyName}</strong>.
             </p>
 
+            <!-- Información de la Empresa -->
             <div class='info-box'>
-                <strong>📋 Información de tu Cuenta</strong>
-                <p style='margin: 10px 0 0 0;'>
+                <div class='info-box-title'>📋 Información de tu Empresa</div>
+                <div class='info-box-content'>
                     <strong>Empresa:</strong> {tenant.CompanyName}<br/>
-                    <strong>Subdomain:</strong> {tenant.Subdomain}.jegasolutions.co<br/>
-                    <strong>Módulo Adquirido:</strong> {moduleName}<br/>
+                    <strong>Módulo Adquirido:</strong> {moduleFriendlyName}<br/>
                     <strong>Fecha de Activación:</strong> {DateTime.UtcNow:dd/MM/yyyy HH:mm}
-                </p>
+                </div>
             </div>
 
+            <!-- Credenciales de Acceso -->
             <div class='credentials-box'>
-                <h3 style='margin-top: 0; color: #667eea;'>🔑 Tus Credenciales de Acceso</h3>
+                <div class='credentials-title'>🔑 Tus Credenciales de Acceso</div>
 
                 <div class='credential-item'>
-                    <span class='credential-label'>URL de Acceso al Dashboard:</span>
+                    <span class='credential-label'>URL de Acceso:</span>
                     <div class='credential-value'>{tenantDashboardUrl}</div>
                 </div>
 
@@ -487,23 +689,21 @@ public class WompiService : IWompiService
                 </div>
             </div>
 
+            <!-- Warning de Seguridad -->
             <div class='warning-box'>
                 <strong>⚠️ Importante - Seguridad</strong>
-                <p style='margin: 10px 0 0 0;'>
-                    Por tu seguridad, te recomendamos <strong>cambiar tu contraseña</strong>
-                    después de iniciar sesión por primera vez.
-                </p>
+                <p>Por tu seguridad, te recomendamos <strong>cambiar tu contraseña</strong> después de iniciar sesión por primera vez.</p>
             </div>
 
-            <div style='text-align: center; margin: 30px 0;'>
-                <a href='{tenantDashboardUrl}' class='button'>
-                    Acceder al Dashboard →
-                </a>
+            <!-- Botón de Acceso -->
+            <div class='button-container'>
+                <a href='{tenantDashboardUrl}' class='button'>Acceder Ahora →</a>
             </div>
 
-            <div class='info-box'>
-                <strong>💡 Próximos Pasos</strong>
-                <ol style='margin: 10px 0 0 0; padding-left: 20px;'>
+            <!-- Próximos Pasos -->
+            <div class='steps-box'>
+                <div class='steps-title'>💡 Próximos Pasos</div>
+                <ol>
                     <li>Haz click en el botón 'Acceder Ahora'</li>
                     <li>Inicia sesión con tus credenciales</li>
                     <li>Cambia tu contraseña temporal</li>
@@ -512,23 +712,23 @@ public class WompiService : IWompiService
                 </ol>
             </div>
 
-            <p style='margin-top: 30px;'>
+            <p class='footer-text'>
                 Si tienes alguna pregunta o necesitas ayuda, no dudes en contactarnos.
                 Estamos aquí para ayudarte a sacar el máximo provecho de tu inversión.
             </p>
 
-            <p style='color: #6b7280;'>
+            <p class='signature'>
                 ¡Gracias por elegirnos!<br/>
                 <strong>El Equipo de JEGASolutions</strong>
             </p>
         </div>
 
+        <!-- Footer -->
         <div class='footer'>
-            <p style='margin: 0 0 10px 0;'>
-                © 2025 JEGASolutions. Todos los derechos reservados.
-            </p>
-            <p style='margin: 0;'>
-                📧 JaimeGallo@jegasolutions.co | 🌐 www.jegasolutions.co
+            <p>© 2025 JEGASolutions. Todos los derechos reservados.</p>
+            <p>
+                📧 <a href='mailto:soporte@jegasolutions.co'>soporte@jegasolutions.co</a> |
+                🌐 <a href='https://www.jegasolutions.co'>www.jegasolutions.co</a>
             </p>
         </div>
     </div>
@@ -541,8 +741,8 @@ public class WompiService : IWompiService
                     emailBody
                 );
 
-                _logger.LogInformation("Welcome email sent to {Email} with module URL {ModuleUrl}",
-                    payment.CustomerEmail, moduleUrl);
+                _logger.LogInformation("Welcome email sent to {Email} with dashboard URL {DashboardUrl}",
+                    payment.CustomerEmail, tenantDashboardUrl);
             }
             catch (Exception emailEx)
             {
@@ -551,8 +751,8 @@ public class WompiService : IWompiService
             }
 
             _logger.LogInformation(
-                "Tenant setup completed for {CompanyName}. Module: {ModuleName}, URL: {ModuleUrl}",
-                tenant.CompanyName, moduleName, moduleUrl);
+                "Tenant setup completed for {CompanyName}. Module: {ModuleName}, Dashboard: {DashboardUrl}",
+                tenant.CompanyName, moduleName, tenantDashboardUrl);
         }
         catch (Exception ex)
         {

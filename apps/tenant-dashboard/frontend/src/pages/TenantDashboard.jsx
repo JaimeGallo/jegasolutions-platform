@@ -17,14 +17,7 @@ import {
 
 const TenantDashboard = () => {
   const { user, logout } = useAuth();
-  const {
-    tenant,
-    modules,
-    isLoading,
-    getModuleStatus,
-    getModuleUrl,
-    tenantName,
-  } = useTenant();
+  const { tenant, modules, isLoading, tenantName } = useTenant();
   const [stats, setStats] = useState({
     totalModules: 0,
     activeModules: 0,
@@ -37,44 +30,76 @@ const TenantDashboard = () => {
       setStats({
         totalModules: modules.length,
         activeModules: modules.filter(m => m.status === 'ACTIVE').length,
-        totalUsers: 0, // This would come from API
+        totalUsers: 0,
         lastActivity: new Date().toLocaleDateString(),
       });
     }
   }, [modules]);
 
-  const getModuleFeatures = moduleName => {
-    switch (moduleName) {
-      case 'Extra Hours':
-        return [
+  // Helper function normalizada
+  const getModuleConfig = moduleName => {
+    const normalized = moduleName.toLowerCase().replace(/[-\s]/g, '');
+
+    if (normalized === 'extrahours') {
+      return {
+        displayName: 'GestorHorasExtra',
+        icon: Clock,
+        color: 'bg-blue-500',
+        description: 'Gestión completa de horas extra y compensaciones',
+        features: [
           'Control de horas extra',
           'Gestión de colaboradores',
           'Reportes automáticos',
           'Cumplimiento normativo',
-        ];
-      case 'Report Builder':
-        return [
+        ],
+        route: '/extra-hours',
+      };
+    }
+
+    if (normalized === 'reportbuilder') {
+      return {
+        displayName: 'ReportBuilder con IA',
+        icon: FileText,
+        color: 'bg-purple-500',
+        description:
+          'Generación inteligente de reportes con análisis automático',
+        features: [
           'Análisis con IA',
           'Narrativas ejecutivas',
           'Exportación múltiples formatos',
           'Dashboards interactivos',
-        ];
-      default:
-        return [];
+        ],
+        route: '/report-builder',
+      };
     }
+
+    // Default
+    return {
+      displayName: moduleName,
+      icon: FileText,
+      color: 'bg-gray-500',
+      description: `Módulo ${moduleName}`,
+      features: [],
+      route: '#',
+    };
   };
 
-  // DESPUÉS: Usar la función (línea ~47-56)
-  const availableModules = modules.map(module => ({
-    id: module.moduleName.toLowerCase().replace(/ /g, '-'),
-    name: module.moduleName,
-    description: module.description,
-    icon: module.icon === 'clock' ? Clock : FileText,
-    color: module.icon === 'clock' ? 'bg-blue-500' : 'bg-purple-500',
-    features: getModuleFeatures(module.moduleName),
-    isActive: module.status.toUpperCase() === 'ACTIVE', // ✅ Fix: Case-insensitive comparison
-    url: module.url,
-  }));
+  // Mapear módulos del backend
+  const availableModules = modules.map(module => {
+    const config = getModuleConfig(module.moduleName);
+
+    return {
+      id: module.id,
+      name: config.displayName,
+      moduleName: module.moduleName,
+      description: config.description,
+      icon: config.icon,
+      color: config.color,
+      features: config.features,
+      isActive: module.status.toUpperCase() === 'ACTIVE',
+      url: `${window.location.origin}${config.route}`,
+    };
+  });
 
   const handleLogout = () => {
     logout();
@@ -309,61 +334,6 @@ const TenantDashboard = () => {
             ))}
           </div>
         </motion.div>
-
-        {/*
-        ==========================================
-        SECCIÓN COMENTADA: Acciones Rápidas
-        ==========================================
-        Razón: Cada módulo tiene sus propias configuraciones y opciones para agregar usuarios.
-        Las acciones generales aquí son redundantes.
-        Fecha: 2025-10-09
-        ==========================================
-        */}
-        {/* <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-          className="mt-8"
-        >
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
-            Acciones Rápidas
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="card text-center">
-              <Settings className="h-8 w-8 text-jega-blue-600 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Configuración
-              </h3>
-              <p className="text-gray-600 mb-4">
-                Gestiona la configuración de tu cuenta
-              </p>
-              <button className="btn-secondary w-full">Configurar</button>
-            </div>
-
-            <div className="card text-center">
-              <Users className="h-8 w-8 text-jega-blue-600 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Usuarios
-              </h3>
-              <p className="text-gray-600 mb-4">
-                Administra los usuarios de tu organización
-              </p>
-              <button className="btn-secondary w-full">Gestionar</button>
-            </div>
-
-            <div className="card text-center">
-              <BarChart3 className="h-8 w-8 text-jega-blue-600 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Reportes
-              </h3>
-              <p className="text-gray-600 mb-4">
-                Visualiza el rendimiento de tus módulos
-              </p>
-              <button className="btn-secondary w-full">Ver Reportes</button>
-            </div>
-          </div>
-        </motion.div> */}
       </main>
     </div>
   );
