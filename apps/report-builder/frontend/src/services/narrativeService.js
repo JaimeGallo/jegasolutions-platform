@@ -1,11 +1,13 @@
+import { getApiBaseUrl } from "./apiConfig";
+
 export const generateNarrativeFromAnalysis = async (
   analysisResult,
   config,
   excelData = null
 ) => {
   try {
-    const baseUrl = import.meta.env.VITE_API_URL || "";
-    const response = await fetch(`${baseUrl}/api/narrative/generate`, {
+    const baseUrl = getApiBaseUrl();
+    const response = await fetch(`${baseUrl}/narrative/generate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

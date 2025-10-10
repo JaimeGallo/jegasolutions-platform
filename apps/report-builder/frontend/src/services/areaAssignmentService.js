@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || "";
+import { getApiBaseUrl } from "./apiConfig";
 
 const AreaAssignmentService = {
   /**
@@ -11,7 +11,8 @@ const AreaAssignmentService = {
         throw new Error("No se encontró token de autenticación");
       }
 
-      const response = await fetch(`${API_URL}/api/Areas`, {
+      const API_URL = getApiBaseUrl();
+      const response = await fetch(`${API_URL}/Areas`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -40,8 +41,9 @@ const AreaAssignmentService = {
         throw new Error("No se encontró token de autenticación");
       }
 
+      const API_URL = getApiBaseUrl();
       const response = await fetch(
-        `${API_URL}/api/ConsolidatedTemplates/suggest-area-assignments`,
+        `${API_URL}/ConsolidatedTemplates/suggest-area-assignments`,
         {
           method: "POST",
           headers: {
@@ -87,8 +89,9 @@ const AreaAssignmentService = {
         throw new Error("No se encontró token de autenticación");
       }
 
+      const API_URL = getApiBaseUrl();
       const response = await fetch(
-        `${API_URL}/api/ConsolidatedTemplates/${templateId}/assign-areas`,
+        `${API_URL}/ConsolidatedTemplates/${templateId}/assign-areas`,
         {
           method: "POST",
           headers: {
@@ -120,8 +123,9 @@ const AreaAssignmentService = {
         throw new Error("No se encontró token de autenticación");
       }
 
+      const API_URL = getApiBaseUrl();
       const response = await fetch(
-        `${API_URL}/api/ConsolidatedTemplates/${templateId}/area-assignments`,
+        `${API_URL}/ConsolidatedTemplates/${templateId}/area-assignments`,
         {
           method: "GET",
           headers: {
