@@ -52,7 +52,10 @@ const TenantDashboard = () => {
           'Reportes automáticos',
           'Cumplimiento normativo',
         ],
-        route: '/extra-hours',
+        // URL configurable vía variable de entorno
+        url:
+          import.meta.env.VITE_EXTRA_HOURS_URL ||
+          'https://extrahours.jegasolutions.co',
       };
     }
 
@@ -69,7 +72,10 @@ const TenantDashboard = () => {
           'Exportación múltiples formatos',
           'Dashboards interactivos',
         ],
-        route: '/report-builder',
+        // URL configurable vía variable de entorno
+        url:
+          import.meta.env.VITE_REPORT_BUILDER_URL ||
+          'https://reportbuilder.jegasolutions.co',
       };
     }
 
@@ -80,7 +86,7 @@ const TenantDashboard = () => {
       color: 'bg-gray-500',
       description: `Módulo ${moduleName}`,
       features: [],
-      route: '#',
+      url: '#',
     };
   };
 
@@ -97,7 +103,7 @@ const TenantDashboard = () => {
       color: config.color,
       features: config.features,
       isActive: module.status.toUpperCase() === 'ACTIVE',
-      url: `${window.location.origin}${config.route}`,
+      url: config.url,
     };
   });
 

@@ -10,6 +10,10 @@ VITE_API_URL=http://localhost:5014/api
 
 # Tenant por defecto en desarrollo
 VITE_DEV_TENANT=test-tenant
+
+# Module URLs (donde están desplegados los módulos)
+VITE_EXTRA_HOURS_URL=http://localhost:5001
+VITE_REPORT_BUILDER_URL=http://localhost:5002
 ```
 
 ---
@@ -23,12 +27,15 @@ VITE_DEV_TENANT=test-tenant
 2. Agrega las siguientes variables:
 ```
 
-| Variable       | Valor                                      | Entorno            |
-| -------------- | ------------------------------------------ | ------------------ |
-| `VITE_API_URL` | `https://api.jegasolutions.co/api`         | Production         |
-| `VITE_API_URL` | `https://api-staging.jegasolutions.co/api` | Preview (opcional) |
+| Variable                  | Valor                                             | Entorno    |
+| ------------------------- | ------------------------------------------------- | ---------- |
+| `VITE_API_URL`            | `https://jegasolutions-platform.onrender.com/api` | Production |
+| `VITE_EXTRA_HOURS_URL`    | `https://extrahours.jegasolutions.co`             | Production |
+| `VITE_REPORT_BUILDER_URL` | `https://reportbuilder.jegasolutions.co`          | Production |
 
 ⚠️ **NO** configurar `VITE_DEV_TENANT` en producción.
+
+⚠️ **Importante:** Las URLs de los módulos deben apuntar a donde estén desplegadas las aplicaciones extra-hours y report-builder. Asegúrate de que estas aplicaciones estén corriendo antes de configurar estas variables.
 
 ---
 
@@ -78,7 +85,7 @@ http://demo.localhost:5173
 **Ejemplos:**
 
 - Desarrollo: `http://localhost:5014/api`
-- Producción: `https://api.jegasolutions.co/api`
+- Producción: `https://jegasolutions-platform.onrender.com/api`
 
 ### `VITE_DEV_TENANT`
 
@@ -91,6 +98,28 @@ http://demo.localhost:5173
 - Solo en modo desarrollo (`npm run dev`)
 - Solo si NO se detecta tenant de subdomain/path/query
 - NO se usa en producción
+
+### `VITE_EXTRA_HOURS_URL`
+
+**Descripción:** URL donde está desplegada la aplicación Extra Hours  
+**Requerido:** Sí (para que funcione el módulo)  
+**Ejemplos:**
+
+- Desarrollo: `http://localhost:5001`
+- Producción: `https://extrahours.jegasolutions.co`
+
+**Nota:** Esta URL se usa cuando el usuario hace click en "Acceder" al módulo Extra Hours.
+
+### `VITE_REPORT_BUILDER_URL`
+
+**Descripción:** URL donde está desplegada la aplicación Report Builder  
+**Requerido:** Sí (para que funcione el módulo)  
+**Ejemplos:**
+
+- Desarrollo: `http://localhost:5002`
+- Producción: `https://reportbuilder.jegasolutions.co`
+
+**Nota:** Esta URL se usa cuando el usuario hace click en "Acceder" al módulo Report Builder.
 
 ---
 
@@ -170,13 +199,17 @@ Tenant: test-tenant
 ```bash
 VITE_API_URL=http://localhost:5014/api
 VITE_DEV_TENANT=demo-tenant
+VITE_EXTRA_HOURS_URL=http://localhost:5001
+VITE_REPORT_BUILDER_URL=http://localhost:5002
 ```
 
 ### Vercel (Producción)
 
 ```bash
-VITE_API_URL=https://api.jegasolutions.co/api
-# VITE_DEV_TENANT no se configura
+VITE_API_URL=https://jegasolutions-platform.onrender.com/api
+VITE_EXTRA_HOURS_URL=https://extrahours.jegasolutions.co
+VITE_REPORT_BUILDER_URL=https://reportbuilder.jegasolutions.co
+# VITE_DEV_TENANT no se configura en producción
 ```
 
 ### Comandos:
