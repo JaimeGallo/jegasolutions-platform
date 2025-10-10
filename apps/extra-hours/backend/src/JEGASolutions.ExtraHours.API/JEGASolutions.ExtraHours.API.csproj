@@ -14,6 +14,8 @@
     <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.2.1" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.2.1" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.4" />
+    <PackageReference Include="EFCore.NamingConventions" Version="8.0.3" />
+
     <ProjectReference Include="..\JEGASolutions.ExtraHours.Core\JEGASolutions.ExtraHours.Core.csproj" />
     <ProjectReference Include="..\JEGASolutions.ExtraHours.Infrastructure\JEGASolutions.ExtraHours.Infrastructure.csproj" />
     <ProjectReference Include="..\JEGASolutions.ExtraHours.Data\JEGASolutions.ExtraHours.Data.csproj" />
