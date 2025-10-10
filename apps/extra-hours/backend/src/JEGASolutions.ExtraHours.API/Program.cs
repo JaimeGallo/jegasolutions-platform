@@ -18,19 +18,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Database Configuration
-var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
-                    ?? Environment.GetEnvironmentVariable("DATABASE_URL")
-                    ?? builder.Configuration.GetConnectionString("DefaultConnection");
-
-if (string.IsNullOrEmpty(connectionString))
-{
-    throw new InvalidOperationException("Database connection string is not configured");
-}
-
-Console.WriteLine($"✅ Database connection configured: {connectionString.Substring(0, Math.Min(30, connectionString.Length))}...");
-
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(connectionString));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
@@ -81,8 +70,9 @@ builder.Services.AddScoped<IExtraHourCalculationService, ExtraHourCalculationSer
 builder.Services.AddScoped<ICompensationRequestService, CompensationRequestService>();
 builder.Services.AddScoped<IEmailService, JEGASolutions.ExtraHours.Infrastructure.Services.EmailService>();
 
-// Add CORS
-// Add CORS - CONFIGURACIÓN ACTUALIZADA
+// ========================================
+// 🔧 FIX: CORS CORRECTO PARA PRODUCCIÓN
+// ========================================
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -92,23 +82,25 @@ builder.Services.AddCors(options =>
             if (string.IsNullOrEmpty(origin))
                 return false;
 
-            // Permitir localhost
-            if (origin.StartsWith("http://localhost:") || origin.StartsWith("https://localhost:"))
+            // Permitir localhost (desarrollo)
+            if (origin.StartsWith("http://localhost:") ||
+                origin.StartsWith("https://localhost:"))
                 return true;
 
-            // Permitir todos los dominios de Vercel
-            if (origin.Contains(".vercel.app"))
+            // Permitir subdominios de jegasolutions.co
+            if (origin.EndsWith(".jegasolutions.co") ||
+                origin == "https://jegasolutions.co")
                 return true;
 
-            // Permitir dominios personalizados
-            if (origin.Contains("jegasolutions.co"))
+            // Frontend específico de Extra Hours
+            if (origin == "https://extrahours.jegasolutions.co")
                 return true;
 
             return false;
         })
         .AllowAnyMethod()
         .AllowAnyHeader()
-        .AllowCredentials();
+        .AllowCredentials(); // ✅ IMPORTANTE: Ahora funciona con SetIsOriginAllowed
     });
 });
 
@@ -121,26 +113,20 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// ⚠️ ORDEN CRÍTICO DEL PIPELINE (muy importante para CORS):
-// 1. HTTPS Redirection
 app.UseHttpsRedirection();
 
-// 2. Routing (NECESARIO para que CORS funcione con endpoints)
-app.UseRouting();
-
-// 3. CORS (debe ir DESPUÉS de UseRouting y ANTES de UseAuthentication)
+// ✅ CORS PRIMERO, antes de Authentication
 app.UseCors("AllowAll");
 
-// 4. Authentication (valida JWT y establece context.User con claims)
+// ORDEN CRÍTICO DEL PIPELINE:
+// 1. Primero autenticación (valida JWT y establece context.User con claims)
 app.UseAuthentication();
-
-// 5. Authorization (verifica roles usando context.User)
+// 2. Luego autorización (verifica roles usando context.User)
 app.UseAuthorization();
 
-// 6. Middleware personalizado de tenant (puede leer claims de context.User)
+// 3. Finalmente middleware de tenant (puede leer claims de context.User)
 app.UseMiddleware<TenantMiddleware>();
 
-// 7. Map Controllers
 app.MapControllers();
 
 // Wait for database to be ready (health check) but DO NOT create tables
@@ -157,17 +143,17 @@ using (var scope = app.Services.CreateScope())
         {
             // Just test the connection, don't create database
             await context.Database.CanConnectAsync();
-            Console.WriteLine("✅ Database connection successful");
+            Console.WriteLine("Database connection successful");
             break;
         }
         catch (Exception ex)
         {
             if (i == maxRetries - 1)
             {
-                Console.WriteLine($"❌ Failed to connect to database after {maxRetries} attempts: {ex.Message}");
+                Console.WriteLine($"Failed to connect to database after {maxRetries} attempts: {ex.Message}");
                 throw;
             }
-            Console.WriteLine($"⏳ Database connection attempt {i + 1}/{maxRetries} failed, retrying in {delay.TotalSeconds} seconds...");
+            Console.WriteLine($"Database connection attempt {i + 1} failed, retrying in {delay.TotalSeconds} seconds...");
             await Task.Delay(delay);
         }
     }
