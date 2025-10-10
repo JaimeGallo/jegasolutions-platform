@@ -19,7 +19,9 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Configure DbContext
+// ========================================
+// 🔧 Configure DbContext with Snake Case Naming
+// ========================================
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(
         Environment.GetEnvironmentVariable("DB_HOST") != null &&
@@ -29,6 +31,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
             ? $"Host={Environment.GetEnvironmentVariable("DB_HOST")};Database={Environment.GetEnvironmentVariable("DB_NAME")};Username={Environment.GetEnvironmentVariable("DB_USER")};Password={Environment.GetEnvironmentVariable("DB_PASSWORD")}"
             : builder.Configuration.GetConnectionString("DefaultConnection")
     )
+    .UseSnakeCaseNamingConvention() // ✅ AGREGADO: Snake case naming
 );
 
 // Register repositories
@@ -51,83 +54,39 @@ builder.Services.AddScoped<IExcelProcessorService, ExcelProcessorService>();
 // Register OpenAI client
 builder.Services.AddSingleton<OpenAIClient>(provider =>
 {
-    var apiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY") ?? 
-                 builder.Configuration["OpenAI:ApiKey"];
-    return new OpenAIClient(apiKey);
+    var apiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY") ??
+                 builder.Configuration["OpenAI:ApiKey"] ??
+                 "placeholder";
+    return new OpenAIClient(apiKey, new OpenAIClientOptions());
 });
 
-// Register HttpClient for AI services
-builder.Services.AddHttpClient();
+// JWT Authentication
+var jwtKey = Environment.GetEnvironmentVariable("JWT_SECRET") ??
+             builder.Configuration["JwtSettings:SecretKey"];
 
-// Register AI providers
-builder.Services.AddScoped<IAIProvider, OpenAIProviderService>(provider =>
-{
-    var httpClientFactory = provider.GetRequiredService<IHttpClientFactory>();
-    var httpClient = httpClientFactory.CreateClient();
-    var config = provider.GetRequiredService<IConfiguration>();
-    var logger = provider.GetRequiredService<ILogger<OpenAIProviderService>>();
-    return new OpenAIProviderService(httpClient, config, logger);
-});
-
-builder.Services.AddScoped<IAIProvider, AnthropicService>(provider =>
-{
-    var httpClientFactory = provider.GetRequiredService<IHttpClientFactory>();
-    var httpClient = httpClientFactory.CreateClient();
-    var config = provider.GetRequiredService<IConfiguration>();
-    var logger = provider.GetRequiredService<ILogger<AnthropicService>>();
-    return new AnthropicService(httpClient, config, logger);
-});
-
-builder.Services.AddScoped<IAIProvider, DeepSeekService>(provider =>
-{
-    var httpClientFactory = provider.GetRequiredService<IHttpClientFactory>();
-    var httpClient = httpClientFactory.CreateClient();
-    var config = provider.GetRequiredService<IConfiguration>();
-    var logger = provider.GetRequiredService<ILogger<DeepSeekService>>();
-    return new DeepSeekService(httpClient, config, logger);
-});
-
-builder.Services.AddScoped<IAIProvider, GroqService>(provider =>
-{
-    var httpClientFactory = provider.GetRequiredService<IHttpClientFactory>();
-    var httpClient = httpClientFactory.CreateClient();
-    var config = provider.GetRequiredService<IConfiguration>();
-    var logger = provider.GetRequiredService<ILogger<GroqService>>();
-    return new GroqService(httpClient, config, logger);
-});
-
-// Register MultiAI coordinator service
-builder.Services.AddScoped<IMultiAIService, MultiAIService>();
-
-// Configure JWT Authentication
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    var jwtKey = Environment.GetEnvironmentVariable("JWT_SECRET") ?? 
-                 builder.Configuration["JwtSettings:SecretKey"];
-    
-    options.TokenValidationParameters = new TokenValidationParameters
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
     {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? 
-                      builder.Configuration["JwtSettings:Issuer"],
-        ValidAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? 
-                        builder.Configuration["JwtSettings:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey ?? throw new InvalidOperationException("JWT secret key is required"))),
-        ClockSkew = TimeSpan.Zero
-    };
-});
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ??
+                          builder.Configuration["JwtSettings:Issuer"],
+            ValidAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ??
+                            builder.Configuration["JwtSettings:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey ?? throw new InvalidOperationException("JWT secret key is required"))),
+            ClockSkew = TimeSpan.Zero
+        };
+    });
 
 builder.Services.AddAuthorization();
 
-// Configure CORS
+// ========================================
+// 🔧 Configure CORS for Production
+// ========================================
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
@@ -135,12 +94,26 @@ builder.Services.AddCors(options =>
         policy.SetIsOriginAllowed(origin =>
         {
             if (string.IsNullOrWhiteSpace(origin)) return false;
+
             var uri = new Uri(origin);
-            return uri.Host == "localhost" || uri.Host == "127.0.0.1";
+
+            // Permitir localhost (desarrollo)
+            if (uri.Host == "localhost" || uri.Host == "127.0.0.1")
+                return true;
+
+            // Permitir dominios de producción
+            if (uri.Host.EndsWith(".jegasolutions.co") || uri.Host == "jegasolutions.co")
+                return true;
+
+            // Frontend específico de Report Builder
+            if (origin == "https://reportbuilder.jegasolutions.co")
+                return true;
+
+            return false;
         })
         .AllowAnyHeader()
         .AllowAnyMethod()
-        .AllowCredentials();
+        .AllowCredentials(); // ✅ Funciona con SetIsOriginAllowed
     });
 });
 
@@ -152,14 +125,14 @@ if (app.Environment.IsDevelopment())
     using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-    
+
     logger.LogInformation("Checking database connection...");
-    
+
     // Wait for database to be ready (retry logic)
     var retryCount = 0;
     var maxRetries = 10;
     var delayMs = 2000;
-    
+
     while (retryCount < maxRetries)
     {
         try
@@ -173,19 +146,19 @@ if (app.Environment.IsDevelopment())
         catch (Exception ex)
         {
             retryCount++;
-            logger.LogWarning("Database connection attempt {Retry}/{MaxRetries} failed: {Error}", 
+            logger.LogWarning("Database connection attempt {Retry}/{MaxRetries} failed: {Error}",
                 retryCount, maxRetries, ex.Message);
-            
+
             if (retryCount >= maxRetries)
             {
                 logger.LogError("Failed to connect to database after {MaxRetries} attempts", maxRetries);
                 throw;
             }
-            
+
             await Task.Delay(delayMs);
         }
     }
-    
+
     // Apply pending migrations
     logger.LogInformation("Applying database migrations...");
     try
@@ -207,11 +180,14 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+// ✅ CORS PRIMERO
 app.UseCors("AllowFrontend");
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
+Console.WriteLine("🚀 Report Builder API is running!");
 app.Run();
 
 // Make Program class accessible for testing
