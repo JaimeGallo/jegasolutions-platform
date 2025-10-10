@@ -19,7 +19,13 @@ builder.Services.AddSwaggerGen();
 
 // Database Configuration
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        o => o.UseSnakeCaseNamingConvention() // ✅ NUEVO
+    );
+});
+
 
 // JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
