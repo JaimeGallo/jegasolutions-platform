@@ -354,13 +354,124 @@ Vercel redesplegará automáticamente.
 
 ---
 
+---
+
+## 🔧 PROBLEMA ADICIONAL DESCUBIERTO: Tablas de Usuarios Separadas
+
+### El Problema
+
+Landing y Extra Hours comparten la **misma base de datos** pero usan **tablas diferentes para usuarios**:
+
+- **Landing:** Tabla `Users` (mayúscula) con campos `Id`, `Email`, `FirstName`, `LastName`, `PasswordHash`, `Role`, `TenantId`
+- **Extra Hours:** Tabla `users` (minúscula) con campos `id`, `email`, `name`, `username`, `password`, `role`, `TenantId`
+
+**Resultado:** Cuando se crea un tenant, el usuario solo se guardaba en `Users` (Landing), pero Extra Hours busca en `users` y no lo encuentra → **Login falla**
+
+### La Solución
+
+**Archivo:** `apps/landing/backend/src/JEGASolutions.Landing.Infrastructure/Services/WompiService.cs`
+
+#### 1. Agregar ApplicationDbContext
+
+```csharp
+// Nuevos imports
+using JEGASolutions.Landing.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+
+// Campo agregado
+private readonly ApplicationDbContext _dbContext;
+
+// Constructor actualizado
+public WompiService(
+    // ... parámetros existentes ...
+    ApplicationDbContext dbContext)
+{
+    // ... asignaciones existentes ...
+    _dbContext = dbContext;
+}
+```
+
+#### 2. Crear usuario también en tabla de Extra Hours
+
+```csharp
+await _userRepository.AddAsync(adminUser);
+await _unitOfWork.SaveChangesAsync();
+
+// ✅ NUEVO: Crear usuario también en la tabla de Extra Hours
+await CreateUserInExtraHoursTable(
+    email: payment.CustomerEmail ?? "",
+    name: payment.CustomerName ?? "Admin",
+    username: (payment.CustomerEmail ?? "").Split('@')[0],
+    passwordHash: adminUser.PasswordHash,
+    role: "superusuario",
+    tenantId: tenant.Id
+);
+```
+
+#### 3. Método helper para insertar en tabla users
+
+```csharp
+private async Task CreateUserInExtraHoursTable(
+    string email, string name, string username,
+    string passwordHash, string role, int tenantId)
+{
+    try
+    {
+        await _dbContext.Database.ExecuteSqlRawAsync(
+            @"INSERT INTO users (email, name, username, password, role, ""TenantId"")
+              VALUES ({0}, {1}, {2}, {3}, {4}, {5})",
+            email, name, username, passwordHash, role, tenantId
+        );
+
+        _logger.LogInformation(
+            "Created user in Extra Hours table for email {Email}",
+            email
+        );
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex,
+            "Error creating user in Extra Hours table for email {Email}",
+            email
+        );
+        // No lanzar excepción para no detener el proceso
+    }
+}
+```
+
+### Script SQL para Usuarios Existentes
+
+**Archivo:** `apps/landing/backend/fix-existing-user-extra-hours.sql`
+
+Este script copia usuarios ya creados de `Users` a `users`:
+
+```sql
+INSERT INTO users (email, name, username, password, role, "TenantId")
+SELECT
+    u."Email" as email,
+    CONCAT(u."FirstName", ' ', COALESCE(u."LastName", '')) as name,
+    SPLIT_PART(u."Email", '@', 1) as username,
+    u."PasswordHash" as password,
+    'superusuario' as role,
+    u."TenantId" as "TenantId"
+FROM "Users" u
+WHERE u."IsActive" = true
+AND NOT EXISTS (
+    SELECT 1 FROM users eh WHERE eh.email = u."Email"
+);
+```
+
+---
+
 ## 🎯 Estado Actual
 
 ```
 ✅ Backend corregido (múltiples módulos)
+✅ Backend corregido (usuarios en ambas tablas)
 ✅ Frontend corregido (URLs configurables)
 ✅ Documentación actualizada
+✅ Script SQL creado para usuarios existentes
 ⏳ Falta desplegar cambios
+⏳ Falta ejecutar script SQL para usuarios existentes
 ⏳ Falta configurar variables de entorno en Vercel
-⏳ Falta desplegar aplicaciones de módulos
 ```

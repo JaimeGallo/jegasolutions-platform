@@ -8,6 +8,8 @@ using JEGASolutions.Landing.Application.Interfaces;
 using JEGASolutions.Landing.Domain.Entities;
 using JEGASolutions.Landing.Domain.Interfaces;
 using JEGASolutions.Landing.Infrastructure.Utils;
+using JEGASolutions.Landing.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace JEGASolutions.Landing.Infrastructure.Services;
 
@@ -23,6 +25,7 @@ public class WompiService : IWompiService
     private readonly IEmailService _emailService;
     private readonly ILogger<WompiService> _logger;
     private readonly IPasswordGenerator _passwordGenerator;
+    private readonly ApplicationDbContext _dbContext;
     private readonly string _privateKey;
     private readonly string _publicKey;
     private readonly string _eventsSecret;
@@ -38,7 +41,8 @@ public class WompiService : IWompiService
         IConfiguration configuration,
         IEmailService emailService,
         ILogger<WompiService> logger,
-        IPasswordGenerator passwordGenerator)
+        IPasswordGenerator passwordGenerator,
+        ApplicationDbContext dbContext)
     {
         _httpClient = httpClient;
         _paymentRepository = paymentRepository;
@@ -50,6 +54,7 @@ public class WompiService : IWompiService
         _emailService = emailService;
         _logger = logger;
         _passwordGenerator = passwordGenerator;
+        _dbContext = dbContext;
 
         _privateKey = _configuration["Wompi__PrivateKey"] ?? _configuration["Wompi:PrivateKey"]
             ?? throw new ArgumentNullException("Wompi__PrivateKey", "Wompi private key is required.");
@@ -398,6 +403,16 @@ public class WompiService : IWompiService
 
             _logger.LogInformation("Created admin user {UserId} for tenant {TenantId}",
                 adminUser.Id, tenant.Id);
+
+            // Crear usuario también en la tabla de Extra Hours (para compatibilidad)
+            await CreateUserInExtraHoursTable(
+                email: payment.CustomerEmail ?? "",
+                name: payment.CustomerName ?? "Admin",
+                username: (payment.CustomerEmail ?? "").Split('@')[0],
+                passwordHash: adminUser.PasswordHash,
+                role: "superusuario", // rol por defecto en extra-hours
+                tenantId: tenant.Id
+            );
 
             /*
             // Enviar email de bienvenida
@@ -920,6 +935,44 @@ public class WompiService : IWompiService
         using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(key));
         var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(data));
         return Convert.ToHexString(hash).ToLower();
+    }
+
+    /// <summary>
+    /// Crea un usuario en la tabla 'users' de Extra Hours usando SQL crudo
+    /// (Comparten la misma base de datos pero usan tablas diferentes)
+    /// </summary>
+    private async Task CreateUserInExtraHoursTable(
+        string email,
+        string name,
+        string username,
+        string passwordHash,
+        string role,
+        int tenantId)
+    {
+        try
+        {
+            // Insertar en la tabla users de Extra Hours
+            // Nota: BCrypt genera hashes compatibles entre Landing y Extra Hours
+            await _dbContext.Database.ExecuteSqlRawAsync(
+                @"INSERT INTO users (email, name, username, password, role, ""TenantId"")
+                  VALUES ({0}, {1}, {2}, {3}, {4}, {5})",
+                email, name, username, passwordHash, role, tenantId
+            );
+
+            _logger.LogInformation(
+                "Created user in Extra Hours table for email {Email}, tenant {TenantId}",
+                email, tenantId
+            );
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error creating user in Extra Hours table for email {Email}",
+                email
+            );
+            // No lanzar excepción para no detener el proceso de creación de tenant
+            // El usuario podrá ser creado manualmente después si es necesario
+        }
     }
 }
 
