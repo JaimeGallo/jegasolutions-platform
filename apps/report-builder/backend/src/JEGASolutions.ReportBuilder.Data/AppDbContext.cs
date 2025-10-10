@@ -16,6 +16,15 @@ namespace JEGASolutions.ReportBuilder.Data
         public DbSet<ConsolidatedTemplateSection> ConsolidatedTemplateSections { get; set; }
         public DbSet<ExcelUpload> ExcelUploads { get; set; }
 
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            // CRITICAL: Enable snake_case naming convention
+            if (!optionsBuilder.IsConfigured)
+            {
+                optionsBuilder.UseSnakeCaseNamingConvention();
+            }
+        }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -55,15 +64,9 @@ namespace JEGASolutions.ReportBuilder.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<ReportSubmission>()
-                .HasOne(rs => rs.Template)
+                .HasOne(r => r.Template)
                 .WithMany()
-                .HasForeignKey(rs => rs.TemplateId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<ReportSubmission>()
-                .HasOne(rs => rs.Area)
-                .WithMany()
-                .HasForeignKey(rs => rs.AreaId)
+                .HasForeignKey(r => r.TemplateId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<AIInsight>()
@@ -72,75 +75,28 @@ namespace JEGASolutions.ReportBuilder.Data
                 .HasForeignKey(ai => ai.ReportSubmissionId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // ConsolidatedTemplate relationships
-            modelBuilder.Entity<ConsolidatedTemplate>()
-                .HasOne(ct => ct.CreatedByUser)
-                .WithMany()
-                .HasForeignKey(ct => ct.CreatedByUserId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<ConsolidatedTemplate>()
-                .HasMany(ct => ct.Sections)
-                .WithOne(cts => cts.ConsolidatedTemplate)
+            modelBuilder.Entity<ConsolidatedTemplateSection>()
+                .HasOne(cts => cts.ConsolidatedTemplate)
+                .WithMany(ct => ct.Sections)
                 .HasForeignKey(cts => cts.ConsolidatedTemplateId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // ConsolidatedTemplateSection relationships
             modelBuilder.Entity<ConsolidatedTemplateSection>()
                 .HasOne(cts => cts.Area)
                 .WithMany()
                 .HasForeignKey(cts => cts.AreaId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<ConsolidatedTemplateSection>()
-                .HasOne(cts => cts.CompletedByUser)
-                .WithMany()
-                .HasForeignKey(cts => cts.CompletedByUserId)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            // ExcelUpload relationships
             modelBuilder.Entity<ExcelUpload>()
                 .HasOne(eu => eu.Area)
                 .WithMany()
                 .HasForeignKey(eu => eu.AreaId)
                 .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<ExcelUpload>()
-                .HasOne(eu => eu.UploadedByUser)
-                .WithMany()
-                .HasForeignKey(eu => eu.UploadedByUserId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // Configure indexes for performance
-            modelBuilder.Entity<Template>()
-                .HasIndex(t => new { t.TenantId, t.AreaId })
-                .HasDatabaseName("IX_Templates_TenantId_AreaId");
-
-            modelBuilder.Entity<ReportSubmission>()
-                .HasIndex(rs => new { rs.TenantId, rs.Status })
-                .HasDatabaseName("IX_ReportSubmissions_TenantId_Status");
-
-            modelBuilder.Entity<AIInsight>()
-                .HasIndex(ai => new { ai.TenantId, ai.InsightType })
-                .HasDatabaseName("IX_AIInsights_TenantId_InsightType");
-
-            // Indexes for new entities
-            modelBuilder.Entity<ConsolidatedTemplate>()
-                .HasIndex(ct => new { ct.TenantId, ct.Status })
-                .HasDatabaseName("IX_ConsolidatedTemplates_TenantId_Status");
-
-            modelBuilder.Entity<ConsolidatedTemplateSection>()
-                .HasIndex(cts => new { cts.TenantId, cts.AreaId, cts.Status })
-                .HasDatabaseName("IX_ConsolidatedTemplateSections_TenantId_AreaId_Status");
-
-            modelBuilder.Entity<ExcelUpload>()
-                .HasIndex(eu => new { eu.TenantId, eu.AreaId, eu.Period })
-                .HasDatabaseName("IX_ExcelUploads_TenantId_AreaId_Period");
         }
 
         private void ConfigureTenantFiltering(ModelBuilder modelBuilder)
         {
-            // Configure global query filters for multi-tenancy (soft delete)
+            // Apply soft delete filter to all entities
             modelBuilder.Entity<Template>()
                 .HasQueryFilter(t => t.DeletedAt == null);
 
@@ -148,7 +104,7 @@ namespace JEGASolutions.ReportBuilder.Data
                 .HasQueryFilter(a => a.DeletedAt == null);
 
             modelBuilder.Entity<ReportSubmission>()
-                .HasQueryFilter(rs => rs.DeletedAt == null);
+                .HasQueryFilter(r => r.DeletedAt == null);
 
             modelBuilder.Entity<AIInsight>()
                 .HasQueryFilter(ai => ai.DeletedAt == null);
@@ -171,22 +127,22 @@ namespace JEGASolutions.ReportBuilder.Data
             modelBuilder.Entity<User>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                
+
                 // Unique email constraint
                 entity.HasIndex(e => e.Email)
                     .IsUnique()
                     .HasDatabaseName("IX_Users_Email");
-                
+
                 // Index for tenant queries
                 entity.HasIndex(e => new { e.TenantId, e.IsActive })
                     .HasDatabaseName("IX_Users_TenantId_IsActive");
-                
+
                 // Required fields
                 entity.Property(e => e.Email).IsRequired().HasMaxLength(255);
                 entity.Property(e => e.PasswordHash).IsRequired();
                 entity.Property(e => e.FullName).HasMaxLength(255);
                 entity.Property(e => e.Role).HasMaxLength(20).HasDefaultValue("User");
-                
+
                 // Default values for audit columns
                 entity.Property(e => e.TenantId).HasDefaultValue(1);
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("NOW()");
