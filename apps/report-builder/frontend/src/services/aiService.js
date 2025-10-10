@@ -3,6 +3,7 @@ import {
   isFeatureEnabled,
   logFeatureFlags,
 } from "../utils/featureFlags";
+import { getApiBaseUrl } from "./apiConfig";
 
 /**
  * Servicio base para todas las funcionalidades de AI
@@ -10,7 +11,7 @@ import {
  */
 class AIService {
   constructor() {
-    this.baseUrl = import.meta.env.VITE_API_URL || "";
+    this.baseUrl = getApiBaseUrl();
     this.logFeatureFlags();
   }
 
@@ -35,7 +36,7 @@ class AIService {
     const filteredConfig = getFilteredAIConfig(config);
 
     try {
-      const response = await fetch(`${this.baseUrl}/api/narrative/generate`, {
+      const response = await fetch(`${this.baseUrl}/narrative/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -67,7 +68,7 @@ class AIService {
     const filteredConfig = getFilteredAIConfig(config);
 
     try {
-      const response = await fetch(`${this.baseUrl}/api/analytics/analyze`, {
+      const response = await fetch(`${this.baseUrl}/analytics/analyze`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -102,7 +103,7 @@ class AIService {
     const filteredConfig = getFilteredAIConfig(config);
 
     try {
-      const response = await fetch(`${this.baseUrl}/api/analytics/charts`, {
+      const response = await fetch(`${this.baseUrl}/analytics/charts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -137,7 +138,7 @@ class AIService {
     const filteredConfig = getFilteredAIConfig(config);
 
     try {
-      const response = await fetch(`${this.baseUrl}/api/analytics/kpis`, {
+      const response = await fetch(`${this.baseUrl}/analytics/kpis`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -172,7 +173,7 @@ class AIService {
     const filteredConfig = getFilteredAIConfig(config);
 
     try {
-      const response = await fetch(`${this.baseUrl}/api/analytics/trends`, {
+      const response = await fetch(`${this.baseUrl}/analytics/trends`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

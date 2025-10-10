@@ -1,3 +1,5 @@
+import { getApiBaseUrl } from "./apiConfig";
+
 /**
  * Envía un objeto de solicitud de análisis al backend.
  * @param {Array} data - Los datos a analizar
@@ -6,8 +8,8 @@
  */
 export const analyzeData = async (data, config) => {
   try {
-    const baseUrl = import.meta.env.VITE_API_URL || "";
-    const response = await fetch(`${baseUrl}/api/analytics/analyze`, {
+    const baseUrl = getApiBaseUrl();
+    const response = await fetch(`${baseUrl}/analytics/analyze`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -35,8 +37,8 @@ export const analyzeData = async (data, config) => {
 
 export const getInsights = async (reportId) => {
   try {
-    const baseUrl = import.meta.env.VITE_API_URL || "";
-    const response = await fetch(`${baseUrl}/api/analytics/insights/${reportId}`, {
+    const baseUrl = getApiBaseUrl();
+    const response = await fetch(`${baseUrl}/analytics/insights/${reportId}`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     });
@@ -55,13 +57,13 @@ export const getInsights = async (reportId) => {
 
 export const getTrends = async (areaId, startDate, endDate) => {
   try {
-    const baseUrl = import.meta.env.VITE_API_URL || "";
+    const baseUrl = getApiBaseUrl();
     const params = new URLSearchParams({
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),
     });
 
-    const response = await fetch(`${baseUrl}/api/analytics/trends/${areaId}?${params}`, {
+    const response = await fetch(`${baseUrl}/analytics/trends/${areaId}?${params}`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     });
@@ -86,7 +88,7 @@ export const comparePeriods = async (
   period2End
 ) => {
   try {
-    const baseUrl = import.meta.env.VITE_API_URL || "";
+    const baseUrl = getApiBaseUrl();
     const params = new URLSearchParams({
       period1Start: period1Start.toISOString(),
       period1End: period1End.toISOString(),
@@ -94,7 +96,7 @@ export const comparePeriods = async (
       period2End: period2End.toISOString(),
     });
 
-    const response = await fetch(`${baseUrl}/api/analytics/compare/${areaId}?${params}`, {
+    const response = await fetch(`${baseUrl}/analytics/compare/${areaId}?${params}`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     });
