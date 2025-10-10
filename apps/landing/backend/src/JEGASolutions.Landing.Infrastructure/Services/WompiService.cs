@@ -289,39 +289,42 @@ public class WompiService : IWompiService
 
                 if (existingTenant != null)
                 {
-                    // Determinar el nombre del módulo
-                    var purchasedModuleName = ExtractModuleNameFromReference(payment.Reference);
+                    // Determinar los módulos (puede ser uno o varios si es bundle)
+                    var purchasedModules = ExtractModulesFromReference(payment.Reference);
 
-                    // Verificar si el módulo ya existe para este tenant
-                    var existingModule = await _tenantModuleRepository.FirstOrDefaultAsync(
-                        tm => tm.TenantId == existingTenant.Id && tm.ModuleName == purchasedModuleName
-                    );
-
-                    if (existingModule == null)
+                    foreach (var purchasedModuleName in purchasedModules)
                     {
-                        // Agregar el nuevo módulo
-                        var newTenantModule = new TenantModule
+                        // Verificar si el módulo ya existe para este tenant
+                        var existingModule = await _tenantModuleRepository.FirstOrDefaultAsync(
+                            tm => tm.TenantId == existingTenant.Id && tm.ModuleName == purchasedModuleName
+                        );
+
+                        if (existingModule == null)
                         {
-                            TenantId = existingTenant.Id,
-                            ModuleName = purchasedModuleName,
-                            Status = "ACTIVE",
-                            PurchasedAt = DateTime.UtcNow
-                        };
+                            // Agregar el nuevo módulo
+                            var newTenantModule = new TenantModule
+                            {
+                                TenantId = existingTenant.Id,
+                                ModuleName = purchasedModuleName,
+                                Status = "ACTIVE",
+                                PurchasedAt = DateTime.UtcNow
+                            };
 
-                        await _tenantModuleRepository.AddAsync(newTenantModule);
-                        await _unitOfWork.SaveChangesAsync();
+                            await _tenantModuleRepository.AddAsync(newTenantModule);
+                            await _unitOfWork.SaveChangesAsync();
 
-                        _logger.LogInformation("Added module {ModuleName} to existing tenant {TenantId}",
-                            purchasedModuleName, existingTenant.Id);
-
-                        // Enviar email de confirmación de compra de módulo adicional
-                        await SendModulePurchaseEmailAsync(payment, existingTenant, purchasedModuleName);
+                            _logger.LogInformation("Added module {ModuleName} to existing tenant {TenantId}",
+                                purchasedModuleName, existingTenant.Id);
+                        }
+                        else
+                        {
+                            _logger.LogInformation("Module {ModuleName} already exists for tenant {TenantId}",
+                                purchasedModuleName, existingTenant.Id);
+                        }
                     }
-                    else
-                    {
-                        _logger.LogInformation("Module {ModuleName} already exists for tenant {TenantId}",
-                            purchasedModuleName, existingTenant.Id);
-                    }
+
+                    // Enviar email de confirmación de compra de módulo(s) adicional(es)
+                    await SendModulePurchaseEmailAsync(payment, existingTenant, string.Join(", ", purchasedModules));
                 }
 
                 return;
@@ -349,40 +352,28 @@ public class WompiService : IWompiService
             _logger.LogInformation("Created tenant {TenantId} with subdomain {Subdomain}",
                 tenant.Id, subdomain);
 
-            // Determinar el nombre del módulo según la referencia
-            var moduleName = ExtractModuleNameFromReference(payment.Reference);
+            // Determinar los módulos según la referencia (puede ser uno o varios si es bundle)
+            var purchasedModules = ExtractModulesFromReference(payment.Reference);
 
             // Usar subdomain del tenant para acceder al dashboard
             string tenantDashboardUrl = $"https://{tenant.Subdomain}.jegasolutions.co";
 
-            // Determinar la ruta del módulo dentro del dashboard
-            string moduleRoute;
-            switch (moduleName.ToLower())
+            // Crear todos los módulos adquiridos
+            foreach (var moduleName in purchasedModules)
             {
-                case "extra hours":
-                    moduleRoute = "/extra-hours";
-                    break;
-                case "report builder":
-                    moduleRoute = "/report-builder";
-                    break;
-                default:
-                    moduleRoute = "/extra-hours";
-                    break;
+                var tenantModule = new TenantModule
+                {
+                    TenantId = tenant.Id,
+                    ModuleName = moduleName,
+                    Status = "ACTIVE",
+                    PurchasedAt = DateTime.UtcNow
+                };
+
+                await _tenantModuleRepository.AddAsync(tenantModule);
+
+                _logger.LogInformation("Created module {ModuleName} for tenant {TenantId}",
+                    moduleName, tenant.Id);
             }
-
-            // URL completa: subdomain.jegasolutions.co/extra-hours
-            string moduleUrl = $"{tenantDashboardUrl}{moduleRoute}";
-
-            // Crear el módulo para el tenant
-            var tenantModule = new TenantModule
-            {
-                TenantId = tenant.Id,
-                ModuleName = moduleName,
-                Status = "ACTIVE",
-                PurchasedAt = DateTime.UtcNow
-            };
-
-            await _tenantModuleRepository.AddAsync(tenantModule);
 
             // Crear usuario admin
             var nameParts = (payment.CustomerName ?? "")
@@ -437,15 +428,21 @@ public class WompiService : IWompiService
             // ============================================
             try
             {
-                // Obtener nombre amigable del módulo
-                string moduleFriendlyName = moduleName switch
+                // Obtener nombres amigables de los módulos
+                var moduleFriendlyNames = purchasedModules.Select(m => m switch
                 {
                     "extra-hours" => "Extra Hours",
                     "report-builder" => "Report Builder",
-                    _ => moduleName
-                };
+                    _ => m
+                }).ToList();
 
-                var emailSubject = "🎉 ¡Bienvenido a JEGASolutions!";
+                string modulesText = purchasedModules.Count > 1
+                    ? $"{string.Join(" y ", moduleFriendlyNames)}"
+                    : moduleFriendlyNames.First();
+
+                string modulesPlural = purchasedModules.Count > 1 ? "módulos" : "módulo";
+
+                var emailSubject = $"🎉 ¡Bienvenido a JEGASolutions! - {modulesText}";
                 var emailBody = $@"
 <!DOCTYPE html>
 <html>
@@ -647,7 +644,7 @@ public class WompiService : IWompiService
         <!-- Header -->
         <div class='header'>
             <h1>¡Bienvenido a JEGASolutions! 🚀</h1>
-            <p>Tu módulo {moduleFriendlyName} está listo</p>
+            <p>Tu{(purchasedModules.Count > 1 ? "s" : "")} {modulesPlural} {modulesText} {(purchasedModules.Count > 1 ? "están listos" : "está listo")}</p>
         </div>
 
         <!-- Content -->
@@ -656,7 +653,7 @@ public class WompiService : IWompiService
 
             <p class='intro-text'>
                 ¡Gracias por confiar en nosotros! Tu cuenta ha sido creada exitosamente y
-                ya puedes empezar a usar <strong>{moduleFriendlyName}</strong>.
+                ya puedes empezar a usar <strong>{modulesText}</strong>.
             </p>
 
             <!-- Información de la Empresa -->
@@ -664,7 +661,7 @@ public class WompiService : IWompiService
                 <div class='info-box-title'>📋 Información de tu Empresa</div>
                 <div class='info-box-content'>
                     <strong>Empresa:</strong> {tenant.CompanyName}<br/>
-                    <strong>Módulo Adquirido:</strong> {moduleFriendlyName}<br/>
+                    <strong>{(purchasedModules.Count > 1 ? "Módulos Adquiridos" : "Módulo Adquirido")}:</strong> {modulesText}<br/>
                     <strong>Fecha de Activación:</strong> {DateTime.UtcNow:dd/MM/yyyy HH:mm}
                 </div>
             </div>
@@ -870,15 +867,35 @@ public class WompiService : IWompiService
         }
     }
 
-    private string ExtractModuleNameFromReference(string reference)
-    {
-        if (reference.Contains("EXTRAHOURS", StringComparison.OrdinalIgnoreCase))
-            return "extra-hours";  // ✅ CORREGIDO
-        if (reference.Contains("REPORTBUILDER", StringComparison.OrdinalIgnoreCase))
-            return "report-builder";  // ✅ CORREGIDO
+    private List<string> ExtractModulesFromReference(string reference)
+{
+    var modules = new List<string>();
 
-        return "extra-hours"; // ✅ CORREGIDO - Default
+    // Detectar si es un bundle (contiene ambos)
+    if (reference.Contains("EXTRAHOURS", StringComparison.OrdinalIgnoreCase) &&
+        reference.Contains("REPORTS", StringComparison.OrdinalIgnoreCase))
+    {
+        // Es un bundle - agregar ambos módulos
+        modules.Add("extra-hours");
+        modules.Add("report-builder");
+        _logger.LogInformation("Bundle detected: creating both modules");
     }
+    else if (reference.Contains("EXTRAHOURS", StringComparison.OrdinalIgnoreCase))
+    {
+        modules.Add("extra-hours");
+    }
+    else if (reference.Contains("REPORTBUILDER", StringComparison.OrdinalIgnoreCase))
+    {
+        modules.Add("report-builder");
+    }
+    else
+    {
+        // Default
+        modules.Add("extra-hours");
+    }
+
+    return modules;
+}
 
     private string MapWompiStatus(string wompiStatus)
     {
