@@ -17,15 +17,13 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Database Configuration
+// ========================================
+// 🔧 FIX: Database Configuration con Snake Case Naming
+// ========================================
 builder.Services.AddDbContext<AppDbContext>(options =>
-{
-    options.UseNpgsql(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
-        o => o.UseSnakeCaseNamingConvention() // ✅ NUEVO
-    );
-});
-
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
+           .UseSnakeCaseNamingConvention() // ✅ SINTAXIS CORRECTA
+);
 
 // JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
@@ -71,7 +69,6 @@ builder.Services.AddScoped<IExtraHourService, ExtraHourService>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IExtraHoursConfigService, ExtraHoursConfigService>();
-// Re-enabled services for full functionality
 builder.Services.AddScoped<IExtraHourCalculationService, ExtraHourCalculationService>();
 builder.Services.AddScoped<ICompensationRequestService, CompensationRequestService>();
 builder.Services.AddScoped<IEmailService, JEGASolutions.ExtraHours.Infrastructure.Services.EmailService>();
@@ -106,7 +103,7 @@ builder.Services.AddCors(options =>
         })
         .AllowAnyMethod()
         .AllowAnyHeader()
-        .AllowCredentials(); // ✅ IMPORTANTE: Ahora funciona con SetIsOriginAllowed
+        .AllowCredentials(); // ✅ Funciona con SetIsOriginAllowed
     });
 });
 
@@ -121,7 +118,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// ✅ CORS PRIMERO, antes de Authentication
+// ✅ CORS PRIMERO
 app.UseCors("AllowAll");
 
 // ORDEN CRÍTICO DEL PIPELINE:
@@ -135,8 +132,7 @@ app.UseMiddleware<TenantMiddleware>();
 
 app.MapControllers();
 
-// Wait for database to be ready (health check) but DO NOT create tables
-// The tables will be created from the SQL backup script
+// Wait for database to be ready (health check)
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -147,22 +143,23 @@ using (var scope = app.Services.CreateScope())
     {
         try
         {
-            // Just test the connection, don't create database
+            // Test the connection
             await context.Database.CanConnectAsync();
-            Console.WriteLine("Database connection successful");
+            Console.WriteLine("✅ Database connection successful");
             break;
         }
         catch (Exception ex)
         {
             if (i == maxRetries - 1)
             {
-                Console.WriteLine($"Failed to connect to database after {maxRetries} attempts: {ex.Message}");
+                Console.WriteLine($"❌ Failed to connect to database after {maxRetries} attempts: {ex.Message}");
                 throw;
             }
-            Console.WriteLine($"Database connection attempt {i + 1} failed, retrying in {delay.TotalSeconds} seconds...");
+            Console.WriteLine($"🔄 Database connection attempt {i + 1} failed, retrying in {delay.TotalSeconds} seconds...");
             await Task.Delay(delay);
         }
     }
 }
 
+Console.WriteLine("🚀 Extra Hours API is running!");
 app.Run();
