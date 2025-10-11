@@ -56,17 +56,17 @@ const ExtraHoursModule = () => {
         las políticas de tu empresa.
       </p>
 
-      <div className="flex flex-wrap items-center gap-4">
+      <div className="flex items-center gap-4 flex-nowrap">
         <button
           onClick={() => setIsVideoOpen(true)}
-          className="inline-flex items-center space-x-2 px-6 py-3 bg-jega-blue-600 hover:bg-jega-blue-700 text-white rounded-lg transition-all duration-300 hover:scale-105 shadow-md hover:shadow-lg"
+          className="inline-flex items-center space-x-2 px-6 py-3 bg-jega-blue-600 hover:bg-jega-blue-700 text-white rounded-lg transition-all duration-300 hover:scale-105 shadow-md hover:shadow-lg whitespace-nowrap"
         >
           <Play className="w-5 h-5" />
           <span className="font-semibold">Ver Demo</span>
         </button>
         <a
           href="#pricing"
-          className="inline-flex items-center space-x-2 px-6 py-3 bg-white hover:bg-gray-50 text-jega-blue-600 border-2 border-jega-blue-600 rounded-lg transition-all duration-300 hover:scale-105 shadow-md hover:shadow-lg"
+          className="inline-flex items-center space-x-2 px-6 py-3 bg-white hover:bg-gray-50 text-jega-blue-600 border-2 border-jega-blue-600 rounded-lg transition-all duration-300 hover:scale-105 shadow-md hover:shadow-lg whitespace-nowrap"
         >
           <span className="font-semibold">Ver Precios</span>
         </a>

@@ -6,8 +6,8 @@ const FlippableModuleCard = ({ frontContent, backContent }) => {
   const [isFlipped, setIsFlipped] = useState(false);
 
   const handleCardClick = (e) => {
-    // No voltear si el clic fue en un botón
-    if (e.target.closest('button')) {
+    // No voltear si el clic fue en un botón o enlace
+    if (e.target.closest('button') || e.target.closest('a')) {
       return;
     }
     setIsFlipped(!isFlipped);
