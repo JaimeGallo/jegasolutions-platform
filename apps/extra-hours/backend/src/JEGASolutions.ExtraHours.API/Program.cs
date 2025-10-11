@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Security.Claims;
-using Microsoft.EntityFrameworkCore.Diagnostics;
 using JEGASolutions.ExtraHours.Data;
 using JEGASolutions.ExtraHours.Core.Interfaces;
 using JEGASolutions.ExtraHours.Core.Services;
@@ -137,6 +136,14 @@ app.UseAuthorization();
 app.UseMiddleware<TenantMiddleware>();
 
 app.MapControllers();
+
+// ✅ Health check endpoint (requerido por Render)
+app.MapGet("/health", () => new
+{
+    status = "OK",
+    timestamp = DateTime.UtcNow,
+    service = "Extra Hours API"
+});
 
 // ========================================
 // 🔥 APLICAR MIGRACIONES EN TODOS LOS AMBIENTES
