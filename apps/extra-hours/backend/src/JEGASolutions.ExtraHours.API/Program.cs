@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Security.Claims;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using JEGASolutions.ExtraHours.Data;
 using JEGASolutions.ExtraHours.Core.Interfaces;
 using JEGASolutions.ExtraHours.Core.Services;
@@ -22,7 +23,10 @@ builder.Services.AddSwaggerGen();
 // ========================================
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
-           .UseSnakeCaseNamingConvention() // ✅ SINTAXIS CORRECTA
+           .UseSnakeCaseNamingConvention()
+           // Suppress pending model changes warning
+           .ConfigureWarnings(warnings =>
+               warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning))
 );
 
 // JWT Authentication
