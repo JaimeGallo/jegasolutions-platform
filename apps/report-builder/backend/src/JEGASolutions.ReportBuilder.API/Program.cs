@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using JEGASolutions.ReportBuilder.Data;
 using JEGASolutions.ReportBuilder.Core.Interfaces;
 using JEGASolutions.ReportBuilder.Infrastructure.Repositories;
@@ -33,7 +34,10 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
     // CRITICAL: Apply snake_case naming convention
     options.UseNpgsql(connectionString)
-           .UseSnakeCaseNamingConvention();
+           .UseSnakeCaseNamingConvention()
+           // Suppress pending model changes warning
+           .ConfigureWarnings(warnings =>
+               warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
 });
 
 // Register repositories
