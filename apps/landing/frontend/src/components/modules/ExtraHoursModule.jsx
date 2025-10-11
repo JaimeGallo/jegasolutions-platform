@@ -1,36 +1,43 @@
-import React, { useState } from "react";
-import { Clock, CheckCircle, TrendingUp, Shield, FileText, Play } from "lucide-react";
-import FlippableModuleCard from "../modules/FlippableModuleCard";
-import VideoModal from "../VideoModal";
+import React, { useState } from 'react';
+import {
+  Clock,
+  CheckCircle,
+  TrendingUp,
+  Shield,
+  FileText,
+  Play,
+} from 'lucide-react';
+import FlippableModuleCard from '../modules/FlippableModuleCard';
+import VideoModal from '../VideoModal';
 
 const ExtraHoursModule = () => {
   const [isVideoOpen, setIsVideoOpen] = useState(false);
   const features = [
-    "Registro automático por empleados",
-    "Cálculo categorizado (diurna/nocturna/festiva)",
-    "Sistema de aprobación por managers",
-    "Reportes y exportación a Excel",
-    "Cumplimiento normativo 100%",
-    "Integración con sistemas de nómina",
-    "Notificaciones automáticas",
-    "Auditoría completa de cambios",
+    'Registro automático por empleados',
+    'Cálculo categorizado (diurna/nocturna/festiva)',
+    'Sistema de aprobación por managers',
+    'Reportes y exportación a Excel',
+    'Cumplimiento normativo 100%',
+    'Integración con sistemas de nómina',
+    'Notificaciones automáticas',
+    'Auditoría completa de cambios',
   ];
 
   const benefits = [
     {
       icon: TrendingUp,
-      title: "Eficiencia",
-      description: "Reduce tiempo de procesamiento en un 80%",
+      title: 'Eficiencia',
+      description: 'Reduce tiempo de procesamiento en un 80%',
     },
     {
       icon: Shield,
-      title: "Cumplimiento",
-      description: "Garantiza conformidad con normativas laborales",
+      title: 'Cumplimiento',
+      description: 'Garantiza conformidad con normativas laborales',
     },
     {
       icon: FileText,
-      title: "Reportes",
-      description: "Genera informes detallados automáticamente",
+      title: 'Reportes',
+      description: 'Genera informes detallados automáticamente',
     },
   ];
 
@@ -48,14 +55,22 @@ const ExtraHoursModule = () => {
         cumplimiento normativo garantizado. Sistema inteligente que se adapta a
         las políticas de tu empresa.
       </p>
-      
-      <button
-        onClick={() => setIsVideoOpen(true)}
-        className="inline-flex items-center space-x-2 px-6 py-3 bg-jega-blue-600 hover:bg-jega-blue-700 text-white rounded-lg transition-all duration-300 hover:scale-105 shadow-md hover:shadow-lg"
-      >
-        <Play className="w-5 h-5" />
-        <span className="font-semibold">Ver Demo</span>
-      </button>
+
+      <div className="flex flex-wrap items-center gap-4">
+        <button
+          onClick={() => setIsVideoOpen(true)}
+          className="inline-flex items-center space-x-2 px-6 py-3 bg-jega-blue-600 hover:bg-jega-blue-700 text-white rounded-lg transition-all duration-300 hover:scale-105 shadow-md hover:shadow-lg"
+        >
+          <Play className="w-5 h-5" />
+          <span className="font-semibold">Ver Demo</span>
+        </button>
+        <a
+          href="#pricing"
+          className="inline-flex items-center space-x-2 px-6 py-3 bg-white hover:bg-gray-50 text-jega-blue-600 border-2 border-jega-blue-600 rounded-lg transition-all duration-300 hover:scale-105 shadow-md hover:shadow-lg"
+        >
+          <span className="font-semibold">Ver Precios</span>
+        </a>
+      </div>
     </>
   );
   const backContent = (

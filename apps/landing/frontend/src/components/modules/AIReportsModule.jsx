@@ -1,36 +1,43 @@
-import { useState } from "react";
-import { Brain, CheckCircle, Sparkles, BarChart3, Zap, Play } from "lucide-react";
-import FlippableModuleCard from "./FlippableModuleCard";
-import VideoModal from "../VideoModal";
+import { useState } from 'react';
+import {
+  Brain,
+  CheckCircle,
+  Sparkles,
+  BarChart3,
+  Zap,
+  Play,
+} from 'lucide-react';
+import FlippableModuleCard from './FlippableModuleCard';
+import VideoModal from '../VideoModal';
 
 const AIReportsModule = () => {
   const [isVideoOpen, setIsVideoOpen] = useState(false);
   const features = [
-    "Narrativas automáticas con Claude AI",
-    "Análisis semántico de datos",
-    "Consolidación de informes",
-    "Exportación PDF/Word",
-    "Insights inteligentes",
-    "Personalización de plantillas",
-    "Sincronización en tiempo real",
-    "Historial de versiones",
+    'Narrativas automáticas con Claude AI',
+    'Análisis semántico de datos',
+    'Consolidación de informes',
+    'Exportación PDF/Word',
+    'Insights inteligentes',
+    'Personalización de plantillas',
+    'Sincronización en tiempo real',
+    'Historial de versiones',
   ];
 
   const aiCapabilities = [
     {
       icon: Sparkles,
-      title: "Generación Inteligente",
-      description: "Crea narrativas profesionales automáticamente",
+      title: 'Generación Inteligente',
+      description: 'Crea narrativas profesionales automáticamente',
     },
     {
       icon: BarChart3,
-      title: "Análisis Avanzado",
-      description: "Identifica patrones y tendencias ocultas",
+      title: 'Análisis Avanzado',
+      description: 'Identifica patrones y tendencias ocultas',
     },
     {
       icon: Zap,
-      title: "Velocidad",
-      description: "Reduce tiempo de creación de reportes en 90%",
+      title: 'Velocidad',
+      description: 'Reduce tiempo de creación de reportes en 90%',
     },
   ];
 
@@ -45,14 +52,22 @@ const AIReportsModule = () => {
         Generación automática de narrativas profesionales y análisis inteligente
         con Claude AI. Transforma datos complejos en insights accionables.
       </p>
-      
-      <button
-        onClick={() => setIsVideoOpen(true)}
-        className="inline-flex items-center space-x-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all duration-300 hover:scale-105 shadow-md hover:shadow-lg"
-      >
-        <Play className="w-5 h-5" />
-        <span className="font-semibold">Ver Demo</span>
-      </button>
+
+      <div className="flex flex-wrap items-center gap-4">
+        <button
+          onClick={() => setIsVideoOpen(true)}
+          className="inline-flex items-center space-x-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all duration-300 hover:scale-105 shadow-md hover:shadow-lg"
+        >
+          <Play className="w-5 h-5" />
+          <span className="font-semibold">Ver Demo</span>
+        </button>
+        <a
+          href="#pricing"
+          className="inline-flex items-center space-x-2 px-6 py-3 bg-white hover:bg-gray-50 text-purple-600 border-2 border-purple-600 rounded-lg transition-all duration-300 hover:scale-105 shadow-md hover:shadow-lg"
+        >
+          <span className="font-semibold">Ver Precios</span>
+        </a>
+      </div>
     </>
   );
 
