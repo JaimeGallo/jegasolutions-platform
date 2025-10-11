@@ -1,21 +1,21 @@
-import { useState, useRef, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import Header from "./layout/Header";
-import Hero from "./Hero";
-import ModulesSection from "./modules/ModulesSection";
-import Consulting from "./Consulting";
-import PricingCalculator from "./PricingCalculator";
-import Contact from "./Contact";
-import Footer from "./layout/Footer";
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { motion } from 'framer-motion';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import Header from './layout/Header';
+import Hero from './Hero';
+import ModulesSection from './modules/ModulesSection';
+import Consulting from './Consulting';
+import PricingCalculator from './PricingCalculator';
+import Contact from './Contact';
+import Footer from './layout/Footer';
 
 const sections = [
-  { id: "hero", component: Hero, name: "Inicio" },
-  { id: "modules", component: ModulesSection, name: "Módulos" },
-  { id: "consulting", component: Consulting, name: "Consultoría" },
-  { id: "pricing", component: PricingCalculator, name: "Precios" },
-  { id: "contact", component: Contact, name: "Contacto" },
-  { id: "footer", component: Footer, name: "Final" },
+  { id: 'hero', component: Hero, name: 'Inicio' },
+  { id: 'modules', component: ModulesSection, name: 'Módulos' },
+  { id: 'consulting', component: Consulting, name: 'Consultoría' },
+  { id: 'pricing', component: PricingCalculator, name: 'Precios' },
+  { id: 'contact', component: Contact, name: 'Contacto' },
+  { id: 'footer', component: Footer, name: 'Final' },
 ];
 
 const JEGASolutionsLanding = () => {
@@ -25,16 +25,16 @@ const JEGASolutionsLanding = () => {
   const sectionRefs = useRef([]);
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia("(min-width: 1024px)");
+    const mediaQuery = window.matchMedia('(min-width: 1024px)');
     setIsDesktop(mediaQuery.matches);
 
     const handleResize = () => setIsDesktop(mediaQuery.matches);
-    mediaQuery.addEventListener("change", handleResize);
-    return () => mediaQuery.removeEventListener("change", handleResize);
+    mediaQuery.addEventListener('change', handleResize);
+    return () => mediaQuery.removeEventListener('change', handleResize);
   }, []);
 
   const scrollToSection = useCallback(
-    (index) => {
+    index => {
       const section = sectionRefs.current[index];
       if (!section) return;
 
@@ -45,15 +45,15 @@ const JEGASolutionsLanding = () => {
           setActiveSection(index); // Set active section immediately on scroll command
           container.scrollTo({
             left: section.offsetLeft,
-            behavior: "smooth",
+            behavior: 'smooth',
           });
         }
       } else {
         // Fallback for mobile
         setActiveSection(index); // Set active section immediately on scroll command
         section.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
+          behavior: 'smooth',
+          block: 'start',
         });
       }
     },
@@ -66,7 +66,7 @@ const JEGASolutionsLanding = () => {
       let isScrolling = false;
       let scrollTimeout;
 
-      const handleWheel = (e) => {
+      const handleWheel = e => {
         e.preventDefault();
         if (isScrolling) return;
 
@@ -86,16 +86,16 @@ const JEGASolutionsLanding = () => {
         }, 800); // Adjust time as needed for feel
       };
 
-      container.addEventListener("wheel", handleWheel, { passive: false });
+      container.addEventListener('wheel', handleWheel, { passive: false });
       return () => {
-        container.removeEventListener("wheel", handleWheel);
+        container.removeEventListener('wheel', handleWheel);
         clearTimeout(scrollTimeout);
       };
     }
   }, [isDesktop, scrollToSection]); // Add scrollToSection to dependencies
 
   const nextSection = () => {
-    setActiveSection((prevIndex) => {
+    setActiveSection(prevIndex => {
       const nextIndex = Math.min(prevIndex + 1, sections.length - 1);
       scrollToSection(nextIndex);
       return nextIndex;
@@ -103,7 +103,7 @@ const JEGASolutionsLanding = () => {
   };
 
   const prevSection = () => {
-    setActiveSection((prevIndex) => {
+    setActiveSection(prevIndex => {
       const nextIndex = Math.max(prevIndex - 1, 0);
       scrollToSection(nextIndex);
       return nextIndex;
@@ -119,12 +119,13 @@ const JEGASolutionsLanding = () => {
         ref={containerRef}
         className="flex flex-col lg:flex-row lg:h-full lg:w-full lg:overflow-x-scroll lg:snap-x lg:snap-mandatory"
         // The duplicate style attribute was removed. The one below is kept.
-        style={{ scrollBehavior: "smooth" }}
+        style={{ scrollBehavior: 'smooth' }}
       >
         {sections.map((Section, index) => (
           <div
             key={Section.id}
-            ref={(el) => (sectionRefs.current[index] = el)}
+            id={Section.id}
+            ref={el => (sectionRefs.current[index] = el)}
             className="w-full flex-shrink-0 lg:h-screen lg:min-h-screen lg:snap-start lg:overflow-y-auto"
           >
             <Section.component
@@ -133,7 +134,7 @@ const JEGASolutionsLanding = () => {
               onScrollToTop={() =>
                 isDesktop
                   ? scrollToSection(0)
-                  : window.scrollTo({ top: 0, behavior: "smooth" })
+                  : window.scrollTo({ top: 0, behavior: 'smooth' })
               }
             />
           </div>
@@ -170,8 +171,8 @@ const JEGASolutionsLanding = () => {
             onClick={() => scrollToSection(index)}
             className={`w-3 h-3 rounded-full transition-all duration-300 ${
               activeSection === index
-                ? "bg-jega-blue-600 scale-125"
-                : "bg-gray-300 hover:bg-gray-400"
+                ? 'bg-jega-blue-600 scale-125'
+                : 'bg-gray-300 hover:bg-gray-400'
             }`}
             aria-label={`Ir a la sección ${section.name}`}
           ></button>
