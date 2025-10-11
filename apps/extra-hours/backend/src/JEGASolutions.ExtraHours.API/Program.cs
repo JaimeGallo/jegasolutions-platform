@@ -132,7 +132,9 @@ app.UseMiddleware<TenantMiddleware>();
 
 app.MapControllers();
 
-// Wait for database to be ready (health check)
+// ========================================
+// 🔥 APLICAR MIGRACIONES EN TODOS LOS AMBIENTES
+// ========================================
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -158,6 +160,19 @@ using (var scope = app.Services.CreateScope())
             Console.WriteLine($"🔄 Database connection attempt {i + 1} failed, retrying in {delay.TotalSeconds} seconds...");
             await Task.Delay(delay);
         }
+    }
+
+    // 🔥 APLICAR MIGRACIONES AUTOMÁTICAMENTE
+    Console.WriteLine("Applying database migrations...");
+    try
+    {
+        await context.Database.MigrateAsync();
+        Console.WriteLine("✅ Database migrations applied successfully");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"❌ Error applying migrations: {ex.Message}");
+        throw;
     }
 }
 

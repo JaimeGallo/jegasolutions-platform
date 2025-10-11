@@ -167,10 +167,11 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Apply migrations automatically in Development
-if (app.Environment.IsDevelopment())
+// ========================================
+// 🔥 APLICAR MIGRACIONES EN TODOS LOS AMBIENTES
+// ========================================
+using (var scope = app.Services.CreateScope())
 {
-    using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 
@@ -187,19 +188,19 @@ if (app.Environment.IsDevelopment())
         {
             if (dbContext.Database.CanConnect())
             {
-                logger.LogInformation("Database connection successful");
+                logger.LogInformation("✅ Database connection successful");
                 break;
             }
         }
         catch (Exception ex)
         {
             retryCount++;
-            logger.LogWarning("Database connection attempt {Retry}/{MaxRetries} failed: {Error}",
+            logger.LogWarning("🔄 Database connection attempt {Retry}/{MaxRetries} failed: {Error}",
                 retryCount, maxRetries, ex.Message);
 
             if (retryCount >= maxRetries)
             {
-                logger.LogError("Failed to connect to database after {MaxRetries} attempts", maxRetries);
+                logger.LogError("❌ Failed to connect to database after {MaxRetries} attempts", maxRetries);
                 throw;
             }
 
@@ -207,16 +208,16 @@ if (app.Environment.IsDevelopment())
         }
     }
 
-    // Apply pending migrations
+    // 🔥 APLICAR MIGRACIONES AUTOMÁTICAMENTE
     logger.LogInformation("Applying database migrations...");
     try
     {
         await dbContext.Database.MigrateAsync();
-        logger.LogInformation("Database migrations applied successfully");
+        logger.LogInformation("✅ Database migrations applied successfully");
     }
     catch (Exception ex)
     {
-        logger.LogError(ex, "Error applying database migrations");
+        logger.LogError(ex, "❌ Error applying database migrations");
         throw;
     }
 }
@@ -242,6 +243,7 @@ app.MapGet("/health", () => new
     service = "ReportBuilder API"
 });
 
+Console.WriteLine("🚀 Report Builder API is running!");
 app.Run();
 
 // Make Program class accessible for testing
