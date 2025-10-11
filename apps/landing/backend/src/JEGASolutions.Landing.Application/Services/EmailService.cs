@@ -119,7 +119,7 @@ public class EmailService : IEmailService
 
             <div class='credentials'>
                 <h3 style='margin-top: 0; color: #667eea;'>🔑 Tus Credenciales de Acceso</h3>
-                <p><strong>URL:</strong> <a href='https://{tenant.Subdomain}.jegasolutions.co'>https://{tenant.Subdomain}.jegasolutions.co</a></p>
+                <p><strong>URL:</strong> <a href='https://{tenant.Subdomain}.jegasolutions.co/login'>https://{tenant.Subdomain}.jegasolutions.co/login</a></p>
                 <p><strong>Usuario:</strong> <code>{user.Email}</code></p>
                 <p><strong>Contraseña Temporal:</strong> <code>{temporaryPassword}</code></p>
             </div>
@@ -127,7 +127,7 @@ public class EmailService : IEmailService
             <p>⚠️ <strong>Importante:</strong> Por seguridad, te recomendamos cambiar tu contraseña después del primer inicio de sesión.</p>
 
             <center>
-                <a href='https://{tenant.Subdomain}.jegasolutions.co' class='button'>
+                <a href='https://{tenant.Subdomain}.jegasolutions.co/login' class='button'>
                     Acceder Ahora →
                 </a>
             </center>
