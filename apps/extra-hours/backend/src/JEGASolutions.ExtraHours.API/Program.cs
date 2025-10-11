@@ -24,9 +24,9 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
            .UseSnakeCaseNamingConvention()
-           // Suppress pending model changes warning
+           // Suppress pending model changes warning (EF Core 8 uses CoreEventId)
            .ConfigureWarnings(warnings =>
-               warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning))
+               warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.CoreEventId.PendingModelChangesWarning))
 );
 
 // JWT Authentication
@@ -120,7 +120,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// HTTPS redirection only in Development
+// In production (Render), HTTPS is handled by the proxy
+if (app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 // ✅ CORS PRIMERO
 app.UseCors("AllowAll");
