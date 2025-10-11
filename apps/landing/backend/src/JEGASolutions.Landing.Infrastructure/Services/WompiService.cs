@@ -10,6 +10,7 @@ using JEGASolutions.Landing.Domain.Interfaces;
 using JEGASolutions.Landing.Infrastructure.Utils;
 using JEGASolutions.Landing.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace JEGASolutions.Landing.Infrastructure.Services;
 
@@ -322,6 +323,29 @@ public class WompiService : IWompiService
 
                             _logger.LogInformation("Added module {ModuleName} to existing tenant {TenantId}",
                                 purchasedModuleName, existingTenant.Id);
+
+                            // Crear usuario en la BD del nuevo módulo
+                            if (purchasedModuleName == "extra-hours")
+                            {
+                                await CreateUserInExtraHoursDB(
+                                    email: existingUser.Email,
+                                    name: $"{existingUser.FirstName} {existingUser.LastName}",
+                                    username: existingUser.Email.Split('@')[0],
+                                    passwordHash: existingUser.PasswordHash,
+                                    role: "superusuario",
+                                    tenantId: existingTenant.Id
+                                );
+                            }
+                            
+                            if (purchasedModuleName == "report-builder")
+                            {
+                                await CreateUserInReportBuilderDB(
+                                    email: existingUser.Email,
+                                    name: $"{existingUser.FirstName} {existingUser.LastName}",
+                                    passwordHash: existingUser.PasswordHash,
+                                    tenantId: existingTenant.Id
+                                );
+                            }
                         }
                         else
                         {
@@ -404,15 +428,34 @@ public class WompiService : IWompiService
             _logger.LogInformation("Created admin user {UserId} for tenant {TenantId}",
                 adminUser.Id, tenant.Id);
 
-            // Crear usuario también en la tabla de Extra Hours (para compatibilidad)
-            await CreateUserInExtraHoursTable(
-                email: payment.CustomerEmail ?? "",
-                name: payment.CustomerName ?? "Admin",
-                username: (payment.CustomerEmail ?? "").Split('@')[0],
-                passwordHash: adminUser.PasswordHash,
-                role: "superusuario", // rol por defecto en extra-hours
-                tenantId: tenant.Id
-            );
+            // Crear usuario SOLO en las bases de datos de los módulos comprados
+            _logger.LogInformation("Creating users in module databases for purchased modules: {Modules}", 
+                string.Join(", ", purchasedModules));
+
+            foreach (var moduleName in purchasedModules)
+            {
+                if (moduleName == "extra-hours")
+                {
+                    await CreateUserInExtraHoursDB(
+                        email: payment.CustomerEmail ?? "",
+                        name: payment.CustomerName ?? "Admin",
+                        username: (payment.CustomerEmail ?? "").Split('@')[0],
+                        passwordHash: adminUser.PasswordHash,
+                        role: "superusuario",
+                        tenantId: tenant.Id
+                    );
+                }
+                
+                if (moduleName == "report-builder")
+                {
+                    await CreateUserInReportBuilderDB(
+                        email: payment.CustomerEmail ?? "",
+                        name: payment.CustomerName ?? "Admin",
+                        passwordHash: adminUser.PasswordHash,
+                        tenantId: tenant.Id
+                    );
+                }
+            }
 
             /*
             // Enviar email de bienvenida
@@ -938,10 +981,9 @@ public class WompiService : IWompiService
     }
 
     /// <summary>
-    /// Crea un usuario en la tabla 'users' de Extra Hours usando SQL crudo
-    /// (Comparten la misma base de datos pero usan tablas diferentes)
+    /// Crea un usuario en la base de datos de Extra Hours (extrahours_db)
     /// </summary>
-    private async Task CreateUserInExtraHoursTable(
+    private async Task CreateUserInExtraHoursDB(
         string email,
         string name,
         string username,
@@ -951,27 +993,92 @@ public class WompiService : IWompiService
     {
         try
         {
-            // Insertar en la tabla users de Extra Hours
-            // Nota: BCrypt genera hashes compatibles entre Landing y Extra Hours
-            await _dbContext.Database.ExecuteSqlRawAsync(
-                @"INSERT INTO users (email, name, username, password, role, ""TenantId"")
-                  VALUES ({0}, {1}, {2}, {3}, {4}, {5})",
-                email, name, username, passwordHash, role, tenantId
-            );
+            var connectionString = _configuration.GetConnectionString("ExtraHoursConnection");
+            
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                _logger.LogWarning("ExtraHoursConnection not configured. Skipping user creation in Extra Hours DB.");
+                return;
+            }
+
+            await using var connection = new NpgsqlConnection(connectionString);
+            await connection.OpenAsync();
+
+            var sql = @"INSERT INTO users (email, name, username, password, role, ""TenantId"")
+                       VALUES (@email, @name, @username, @password, @role, @tenantId)";
+
+            await using var command = new NpgsqlCommand(sql, connection);
+            command.Parameters.AddWithValue("@email", email);
+            command.Parameters.AddWithValue("@name", name);
+            command.Parameters.AddWithValue("@username", username);
+            command.Parameters.AddWithValue("@password", passwordHash);
+            command.Parameters.AddWithValue("@role", role);
+            command.Parameters.AddWithValue("@tenantId", tenantId);
+
+            await command.ExecuteNonQueryAsync();
 
             _logger.LogInformation(
-                "Created user in Extra Hours table for email {Email}, tenant {TenantId}",
+                "✅ Created user in Extra Hours DB (extrahours_db) for email {Email}, tenant {TenantId}",
                 email, tenantId
             );
         }
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error creating user in Extra Hours table for email {Email}",
+                "❌ Error creating user in Extra Hours DB for email {Email}",
                 email
             );
             // No lanzar excepción para no detener el proceso de creación de tenant
-            // El usuario podrá ser creado manualmente después si es necesario
+        }
+    }
+
+    /// <summary>
+    /// Crea un usuario en la base de datos de Report Builder (reportbuilder_db)
+    /// </summary>
+    private async Task CreateUserInReportBuilderDB(
+        string email,
+        string name,
+        string passwordHash,
+        int tenantId)
+    {
+        try
+        {
+            var connectionString = _configuration.GetConnectionString("ReportBuilderConnection");
+            
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                _logger.LogWarning("ReportBuilderConnection not configured. Skipping user creation in Report Builder DB.");
+                return;
+            }
+
+            await using var connection = new NpgsqlConnection(connectionString);
+            await connection.OpenAsync();
+
+            // Report Builder usa una estructura similar
+            var sql = @"INSERT INTO users (email, name, password, role, ""TenantId"")
+                       VALUES (@email, @name, @password, @role, @tenantId)";
+
+            await using var command = new NpgsqlCommand(sql, connection);
+            command.Parameters.AddWithValue("@email", email);
+            command.Parameters.AddWithValue("@name", name);
+            command.Parameters.AddWithValue("@password", passwordHash);
+            command.Parameters.AddWithValue("@role", "admin"); // Rol por defecto en Report Builder
+            command.Parameters.AddWithValue("@tenantId", tenantId);
+
+            await command.ExecuteNonQueryAsync();
+
+            _logger.LogInformation(
+                "✅ Created user in Report Builder DB (reportbuilder_db) for email {Email}, tenant {TenantId}",
+                email, tenantId
+            );
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "❌ Error creating user in Report Builder DB for email {Email}",
+                email
+            );
+            // No lanzar excepción para no detener el proceso de creación de tenant
         }
     }
 }
