@@ -24,9 +24,6 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
            .UseSnakeCaseNamingConvention()
-           // Suppress pending model changes warning (EF Core 8 uses CoreEventId)
-           .ConfigureWarnings(warnings =>
-               warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.CoreEventId.PendingModelChangesWarning))
 );
 
 // JWT Authentication

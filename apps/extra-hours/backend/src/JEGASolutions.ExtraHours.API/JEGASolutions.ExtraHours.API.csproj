@@ -15,6 +15,11 @@
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.2.1" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.4" />
     <PackageReference Include="EFCore.NamingConventions" Version="8.0.3" />
+    <!-- ✅ AGREGADO: Necesario para migraciones en runtime -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.8">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
 
     <ProjectReference Include="..\JEGASolutions.ExtraHours.Core\JEGASolutions.ExtraHours.Core.csproj" />
     <ProjectReference Include="..\JEGASolutions.ExtraHours.Infrastructure\JEGASolutions.ExtraHours.Infrastructure.csproj" />
