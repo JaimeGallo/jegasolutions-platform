@@ -1,0 +1,44 @@
+# ====================================
+# .dockerignore para Extra Hours Backend
+# ====================================
+
+# Directorios de build y bin
+**/bin/
+**/obj/
+**/out/
+**/publish/
+
+# Archivos de Visual Studio
+**/.vs/
+**/.vscode/
+*.user
+*.suo
+*.userprefs
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Docker
+**/Dockerfile*
+**/docker-compose*
+.dockerignore
+
+# Tests
+**/TestResults/
+
+# Node modules (si hay alguno)
+**/node_modules/
+
+# Logs
+**/*.log
+
+# Otros
+README.md
+LICENSE
+**/*.md
