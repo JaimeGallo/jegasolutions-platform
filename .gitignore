@@ -61,3 +61,6 @@ apps/report-builder/consolidated-template.json
 apps/report-builder/backend/GenerateHash.csx
 apps/report-builder/db-scripts-manual/
 
+# Documentation with sensitive information
+*.md
+
