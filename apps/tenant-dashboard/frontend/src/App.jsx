@@ -30,7 +30,7 @@ function App() {
             <div className="min-h-screen bg-gray-50">
               <Routes>
                 {/* Rutas con tenant en path: /t/:tenant/* */}
-                <Route path="/t/:tenant/login" element={<TenantDashboard />} />
+                <Route path="/t/:tenant/login" element={<LoginPage />} />
                 <Route
                   path="/t/:tenant/dashboard"
                   element={<TenantDashboard />}
@@ -38,7 +38,7 @@ function App() {
                 <Route path="/t/:tenant" element={<TenantDashboard />} />
 
                 {/* Rutas base (para subdominios o query params) */}
-                <Route path="/login" element={<TenantDashboard />} />
+                <Route path="/login" element={<LoginPage />} />
                 <Route path="/dashboard" element={<TenantDashboard />} />
                 <Route path="/" element={<TenantDashboard />} />
               </Routes>

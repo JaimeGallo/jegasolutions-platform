@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTenant } from '../contexts/TenantContext';
 import { motion } from 'framer-motion';
@@ -16,14 +17,22 @@ import {
 } from 'lucide-react';
 
 const TenantDashboard = () => {
-  const { user, logout } = useAuth();
-  const { tenant, modules, isLoading, tenantName } = useTenant();
+  const navigate = useNavigate();
+  const { user, logout, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { tenant, modules, isLoading: tenantLoading, tenantName } = useTenant();
   const [stats, setStats] = useState({
     totalModules: 0,
     activeModules: 0,
     totalUsers: 0,
     lastActivity: null,
   });
+
+  // Redirigir a login si no está autenticado
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      navigate('/login');
+    }
+  }, [authLoading, isAuthenticated, navigate]);
 
   useEffect(() => {
     if (modules) {
@@ -118,7 +127,8 @@ const TenantDashboard = () => {
     }
   };
 
-  if (isLoading) {
+  // Mostrar loading mientras verifica autenticación
+  if (authLoading || tenantLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -127,6 +137,11 @@ const TenantDashboard = () => {
         </div>
       </div>
     );
+  }
+
+  // No renderizar nada si no está autenticado (se redirigirá a login)
+  if (!isAuthenticated) {
+    return null;
   }
 
   return (
