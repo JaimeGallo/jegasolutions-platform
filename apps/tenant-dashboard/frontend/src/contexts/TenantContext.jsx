@@ -94,6 +94,10 @@ export const TenantProvider = ({ children }) => {
       );
 
       console.log('📦 Modules data:', modulesResponse.data);
+      console.log(
+        '📦 Modules data detailed:',
+        JSON.stringify(modulesResponse.data, null, 2)
+      );
       setModules(modulesResponse.data);
 
       setIsLoading(false);
@@ -138,6 +142,10 @@ export const TenantProvider = ({ children }) => {
       if (response.ok) {
         const userModules = await response.json();
         console.log('🔐 User module access:', userModules);
+        console.log(
+          '🔐 User module access detailed:',
+          JSON.stringify(userModules, null, 2)
+        );
         return userModules;
       }
     } catch (error) {

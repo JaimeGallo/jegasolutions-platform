@@ -59,6 +59,10 @@ const TenantDashboard = () => {
       getUserModuleAccess(user.id).then(modules => {
         setUserModules(modules);
         console.log('🔐 User modules loaded:', modules);
+        console.log(
+          '🔐 User modules loaded detailed:',
+          JSON.stringify(modules, null, 2)
+        );
       });
     }
   }, [user, getUserModuleAccess]);
@@ -122,6 +126,13 @@ const TenantDashboard = () => {
     const config = getModuleConfig(module.moduleName);
     const hasAccess = hasModuleAccess(module.moduleName, userModules);
     const isModuleActive = module.status.toUpperCase() === 'ACTIVE';
+
+    console.log(`🔍 Processing module: ${module.moduleName}`);
+    console.log(`  - module.status: ${module.status}`);
+    console.log(`  - isModuleActive: ${isModuleActive}`);
+    console.log(`  - hasAccess: ${hasAccess}`);
+    console.log(`  - userModules:`, userModules);
+    console.log(`  - Final isActive: ${isModuleActive && hasAccess}`);
 
     return {
       id: module.id,
