@@ -64,36 +64,41 @@ const Contact = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
 
+    // Verificación preventiva: variables de entorno
+    const SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+    const TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+    const PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+
+    if (!SERVICE_ID || !TEMPLATE_ID || !PUBLIC_KEY) {
+      console.error('❌ Variables de entorno EmailJS no configuradas correctamente');
+      alert('Error interno: configuración de EmailJS faltante.');
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
-      // Enviar email usando EmailJS
       const result = await emailjs.send(
-        import.meta.env.VITE_EMAILJS_SERVICE_ID || 'YOUR_SERVICE_ID', // Service ID
-        import.meta.env.VITE_EMAILJS_TEMPLATE_ID || 'YOUR_TEMPLATE_ID', // Template ID
+        SERVICE_ID,
+        TEMPLATE_ID,
         {
           from_name: formData.name,
           from_email: formData.email,
           message: formData.message,
           to_email: 'JaimeGallo@jegasolutions.co',
         },
-        import.meta.env.VITE_EMAILJS_PUBLIC_KEY || 'YOUR_PUBLIC_KEY' // Public Key
+        PUBLIC_KEY
       );
 
-      console.log('Email sent successfully:', result);
+      console.log('✅ Email enviado con éxito:', result);
 
-      // Limpiar formulario
-      setFormData({
-        name: '',
-        email: '',
-        message: '',
-      });
-
+      setFormData({ name: '', email: '', message: '' });
       alert('¡Gracias por tu mensaje! Te contactaremos pronto.');
     } catch (error) {
-      console.error('Error sending email:', error);
+      console.error('❌ Error al enviar el email:', error);
       alert(
         'Hubo un error al enviar tu mensaje. Por favor, intenta nuevamente o contáctanos directamente por WhatsApp.'
       );
