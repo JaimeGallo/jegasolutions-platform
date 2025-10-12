@@ -336,7 +336,7 @@ public class WompiService : IWompiService
                                     tenantId: existingTenant.Id
                                 );
                             }
-                            
+
                             if (purchasedModuleName == "report-builder")
                             {
                                 await CreateUserInReportBuilderDB(
@@ -428,8 +428,33 @@ public class WompiService : IWompiService
             _logger.LogInformation("Created admin user {UserId} for tenant {TenantId}",
                 adminUser.Id, tenant.Id);
 
+            // ✅ SSO: Asignar permisos de módulos al usuario (para SSO centralizado)
+            _logger.LogInformation("Assigning module permissions to user {UserId} for modules: {Modules}",
+                adminUser.Id, string.Join(", ", purchasedModules));
+
+            foreach (var moduleName in purchasedModules)
+            {
+                var userModuleAccess = new UserModuleAccess
+                {
+                    UserId = adminUser.Id,
+                    TenantId = tenant.Id,
+                    ModuleName = moduleName,
+                    Role = "admin",  // Owner del tenant es admin de todos los módulos
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                _dbContext.UserModuleAccess.Add(userModuleAccess);
+
+                _logger.LogInformation("✅ Assigned {Role} access to module {ModuleName} for user {UserId}",
+                    "admin", moduleName, adminUser.Id);
+            }
+
+            await _dbContext.SaveChangesAsync();
+
             // Crear usuario SOLO en las bases de datos de los módulos comprados
-            _logger.LogInformation("Creating users in module databases for purchased modules: {Modules}", 
+            _logger.LogInformation("Creating users in module databases for purchased modules: {Modules}",
                 string.Join(", ", purchasedModules));
 
             foreach (var moduleName in purchasedModules)
@@ -445,7 +470,7 @@ public class WompiService : IWompiService
                         tenantId: tenant.Id
                     );
                 }
-                
+
                 if (moduleName == "report-builder")
                 {
                     await CreateUserInReportBuilderDB(
@@ -994,7 +1019,7 @@ public class WompiService : IWompiService
         try
         {
             var connectionString = _configuration.GetConnectionString("ExtraHoursConnection");
-            
+
             if (string.IsNullOrEmpty(connectionString))
             {
                 _logger.LogWarning("ExtraHoursConnection not configured. Skipping user creation in Extra Hours DB.");
@@ -1044,7 +1069,7 @@ public class WompiService : IWompiService
         try
         {
             var connectionString = _configuration.GetConnectionString("ReportBuilderConnection");
-            
+
             if (string.IsNullOrEmpty(connectionString))
             {
                 _logger.LogWarning("ReportBuilderConnection not configured. Skipping user creation in Report Builder DB.");
