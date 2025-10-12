@@ -181,6 +181,9 @@ importers:
       date-fns:
         specifier: ^2.30.0
         version: 2.30.0
+      jwt-decode:
+        specifier: ^4.0.0
+        version: 4.0.0
       lucide-react:
         specifier: ^0.294.0
         version: 0.294.0(react@18.3.1)
