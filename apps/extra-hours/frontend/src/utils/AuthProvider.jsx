@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import { AuthContext } from "./AuthContext"; // Importar el contexto desde su archivo
 
 export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [auth, setAuth] = useState(() => {
     const token = localStorage.getItem("token");
@@ -33,6 +34,58 @@ export const AuthProvider = ({ children }) => {
     }
     return null;
   });
+
+  // ✅ SSO: Detectar token en URL al cargar la aplicación
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const ssoToken = urlParams.get('token');
+
+    if (ssoToken) {
+      console.log('🔐 SSO: Token detectado en URL');
+      
+      try {
+        // Validar y decodificar el token
+        const decodedToken = jwtDecode(ssoToken);
+        console.log('✅ SSO: Token válido, userId:', decodedToken.userId || decodedToken.id);
+
+        // Extraer rol del token (puede venir como 'role' o dentro de un array)
+        let userRole = decodedToken.role;
+        if (Array.isArray(userRole)) {
+          userRole = userRole[0];
+        }
+        if (!userRole) {
+          userRole = 'employee'; // Rol por defecto
+        }
+
+        // Usar la función login existente para configurar la autenticación
+        const formattedRole = userRole.replace(/[[\]]/g, "");
+        
+        localStorage.setItem("token", ssoToken);
+        localStorage.setItem("role", formattedRole);
+        localStorage.setItem("id", decodedToken.userId || decodedToken.id || decodedToken.sub);
+
+        if (decodedToken.unique_name || decodedToken.email) {
+          localStorage.setItem("unique_name", decodedToken.unique_name || decodedToken.email);
+        }
+
+        setAuth({
+          token: ssoToken,
+          role: formattedRole,
+          uniqueName: decodedToken.unique_name || decodedToken.email,
+        });
+
+        // Limpiar el token de la URL y redirigir al menú
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+        
+        console.log('🚀 SSO: Redirigiendo al menú...');
+        navigate("/menu");
+      } catch (error) {
+        console.error('❌ SSO: Token inválido:', error);
+        // Si el token es inválido, continuar con el flujo normal de login
+      }
+    }
+  }, [location.search, navigate]);
 
   const login = ({ token, role }) => {
     const formattedRole = role.replace(/[[\]]/g, "");

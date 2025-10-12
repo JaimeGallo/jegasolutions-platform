@@ -51,8 +51,9 @@ builder.Services.AddAuthorization();
 
 // Register Services
 builder.Services.AddScoped<ITenantContextService, TenantContextService>();
-builder.Services.AddScoped<IJWTUtils, JEGASolutions.ExtraHours.Infrastructure.Services.JWTUtils>();
-builder.Services.AddScoped<IAuthService, JEGASolutions.ExtraHours.Infrastructure.Services.AuthService>();
+// ❌ SSO: Ya no se usa AuthService ni JWTUtils locales, el Landing maneja la autenticación
+// builder.Services.AddScoped<IJWTUtils, JEGASolutions.ExtraHours.Infrastructure.Services.JWTUtils>();
+// builder.Services.AddScoped<IAuthService, JEGASolutions.ExtraHours.Infrastructure.Services.AuthService>();
 builder.Services.AddScoped<IColombianHolidayService, JEGASolutions.ExtraHours.Infrastructure.Services.ColombianHolidayService>();
 
 // Register Repositories
@@ -131,7 +132,10 @@ app.UseAuthentication();
 // 2. Luego autorización (verifica roles usando context.User)
 app.UseAuthorization();
 
-// 3. Finalmente middleware de tenant (puede leer claims de context.User)
+// 3. ✅ SSO: Validar acceso al módulo extra-hours
+app.UseMiddleware<ModuleAccessMiddleware>();
+
+// 4. Finalmente middleware de tenant (puede leer claims de context.User)
 app.UseMiddleware<TenantMiddleware>();
 
 app.MapControllers();
