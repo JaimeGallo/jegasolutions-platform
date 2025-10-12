@@ -123,7 +123,14 @@ const TenantDashboard = () => {
 
   const handleModuleClick = module => {
     if (module.isActive) {
-      window.open(module.url, '_blank');
+      // ✅ SSO: Pasar token JWT al módulo
+      const token = localStorage.getItem('authToken');
+      const urlWithToken = token 
+        ? `${module.url}?token=${encodeURIComponent(token)}`
+        : module.url;
+      
+      console.log('🚀 Opening module:', module.name, 'with SSO token');
+      window.open(urlWithToken, '_blank');
     }
   };
 
