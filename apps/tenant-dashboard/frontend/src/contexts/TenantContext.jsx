@@ -124,6 +124,40 @@ export const TenantProvider = ({ children }) => {
     return isActive;
   };
 
+  // ✅ SSO: Verificar permisos del usuario para módulos específicos
+  const getUserModuleAccess = async userId => {
+    try {
+      const apiUrl =
+        import.meta.env.VITE_API_URL || 'http://localhost:5014/api';
+      const response = await fetch(`${apiUrl}/auth/user-modules/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+        },
+      });
+
+      if (response.ok) {
+        const userModules = await response.json();
+        console.log('🔐 User module access:', userModules);
+        return userModules;
+      }
+    } catch (error) {
+      console.error('❌ Error getting user modules:', error);
+    }
+    return [];
+  };
+
+  // ✅ SSO: Verificar si usuario tiene acceso a un módulo específico
+  const hasModuleAccess = (moduleName, userModules) => {
+    if (!userModules || userModules.length === 0) return false;
+
+    const normalizedModuleName = moduleName.toLowerCase().replace(/\s+/g, '-');
+    return userModules.some(
+      module =>
+        module.moduleName.toLowerCase() === normalizedModuleName &&
+        module.isActive
+    );
+  };
+
   const getModuleUrl = moduleName => {
     const module = modules.find(m => m.moduleName === moduleName);
     return module?.url || '#';
@@ -166,6 +200,8 @@ export const TenantProvider = ({ children }) => {
     isLoading,
     getModuleStatus,
     getModuleUrl,
+    getUserModuleAccess,
+    hasModuleAccess,
     tenantName: tenant?.companyName || 'Tenant',
     subdomain: tenant?.subdomain,
   };

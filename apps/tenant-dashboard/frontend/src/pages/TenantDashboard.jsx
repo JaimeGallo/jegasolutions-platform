@@ -19,13 +19,21 @@ import {
 const TenantDashboard = () => {
   const navigate = useNavigate();
   const { user, logout, isAuthenticated, isLoading: authLoading } = useAuth();
-  const { tenant, modules, isLoading: tenantLoading, tenantName } = useTenant();
+  const {
+    tenant,
+    modules,
+    isLoading: tenantLoading,
+    tenantName,
+    getUserModuleAccess,
+    hasModuleAccess,
+  } = useTenant();
   const [stats, setStats] = useState({
     totalModules: 0,
     activeModules: 0,
     totalUsers: 0,
     lastActivity: null,
   });
+  const [userModules, setUserModules] = useState([]);
 
   // Redirigir a login si no está autenticado
   useEffect(() => {
@@ -44,6 +52,16 @@ const TenantDashboard = () => {
       });
     }
   }, [modules]);
+
+  // ✅ SSO: Cargar permisos del usuario al autenticarse
+  useEffect(() => {
+    if (user && user.id) {
+      getUserModuleAccess(user.id).then(modules => {
+        setUserModules(modules);
+        console.log('🔐 User modules loaded:', modules);
+      });
+    }
+  }, [user, getUserModuleAccess]);
 
   // Helper function normalizada
   const getModuleConfig = moduleName => {
@@ -99,9 +117,11 @@ const TenantDashboard = () => {
     };
   };
 
-  // Mapear módulos del backend
+  // ✅ SSO: Mapear módulos del backend con permisos del usuario
   const availableModules = modules.map(module => {
     const config = getModuleConfig(module.moduleName);
+    const hasAccess = hasModuleAccess(module.moduleName, userModules);
+    const isModuleActive = module.status.toUpperCase() === 'ACTIVE';
 
     return {
       id: module.id,
@@ -111,7 +131,8 @@ const TenantDashboard = () => {
       icon: config.icon,
       color: config.color,
       features: config.features,
-      isActive: module.status.toUpperCase() === 'ACTIVE',
+      isActive: isModuleActive && hasAccess, // ✅ Solo activo si el módulo está activo Y el usuario tiene acceso
+      hasAccess, // ✅ Nuevo: si el usuario tiene permisos
       url: config.url,
     };
   });
@@ -125,12 +146,18 @@ const TenantDashboard = () => {
     if (module.isActive) {
       // ✅ SSO: Pasar token JWT al módulo
       const token = localStorage.getItem('authToken');
-      const urlWithToken = token 
+      const urlWithToken = token
         ? `${module.url}?token=${encodeURIComponent(token)}`
         : module.url;
-      
+
       console.log('🚀 Opening module:', module.name, 'with SSO token');
       window.open(urlWithToken, '_blank');
+    } else if (!module.hasAccess) {
+      // ✅ SSO: Mostrar mensaje si no tiene acceso
+      alert('No tienes acceso a este módulo. Contacta al administrador.');
+    } else {
+      // Módulo no activo
+      alert('Este módulo no está disponible en este momento.');
     }
   };
 
@@ -295,7 +322,9 @@ const TenantDashboard = () => {
                 className={`card cursor-pointer transition-all duration-200 ${
                   module.isActive
                     ? 'hover:shadow-lg hover:scale-105 border-jega-blue-200'
-                    : 'opacity-60 cursor-not-allowed'
+                    : module.hasAccess
+                    ? 'opacity-60 cursor-not-allowed border-gray-200'
+                    : 'opacity-40 cursor-not-allowed border-red-200 bg-red-50'
                 }`}
                 onClick={() => handleModuleClick(module)}
               >
@@ -317,11 +346,18 @@ const TenantDashboard = () => {
                   <div className="flex items-center space-x-2">
                     {module.isActive ? (
                       <CheckCircle className="h-5 w-5 text-green-500" />
-                    ) : (
+                    ) : !module.hasAccess ? (
                       <XCircle className="h-5 w-5 text-red-500" />
+                    ) : (
+                      <XCircle className="h-5 w-5 text-orange-500" />
                     )}
                     {module.isActive && (
                       <ExternalLink className="h-4 w-4 text-gray-400" />
+                    )}
+                    {!module.hasAccess && (
+                      <span className="text-xs text-red-600 font-medium">
+                        Sin Acceso
+                      </span>
                     )}
                   </div>
                 </div>
