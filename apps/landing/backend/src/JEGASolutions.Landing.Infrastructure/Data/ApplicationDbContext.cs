@@ -14,6 +14,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<TenantModule> TenantModules { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<Lead> Leads { get; set; }
+    public DbSet<UserModuleAccess> UserModuleAccess { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -96,6 +97,36 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.Email);
             entity.HasIndex(e => e.Status);
             entity.HasIndex(e => e.Source);
+        });
+
+        // UserModuleAccess configuration (SSO)
+        modelBuilder.Entity<UserModuleAccess>(entity =>
+        {
+            entity.ToTable("user_module_access");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.UserId).HasColumnName("user_id").IsRequired();
+            entity.Property(e => e.TenantId).HasColumnName("tenant_id").IsRequired();
+            entity.Property(e => e.ModuleName).HasColumnName("module_name").IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Role).HasColumnName("role").IsRequired().HasMaxLength(50);
+            entity.Property(e => e.IsActive).HasColumnName("is_active").HasDefaultValue(true);
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at").HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.HasOne(e => e.User)
+                  .WithMany()
+                  .HasForeignKey(e => e.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Tenant)
+                  .WithMany()
+                  .HasForeignKey(e => e.TenantId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            // Un usuario solo puede tener un rol por módulo
+            entity.HasIndex(e => new { e.UserId, e.ModuleName }).IsUnique();
+            entity.HasIndex(e => e.TenantId);
+            entity.HasIndex(e => e.IsActive).HasFilter("is_active = true");
         });
     }
 }
