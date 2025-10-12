@@ -18,11 +18,10 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // ========================================
-// 🔧 FIX: Database Configuration con Snake Case Naming
+// 🔧 Database Configuration (PascalCase - Default EF Core)
 // ========================================
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
-           .UseSnakeCaseNamingConvention()
 );
 
 // JWT Authentication

@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using JEGASolutions.Landing.Application.Interfaces;
-using JEGASolutions.Landing.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace JEGASolutions.Landing.API.Controllers;
@@ -12,21 +10,18 @@ namespace JEGASolutions.Landing.API.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
-    private readonly ApplicationDbContext _context;
     private readonly ILogger<AuthController> _logger;
 
     public AuthController(
         IAuthService authService,
-        ApplicationDbContext context,
         ILogger<AuthController> logger)
     {
         _authService = authService;
-        _context = context;
         _logger = logger;
     }
 
     /// <summary>
-    /// Login de usuario - Para Tenant Dashboard y SSO
+    /// Login de usuario - Para Tenant Dashboard
     /// </summary>
     [HttpPost("login")]
     [AllowAnonymous]
@@ -130,88 +125,6 @@ public class AuthController : ControllerBase
         {
             _logger.LogError(ex, "Error validating token");
             return Unauthorized(new { message = "Token inválido" });
-        }
-    }
-
-    /// <summary>
-    /// Obtiene los módulos a los que un usuario tiene acceso - Para SSO
-    /// </summary>
-    [HttpGet("user-modules/{userId}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult> GetUserModules(int userId)
-    {
-        try
-        {
-            _logger.LogInformation("📦 Getting modules for user: {UserId}", userId);
-
-            var userModules = await _context.UserModuleAccess
-                .Where(uma => uma.UserId == userId && uma.IsActive)
-                .Select(uma => new
-                {
-                    moduleName = uma.ModuleName,
-                    role = uma.Role,
-                    tenantId = uma.TenantId
-                })
-                .ToListAsync();
-
-            _logger.LogInformation("✅ Found {Count} modules for user {UserId}", userModules.Count, userId);
-
-            return Ok(userModules);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "💥 Error getting modules for user: {UserId}", userId);
-            return StatusCode(500, new { message = "Error al obtener módulos del usuario" });
-        }
-    }
-
-    /// <summary>
-    /// Verifica si un usuario tiene acceso a un módulo específico - Para SSO
-    /// </summary>
-    [HttpGet("check-access")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<ActionResult> CheckModuleAccess(
-        [FromQuery] int userId,
-        [FromQuery] string moduleName)
-    {
-        try
-        {
-            _logger.LogInformation("🔍 Checking access for user {UserId} to module {ModuleName}",
-                userId, moduleName);
-
-            var access = await _context.UserModuleAccess
-                .FirstOrDefaultAsync(uma =>
-                    uma.UserId == userId &&
-                    uma.ModuleName == moduleName &&
-                    uma.IsActive);
-
-            if (access == null)
-            {
-                _logger.LogWarning("❌ User {UserId} does not have access to {ModuleName}",
-                    userId, moduleName);
-
-                return Ok(new
-                {
-                    hasAccess = false,
-                    message = "Usuario no tiene acceso a este módulo"
-                });
-            }
-
-            _logger.LogInformation("✅ User {UserId} has {Role} access to {ModuleName}",
-                userId, access.Role, moduleName);
-
-            return Ok(new
-            {
-                hasAccess = true,
-                role = access.Role,
-                tenantId = access.TenantId
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "💥 Error checking access for user: {UserId}", userId);
-            return StatusCode(500, new { message = "Error al verificar acceso" });
         }
     }
 }
