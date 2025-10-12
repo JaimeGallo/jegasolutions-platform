@@ -53,7 +53,8 @@ builder.Services.AddScoped<IExcelUploadRepository, ExcelUploadRepository>();
 builder.Services.AddScoped<ITemplateService, TemplateService>();
 builder.Services.AddScoped<IReportSubmissionService, ReportSubmissionService>();
 builder.Services.AddScoped<IAIAnalysisService, OpenAIService>();
-builder.Services.AddScoped<IAuthService, JEGASolutions.ReportBuilder.Infrastructure.Services.AuthService>();
+// ❌ SSO: Ya no se usa AuthService local, el Landing maneja la autenticación
+// builder.Services.AddScoped<IAuthService, JEGASolutions.ReportBuilder.Infrastructure.Services.AuthService>();
 builder.Services.AddScoped<IConsolidatedTemplateService, ConsolidatedTemplateService>();
 builder.Services.AddScoped<IExcelProcessorService, ExcelProcessorService>();
 
@@ -237,6 +238,10 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
+
+// ✅ SSO: Validar acceso al módulo report-builder
+app.UseMiddleware<JEGASolutions.ReportBuilder.API.Middleware.ModuleAccessMiddleware>();
+
 app.MapControllers();
 
 // Health check endpoint

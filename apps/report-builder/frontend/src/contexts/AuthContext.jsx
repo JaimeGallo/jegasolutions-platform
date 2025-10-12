@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { authService } from "../services/authService";
+import { jwtDecode } from "jwt-decode";
 
 const AuthContext = createContext();
 
@@ -14,9 +16,50 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const location = useLocation();
 
+  // ✅ SSO: Detectar token en URL al cargar la aplicación
   useEffect(() => {
-    // Check for existing token on app load
+    const urlParams = new URLSearchParams(location.search);
+    const ssoToken = urlParams.get('token');
+
+    if (ssoToken) {
+      console.log('🔐 SSO: Token detectado en URL');
+      
+      try {
+        // Validar y decodificar el token
+        const decodedToken = jwtDecode(ssoToken);
+        console.log('✅ SSO: Token válido, userId:', decodedToken.userId || decodedToken.id);
+
+        // Guardar token en localStorage
+        localStorage.setItem("token", ssoToken);
+
+        // Crear objeto de usuario desde el token
+        const userData = {
+          id: decodedToken.userId || decodedToken.id || decodedToken.sub,
+          email: decodedToken.email || decodedToken.unique_name,
+          name: decodedToken.name || decodedToken.unique_name,
+          role: Array.isArray(decodedToken.role) ? decodedToken.role[0] : (decodedToken.role || 'employee'),
+        };
+
+        setUser(userData);
+        setLoading(false);
+
+        // Limpiar el token de la URL
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+
+        console.log('🚀 SSO: Redirigiendo al dashboard...');
+        navigate("/dashboard");
+        return;
+      } catch (error) {
+        console.error('❌ SSO: Token inválido:', error);
+        // Si el token es inválido, continuar con el flujo normal
+      }
+    }
+
+    // Flujo normal: verificar token existente
     const token = localStorage.getItem("token");
     if (token) {
       authService
@@ -33,7 +76,7 @@ export const AuthProvider = ({ children }) => {
     } else {
       setLoading(false);
     }
-  }, []);
+  }, [location.search, navigate]);
 
   const login = async (email, password) => {
     try {
