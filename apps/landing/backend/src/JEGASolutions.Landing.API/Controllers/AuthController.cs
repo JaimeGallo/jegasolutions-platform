@@ -157,6 +157,7 @@ public class AuthController : ControllerBase
                 .ToListAsync();
 
             _logger.LogInformation("✅ Found {Count} modules for user {UserId}", userModules.Count, userId);
+            _logger.LogInformation("🔍 User modules data: {UserModules}", System.Text.Json.JsonSerializer.Serialize(userModules));
 
             return Ok(userModules);
         }
