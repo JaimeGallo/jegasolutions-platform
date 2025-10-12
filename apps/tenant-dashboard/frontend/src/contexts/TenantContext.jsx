@@ -159,11 +159,23 @@ export const TenantProvider = ({ children }) => {
     if (!userModules || userModules.length === 0) return false;
 
     const normalizedModuleName = moduleName.toLowerCase().replace(/\s+/g, '-');
-    return userModules.some(
-      module =>
-        module.moduleName.toLowerCase() === normalizedModuleName &&
-        module.isActive
+    console.log(`🔍 hasModuleAccess check for: ${moduleName}`);
+    console.log(`  - normalizedModuleName: ${normalizedModuleName}`);
+    console.log(`  - userModules:`, userModules);
+    
+    const hasAccess = userModules.some(
+      module => {
+        const normalizedUserModule = module.moduleName.toLowerCase();
+        const matches = normalizedUserModule === normalizedModuleName;
+        console.log(`  - Checking module: ${module.moduleName} (${normalizedUserModule})`);
+        console.log(`  - Matches: ${matches}`);
+        console.log(`  - isActive: ${module.isActive}`);
+        return matches && module.isActive;
+      }
     );
+    
+    console.log(`  - Final hasAccess: ${hasAccess}`);
+    return hasAccess;
   };
 
   const getModuleUrl = moduleName => {
