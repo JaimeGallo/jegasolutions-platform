@@ -151,7 +151,8 @@ public class AuthController : ControllerBase
                 {
                     moduleName = uma.ModuleName,
                     role = uma.Role,
-                    tenantId = uma.TenantId
+                    tenantId = uma.TenantId,
+                    isActive = uma.IsActive
                 })
                 .ToListAsync();
 
