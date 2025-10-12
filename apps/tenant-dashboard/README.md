@@ -207,10 +207,17 @@ Módulos:
 ### **APIs Disponibles:**
 
 ```http
-GET /api/tenants/{subdomain}           # Obtener datos del tenant
-GET /api/tenants/{subdomain}/modules    # Módulos del tenant
-GET /api/tenants/{subdomain}/stats      # Estadísticas del tenant
+# Tenant Management
+GET /api/tenants/by-subdomain/{subdomain}  # Obtener datos del tenant
+GET /api/tenants/{id}/modules              # Módulos del tenant
+GET /api/tenants/{id}/stats                # Estadísticas del tenant
+
+# Authentication (Landing Backend)
+POST /api/auth/login                       # Login de usuarios
+POST /api/auth/validate                    # Validar token JWT
 ```
+
+> 💡 **Nota:** Los endpoints de autenticación están en el Landing Backend (`apps/landing/backend`), no en el Tenant Dashboard backend. Ver [LOGIN_FIX.md](./LOGIN_FIX.md) para más detalles.
 
 ## 🎯 Flujo de Usuario
 
@@ -261,6 +268,45 @@ GET /api/tenants/{subdomain}/stats      # Estadísticas del tenant
 - ✅ Refresh tokens
 - ✅ Roles y permisos
 - ✅ Sesiones por tenant
+
+## 🐛 Troubleshooting
+
+### **Login no funciona (Error 405)**
+
+Si el login falla con error 405, verifica:
+
+1. **Backend desplegado**: El Landing Backend debe estar corriendo con el `AuthController`
+2. **Variable de entorno**: `VITE_API_URL` debe apuntar al backend correcto
+3. **CORS configurado**: El backend debe permitir el dominio del frontend
+
+Ver [LOGIN_FIX.md](./LOGIN_FIX.md) para la solución completa.
+
+### **Tenant no se detecta**
+
+Si el tenant no se detecta automáticamente:
+
+1. **Subdomain**: Verifica que el DNS wildcard esté configurado
+2. **Path**: Usa formato `/t/tenant-name` si no tienes DNS wildcard
+3. **Query param**: Usa `?tenant=tenant-name` como fallback
+4. **Development**: Configura `VITE_DEV_TENANT` en `.env.local`
+
+Ver [ENV_SETUP.md](./frontend/ENV_SETUP.md) para más detalles.
+
+### **Error de CORS**
+
+Si ves errores de CORS:
+
+1. Verifica que el backend tenga configurado CORS para tu dominio
+2. Verifica que el backend esté corriendo
+3. Verifica que estés usando HTTPS en producción
+
+### **Módulos no aparecen**
+
+Si los módulos no aparecen en el dashboard:
+
+1. Verifica que el tenant tenga módulos asignados en la base de datos
+2. Verifica que los módulos estén en estado `ACTIVE`
+3. Revisa los logs del backend
 
 ## 📊 Monitoreo
 
