@@ -1029,7 +1029,7 @@ public class WompiService : IWompiService
             await using var connection = new NpgsqlConnection(connectionString);
             await connection.OpenAsync();
 
-            var sql = @"INSERT INTO users (email, name, username, password, role, ""TenantId"")
+            var sql = @"INSERT INTO users (email, name, username, password, role, tenant_id)
                        VALUES (@email, @name, @username, @password, @role, @tenantId)";
 
             await using var command = new NpgsqlCommand(sql, connection);
@@ -1080,7 +1080,7 @@ public class WompiService : IWompiService
             await connection.OpenAsync();
 
             // Report Builder usa una estructura similar
-            var sql = @"INSERT INTO users (email, name, password, role, ""TenantId"")
+            var sql = @"INSERT INTO users (email, name, password, role, tenant_id)
                        VALUES (@email, @name, @password, @role, @tenantId)";
 
             await using var command = new NpgsqlCommand(sql, connection);
