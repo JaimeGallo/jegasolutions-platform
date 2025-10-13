@@ -12,31 +12,31 @@ namespace JEGASolutions.ExtraHours.Core.Entities.Models
         public long id { get; set; }
 
         [Required]
-        [Column("weeklyExtraHoursLimit")]
+        [Column("weekly_extra_hours_limit")]
         public double weeklyExtraHoursLimit { get; set; }
 
         [Required]
-        [Column("diurnalMultiplier")]
+        [Column("diurnal_multiplier")]
         public double diurnalMultiplier { get; set; }
 
         [Required]
-        [Column("nocturnalMultiplier")]
+        [Column("nocturnal_multiplier")]
         public double nocturnalMultiplier { get; set; }
 
         [Required]
-        [Column("diurnalHolidayMultiplier")]
+        [Column("diurnal_holiday_multiplier")]
         public double diurnalHolidayMultiplier { get; set; }
 
         [Required]
-        [Column("nocturnalHolidayMultiplier")]
+        [Column("nocturnal_holiday_multiplier")]
         public double nocturnalHolidayMultiplier { get; set; }
 
         [Required]
-        [Column("diurnalStart", TypeName = "time")]
+        [Column("diurnal_start", TypeName = "time")]
         public TimeSpan diurnalStart { get; set; }
 
         [Required]
-        [Column("diurnalEnd", TypeName = "time")]
+        [Column("diurnal_end", TypeName = "time")]
         public TimeSpan diurnalEnd { get; set; }
     }
 }
