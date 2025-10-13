@@ -1,37 +1,37 @@
-import { useState } from "react";
-import { useAuth } from "../contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Building2, Lock, Mail } from "lucide-react";
+import { useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Building2, Lock, Mail } from 'lucide-react';
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({
-    email: "",
-    password: "",
+    email: '',
+    password: '',
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
 
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
     setIsLoading(true);
-    setError("");
+    setError('');
 
     const result = await login(formData.email, formData.password);
 
     if (result.success) {
-      navigate("/dashboard");
+      navigate('/dashboard');
     } else {
-      setError(result.error || "Error al iniciar sesión");
+      setError(result.error || 'Error al iniciar sesión');
     }
 
     setIsLoading(false);
   };
 
-  const handleChange = (e) => {
+  const handleChange = e => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -49,9 +49,11 @@ const LoginPage = () => {
         <div className="card">
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
-              <div className="p-3 bg-jega-blue-100 rounded-full">
-                <Building2 className="h-8 w-8 text-jega-blue-600" />
-              </div>
+              <img
+                src="/logo5.png"
+                alt="JEGASolutions Logo"
+                className="h-16 w-auto"
+              />
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
               JEGASolutions
@@ -115,13 +117,13 @@ const LoginPage = () => {
               disabled={isLoading}
               className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
+              {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
             </button>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
-              ¿Problemas para acceder?{" "}
+              ¿Problemas para acceder?{' '}
               <a
                 href="mailto:soporte@jegasolutions.co"
                 className="text-jega-blue-600 hover:text-jega-blue-700"
