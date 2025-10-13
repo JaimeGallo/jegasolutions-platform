@@ -1,36 +1,34 @@
-import { motion } from "framer-motion";
+import { motion } from 'framer-motion';
 import {
   ArrowUp,
   Mail,
   Phone,
   MapPin,
   Linkedin,
-  X,
-  Github,
-} from "lucide-react";
+  Instagram,
+} from 'lucide-react';
 
 const footerLinks = {
   productos: [
-    { name: "Gestión de Horas Extra", href: "#" },
-    { name: "Reportes con IA", href: "#" },
-    { name: "Calculadora de Precios", href: "#" },
+    { name: 'Gestión de Horas Extra', href: '#' },
+    { name: 'Reportes con IA', href: '#' },
+    { name: 'Calculadora de Precios', href: '#' },
   ],
   servicios: [
-    { name: "Consultoría Tecnológica", href: "#" },
-    { name: "Implementación", href: "#" },
-    { name: "Soporte Técnico", href: "#" },
+    { name: 'Consultoría Tecnológica', href: '#' },
+    { name: 'Implementación', href: '#' },
+    { name: 'Soporte Técnico', href: '#' },
   ],
   empresa: [
-    { name: "Sobre Nosotros", href: "#" },
-    { name: "Carreras", href: "#" },
-    { name: "Blog", href: "#" },
+    { name: 'Sobre Nosotros', href: '#' },
+    { name: 'Carreras', href: '#' },
+    { name: 'Blog', href: '#' },
   ],
 };
 
 const socialLinks = [
-  { icon: Linkedin, href: "#", label: "LinkedIn" },
-  { icon: X, href: "#", label: "X" },
-  { icon: Github, href: "#", label: "GitHub" },
+  { icon: Linkedin, href: '#', label: 'LinkedIn' },
+  { icon: Instagram, href: '#', label: 'Instagram' },
 ];
 
 const Footer = ({ onScrollToTop }) => {
@@ -79,7 +77,7 @@ const Footer = ({ onScrollToTop }) => {
                 {title}
               </h4>
               <ul className="space-y-2">
-                {links.map((link) => (
+                {links.map(link => (
                   <li key={link.name}>
                     <a
                       href={link.href}
@@ -103,7 +101,7 @@ const Footer = ({ onScrollToTop }) => {
               viewport={{ once: true }}
               className="text-base text-gray-500 text-center md:text-left"
             >
-              © {year} JEGASolutions. Todos los derechos reservados.{" "}
+              © {year} JEGASolutions. Todos los derechos reservados.{' '}
               <span className="text-jega-gold-400 ml-2">
                 Soluciones que nacen del corazón.
               </span>
@@ -115,7 +113,7 @@ const Footer = ({ onScrollToTop }) => {
               viewport={{ once: true }}
               className="flex items-center space-x-4"
             >
-              {socialLinks.map((link) => (
+              {socialLinks.map(link => (
                 <a
                   key={link.label}
                   href={link.href}
