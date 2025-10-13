@@ -55,9 +55,6 @@ const LoginPage = () => {
                 className="h-16 w-auto"
               />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              JEGASolutions
-            </h1>
             <p className="text-gray-600">Inicia sesión en tu dashboard</p>
           </div>
 
