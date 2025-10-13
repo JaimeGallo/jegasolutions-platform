@@ -133,8 +133,8 @@ app.UseAuthentication();
 // 2. Luego autorización (verifica roles usando context.User)
 app.UseAuthorization();
 
-// 3. ✅ SSO: Validar acceso al módulo extra-hours
-app.UseMiddleware<ModuleAccessMiddleware>();
+// 3. ✅ SSO: Validar acceso al módulo extra-hours (TEMPORALMENTE DESHABILITADO)
+// app.UseMiddleware<ModuleAccessMiddleware>();
 
 // 4. Finalmente middleware de tenant (puede leer claims de context.User)
 app.UseMiddleware<TenantMiddleware>();
