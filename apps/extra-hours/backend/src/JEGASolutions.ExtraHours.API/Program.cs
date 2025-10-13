@@ -18,10 +18,11 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // ========================================
-// 🔧 Database Configuration (PascalCase - Default EF Core)
+// 🔧 Database Configuration (snake_case - PostgreSQL)
 // ========================================
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
+           .UseSnakeCaseNamingConvention()
 );
 
 // JWT Authentication
