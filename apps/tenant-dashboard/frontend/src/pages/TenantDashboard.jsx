@@ -203,9 +203,6 @@ const TenantDashboard = () => {
                     alt="JEGASolutions Logo"
                     className="h-8 w-auto"
                   />
-                  <span className="ml-2 text-xl font-bold text-gray-900">
-                    JEGASolutions
-                  </span>
                 </div>
               </div>
             </div>
