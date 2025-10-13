@@ -198,7 +198,11 @@ const TenantDashboard = () => {
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="flex items-center">
-                  <Building2 className="h-8 w-8 text-jega-blue-600" />
+                  <img
+                    src="/logo5.png"
+                    alt="JEGASolutions Logo"
+                    className="h-8 w-auto"
+                  />
                   <span className="ml-2 text-xl font-bold text-gray-900">
                     JEGASolutions
                   </span>
