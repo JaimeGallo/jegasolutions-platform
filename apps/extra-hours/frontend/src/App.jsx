@@ -46,7 +46,7 @@ function App() {
               path="/menu"
               element={
                 <ProtectedRouteWithLayout 
-                  allowedRoles={["empleado", "manager", "superusuario"]}
+                  allowedRoles={["empleado", "manager", "superusuario", "admin"]}
                   element={<ExtraHoursMenu />} 
                 />
               }
@@ -55,7 +55,7 @@ function App() {
               path="/add"
               element={
                 <ProtectedRouteWithLayout
-                  allowedRoles={["empleado", "manager", "superusuario"]}
+                  allowedRoles={["empleado", "manager", "superusuario", "admin"]}
                   element={<AddExtrahour />}
                 />
               }
@@ -64,7 +64,7 @@ function App() {
               path="/reports"
               element={
                 <ProtectedRouteWithLayout
-                  allowedRoles={["manager", "superusuario", "empleado"]}
+                  allowedRoles={["manager", "superusuario", "empleado", "admin"]}
                   element={<ReportsPage />}
                 />
               }
@@ -73,7 +73,7 @@ function App() {
               path="/ManagementExtraHour"
               element={
                 <ProtectedRouteWithLayout
-                  allowedRoles={["manager", "superusuario"]}
+                  allowedRoles={["manager", "superusuario", "admin"]}
                   element={<UpdateDeleteApprovePage />}
                 />
               }
@@ -82,7 +82,7 @@ function App() {
               path="/settings"
               element={
                 <ProtectedRouteWithLayout
-                  allowedRoles={["superusuario"]}
+                  allowedRoles={["superusuario", "admin"]}
                   element={<SettingsPage />}
                 />
               }
@@ -105,7 +105,7 @@ function App() {
               path="/solicitud-compensacion"
               element={
                 <ProtectedRouteWithLayout
-                  allowedRoles={["empleado"]}
+                  allowedRoles={["empleado", "admin"]}
                   element={<SolicitudCompensacionPage />}
                 />
               }
@@ -114,7 +114,7 @@ function App() {
               path="/autorizacion-ingreso"
               element={
                 <ProtectedRouteWithLayout
-                  allowedRoles={["manager", "superusuario"]}
+                  allowedRoles={["manager", "superusuario", "admin"]}
                   element={<IngresoAutorizacionPage />}
                 />
               }
@@ -123,7 +123,7 @@ function App() {
               path="/gestion-compensacion"
               element={
                 <ProtectedRouteWithLayout
-                  allowedRoles={["manager", "superusuario"]}
+                  allowedRoles={["manager", "superusuario", "admin"]}
                   element={<GestionSolicitudesCompensacionPage />}
                 />
               }
