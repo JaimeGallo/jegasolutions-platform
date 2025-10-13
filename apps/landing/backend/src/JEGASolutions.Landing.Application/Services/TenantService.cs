@@ -98,7 +98,7 @@ public class TenantService : ITenantService
                 LastName = lastName,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(adminPassword),
                 TenantId = tenant.Id,
-                Role = "Admin",
+                Role = "superusuario",
                 CreatedAt = DateTime.UtcNow,
                 IsActive = true
             };
@@ -106,7 +106,7 @@ public class TenantService : ITenantService
             await _userRepository.AddAsync(adminUser);
             await _unitOfWork.SaveAsync();
 
-            _logger.LogInformation("Admin user created for tenant: {TenantId}", tenant.Id);
+            _logger.LogInformation("Superusuario user created for tenant: {TenantId}", tenant.Id);
 
             // Send welcome email
             try

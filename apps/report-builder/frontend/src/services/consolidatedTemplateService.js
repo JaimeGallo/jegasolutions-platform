@@ -3,7 +3,7 @@
 import api from "./api";
 
 export const ConsolidatedTemplateService = {
-  // ==================== ADMIN OPERATIONS ====================
+  // ==================== SUPERUSUARIO OPERATIONS ====================
   
   /**
    * Obtiene todas las plantillas consolidadas del tenant
@@ -133,7 +133,7 @@ export const ConsolidatedTemplateService = {
   },
 
   /**
-   * Actualiza el estado de una sección (Admin)
+   * Actualiza el estado de una sección (Superusuario)
    * @param {number} sectionId - ID de la sección
    * @param {string} status - Nuevo estado
    * @returns {Promise<boolean>}

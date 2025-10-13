@@ -134,7 +134,7 @@ namespace JEGASolutions.ReportBuilder.API.Controllers
         /// Elimina un upload (soft delete)
         /// </summary>
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "superusuario")]
         public async Task<IActionResult> DeleteExcelUpload(int id)
         {
             try

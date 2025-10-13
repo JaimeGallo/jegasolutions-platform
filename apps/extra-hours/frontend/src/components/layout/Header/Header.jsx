@@ -1,9 +1,9 @@
-import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../../utils/useAuth";
-import "./Header.scss";
-import ChangePasswordModal from "../../auth/ChangePasswordModal/ChangePasswordModal";
-import { Home, User, ChevronDown, LogOut, Key } from "lucide-react";
+import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../utils/useAuth';
+import './Header.scss';
+import ChangePasswordModal from '../../auth/ChangePasswordModal/ChangePasswordModal';
+import { Home, User, ChevronDown, LogOut, Key } from 'lucide-react';
 
 const Header = () => {
   const { auth, logout, getUserName } = useAuth();
@@ -21,7 +21,7 @@ const Header = () => {
       await logout();
       setShowDropdown(false);
     } catch (error) {
-      console.error("Error during logout:", error);
+      console.error('Error during logout:', error);
     }
   };
 
@@ -36,26 +36,26 @@ const Header = () => {
 
   // Cerrar dropdown al hacer clic fuera
   useEffect(() => {
-    const handleClickOutside = (event) => {
+    const handleClickOutside = event => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdown(false);
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
 
-  const getRoleDisplayName = (role) => {
+  const getRoleDisplayName = role => {
     switch (role) {
-      case "superusuario":
-        return "Administrador";
-      case "manager":
-        return "Supervisor";
-      case "empleado":
-        return "Empleado";
+      case 'superusuario':
+        return 'Superusuario';
+      case 'manager':
+        return 'Supervisor';
+      case 'empleado':
+        return 'Empleado';
       default:
         return role;
     }
@@ -66,7 +66,7 @@ const Header = () => {
       <header className="app-header">
         <div className="header-content">
           {/* Brand Section */}
-          <div className="brand-section" onClick={() => navigate("/menu")}>
+          <div className="brand-section" onClick={() => navigate('/menu')}>
             <div className="logo-container">
               <Home className="brand-icon" />
             </div>
@@ -85,14 +85,14 @@ const Header = () => {
                 </div>
                 <div className="user-details">
                   <span className="user-name">
-                    {getUserName() || auth.uniqueName || "Usuario"}
+                    {getUserName() || auth.uniqueName || 'Usuario'}
                   </span>
                   <span className="user-role">
                     {getRoleDisplayName(auth.role)}
                   </span>
                 </div>
                 <ChevronDown
-                  className={`dropdown-arrow ${showDropdown ? "rotated" : ""}`}
+                  className={`dropdown-arrow ${showDropdown ? 'rotated' : ''}`}
                   size={16}
                 />
               </div>
@@ -102,7 +102,7 @@ const Header = () => {
                   <div className="dropdown-header">
                     <div className="dropdown-user-info">
                       <span className="dropdown-name">
-                        {getUserName() || auth.uniqueName || "Usuario"}
+                        {getUserName() || auth.uniqueName || 'Usuario'}
                       </span>
                       <span className="dropdown-role">
                         {getRoleDisplayName(auth.role)}

@@ -64,6 +64,11 @@ export const AuthProvider = ({ children }) => {
           userRole = 'employee'; // Rol por defecto
         }
 
+        // Mapear "Admin" a "superusuario" para mantener consistencia
+        if (userRole.toLowerCase() === 'admin') {
+          userRole = 'superusuario';
+        }
+
         console.log('🔐 SSO: Rol procesado:', userRole);
 
         // Usar la función login existente para configurar la autenticación

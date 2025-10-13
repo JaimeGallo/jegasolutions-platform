@@ -8,10 +8,10 @@ namespace JEGASolutions.ReportBuilder.Core.Interfaces
     /// </summary>
     public interface IConsolidatedTemplateService
     {
-        // ==================== ADMIN OPERATIONS ====================
+        // ==================== SUPERUSUARIO OPERATIONS ====================
         
         /// <summary>
-        /// Crea nueva plantilla consolidada con sus secciones (Admin only)
+        /// Crea nueva plantilla consolidada con sus secciones (Superusuario only)
         /// </summary>
         Task<ConsolidatedTemplateDetailDto> CreateConsolidatedTemplateAsync(
             ConsolidatedTemplateCreateDto dto, 
@@ -19,7 +19,7 @@ namespace JEGASolutions.ReportBuilder.Core.Interfaces
             int tenantId);
 
         /// <summary>
-        /// Actualiza plantilla consolidada (Admin only)
+        /// Actualiza plantilla consolidada (Superusuario only)
         /// </summary>
         Task<ConsolidatedTemplateDetailDto> UpdateConsolidatedTemplateAsync(
             ConsolidatedTemplateUpdateDto dto, 
@@ -27,26 +27,26 @@ namespace JEGASolutions.ReportBuilder.Core.Interfaces
             int tenantId);
 
         /// <summary>
-        /// Elimina plantilla consolidada (soft delete) (Admin only)
+        /// Elimina plantilla consolidada (soft delete) (Superusuario only)
         /// </summary>
         Task<bool> DeleteConsolidatedTemplateAsync(int templateId, int tenantId);
 
         /// <summary>
-        /// Obtiene todas las plantillas consolidadas del tenant (Admin)
+        /// Obtiene todas las plantillas consolidadas del tenant (Superusuario)
         /// </summary>
         Task<List<ConsolidatedTemplateListDto>> GetAllConsolidatedTemplatesAsync(
             int tenantId, 
             string? status = null);
 
         /// <summary>
-        /// Obtiene detalle completo de plantilla consolidada (Admin)
+        /// Obtiene detalle completo de plantilla consolidada (Superusuario)
         /// </summary>
         Task<ConsolidatedTemplateDetailDto?> GetConsolidatedTemplateByIdAsync(
             int templateId, 
             int tenantId);
 
         /// <summary>
-        /// Agrega sección a plantilla existente (Admin)
+        /// Agrega sección a plantilla existente (Superusuario)
         /// </summary>
         Task<ConsolidatedTemplateSectionDto> AddSectionToTemplateAsync(
             int templateId, 
@@ -54,19 +54,19 @@ namespace JEGASolutions.ReportBuilder.Core.Interfaces
             int tenantId);
 
         /// <summary>
-        /// Actualiza estado de sección (Admin)
+        /// Actualiza estado de sección (Superusuario)
         /// </summary>
         Task<bool> UpdateSectionStatusAsync(
             ConsolidatedTemplateSectionUpdateStatusDto dto, 
             int tenantId);
 
         /// <summary>
-        /// Obtiene estadísticas de progreso (Admin Dashboard)
+        /// Obtiene estadísticas de progreso (Superusuario Dashboard)
         /// </summary>
         Task<ConsolidatedTemplateStatsDto> GetConsolidatedTemplateStatsAsync(int tenantId);
 
         /// <summary>
-        /// Consolida el informe final (Admin)
+        /// Consolida el informe final (Superusuario)
         /// </summary>
         Task<byte[]> ConsolidateReportAsync(
             ConsolidateReportRequestDto dto, 

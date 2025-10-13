@@ -42,7 +42,7 @@ namespace JEGASolutions.ReportBuilder.API.Controllers
 
         private bool IsAdmin()
         {
-            return User.IsInRole("Admin");
+            return User.IsInRole("superusuario");
         }
 
         // ==================== ADMIN ENDPOINTS ====================
@@ -51,7 +51,7 @@ namespace JEGASolutions.ReportBuilder.API.Controllers
         /// [ADMIN] Crea nueva plantilla consolidada con secciones
         /// </summary>
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "superusuario")]
         public async Task<IActionResult> CreateConsolidatedTemplate([FromBody] ConsolidatedTemplateCreateDto dto)
         {
             try
@@ -86,7 +86,7 @@ namespace JEGASolutions.ReportBuilder.API.Controllers
         /// [ADMIN] Obtiene todas las plantillas consolidadas del tenant
         /// </summary>
         [HttpGet]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "superusuario")]
         public async Task<IActionResult> GetAllConsolidatedTemplates([FromQuery] string? status = null)
         {
             try
@@ -111,7 +111,7 @@ namespace JEGASolutions.ReportBuilder.API.Controllers
         /// [ADMIN] Obtiene detalle completo de plantilla consolidada
         /// </summary>
         [HttpGet("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "superusuario")]
         public async Task<IActionResult> GetConsolidatedTemplateById(int id)
         {
             try
@@ -137,7 +137,7 @@ namespace JEGASolutions.ReportBuilder.API.Controllers
         /// [ADMIN] Actualiza plantilla consolidada
         /// </summary>
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "superusuario")]
         public async Task<IActionResult> UpdateConsolidatedTemplate(int id, [FromBody] ConsolidatedTemplateUpdateDto dto)
         {
             try
@@ -174,7 +174,7 @@ namespace JEGASolutions.ReportBuilder.API.Controllers
         /// [ADMIN] Elimina plantilla consolidada (soft delete)
         /// </summary>
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "superusuario")]
         public async Task<IActionResult> DeleteConsolidatedTemplate(int id)
         {
             try
@@ -204,7 +204,7 @@ namespace JEGASolutions.ReportBuilder.API.Controllers
         /// [ADMIN] Agrega nueva sección a plantilla consolidada existente
         /// </summary>
         [HttpPost("{templateId}/sections")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "superusuario")]
         public async Task<IActionResult> AddSectionToTemplate(int templateId, [FromBody] ConsolidatedTemplateSectionCreateDto dto)
         {
             try
@@ -237,7 +237,7 @@ namespace JEGASolutions.ReportBuilder.API.Controllers
         /// [ADMIN] Actualiza estado de sección
         /// </summary>
         [HttpPut("sections/{sectionId}/status")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "superusuario")]
         public async Task<IActionResult> UpdateSectionStatus(int sectionId, [FromBody] ConsolidatedTemplateSectionUpdateStatusDto dto)
         {
             try
@@ -277,7 +277,7 @@ namespace JEGASolutions.ReportBuilder.API.Controllers
         /// [ADMIN] Obtiene estadísticas de plantillas consolidadas (Dashboard)
         /// </summary>
         [HttpGet("stats")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "superusuario")]
         public async Task<IActionResult> GetStats()
         {
             try
@@ -298,7 +298,7 @@ namespace JEGASolutions.ReportBuilder.API.Controllers
         /// [ADMIN] Obtiene secciones próximas a vencer
         /// </summary>
         [HttpGet("upcoming-deadlines")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "superusuario")]
         public async Task<IActionResult> GetUpcomingDeadlines([FromQuery] int daysAhead = 7)
         {
             try
@@ -319,7 +319,7 @@ namespace JEGASolutions.ReportBuilder.API.Controllers
         /// [ADMIN] Obtiene secciones vencidas
         /// </summary>
         [HttpGet("overdue-sections")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "superusuario")]
         public async Task<IActionResult> GetOverdueSections()
         {
             try

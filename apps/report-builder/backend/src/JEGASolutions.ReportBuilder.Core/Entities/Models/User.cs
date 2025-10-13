@@ -26,7 +26,7 @@ namespace JEGASolutions.ReportBuilder.Core.Entities.Models
 
         [StringLength(20)]
         [Column("role")]
-        public string Role { get; set; } = "User"; // Admin, User
+        public string Role { get; set; } = "User"; // superusuario, User
 
         [Column("is_active")]
         public bool IsActive { get; set; } = true;

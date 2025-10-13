@@ -403,11 +403,11 @@ public class WompiService : IWompiService
                     moduleName, tenant.Id);
             }
 
-            // Crear usuario admin
+            // Crear usuario superusuario
             var nameParts = (payment.CustomerName ?? "")
                 .Trim()
                 .Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            var firstName = nameParts.FirstOrDefault() ?? "Admin";
+            var firstName = nameParts.FirstOrDefault() ?? "Superusuario";
             var lastName = nameParts.Length > 1 ? string.Join(" ", nameParts.Skip(1)) : "";
 
             var adminUser = new User
@@ -417,7 +417,7 @@ public class WompiService : IWompiService
                 FirstName = firstName,
                 LastName = lastName,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(temporaryPassword),
-                Role = "Admin",
+                Role = "superusuario",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             };
@@ -425,7 +425,7 @@ public class WompiService : IWompiService
             await _userRepository.AddAsync(adminUser);
             await _unitOfWork.SaveChangesAsync();
 
-            _logger.LogInformation("Created admin user {UserId} for tenant {TenantId}",
+            _logger.LogInformation("Created superusuario user {UserId} for tenant {TenantId}",
                 adminUser.Id, tenant.Id);
 
             // ✅ SSO: Asignar permisos de módulos al usuario (para SSO centralizado)
@@ -439,7 +439,7 @@ public class WompiService : IWompiService
                     UserId = adminUser.Id,
                     TenantId = tenant.Id,
                     ModuleName = moduleName,
-                    Role = "admin",  // Owner del tenant es admin de todos los módulos
+                    Role = "superusuario",  // Owner del tenant es superusuario de todos los módulos
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
@@ -448,7 +448,7 @@ public class WompiService : IWompiService
                 _dbContext.UserModuleAccess.Add(userModuleAccess);
 
                 _logger.LogInformation("✅ Assigned {Role} access to module {ModuleName} for user {UserId}",
-                    "admin", moduleName, adminUser.Id);
+                    "superusuario", moduleName, adminUser.Id);
             }
 
             await _dbContext.SaveChangesAsync();
@@ -463,7 +463,7 @@ public class WompiService : IWompiService
                 {
                     await CreateUserInExtraHoursDB(
                         email: payment.CustomerEmail ?? "",
-                        name: payment.CustomerName ?? "Admin",
+                        name: payment.CustomerName ?? "Superusuario",
                         username: (payment.CustomerEmail ?? "").Split('@')[0],
                         passwordHash: adminUser.PasswordHash,
                         role: "superusuario",
@@ -475,7 +475,7 @@ public class WompiService : IWompiService
                 {
                     await CreateUserInReportBuilderDB(
                         email: payment.CustomerEmail ?? "",
-                        name: payment.CustomerName ?? "Admin",
+                        name: payment.CustomerName ?? "Superusuario",
                         passwordHash: adminUser.PasswordHash,
                         tenantId: tenant.Id
                     );
@@ -1087,7 +1087,7 @@ public class WompiService : IWompiService
             command.Parameters.AddWithValue("@email", email);
             command.Parameters.AddWithValue("@name", name);
             command.Parameters.AddWithValue("@password", passwordHash);
-            command.Parameters.AddWithValue("@role", "admin"); // Rol por defecto en Report Builder
+            command.Parameters.AddWithValue("@role", "superusuario"); // Rol por defecto en Report Builder
             command.Parameters.AddWithValue("@tenantId", tenantId);
 
             await command.ExecuteNonQueryAsync();

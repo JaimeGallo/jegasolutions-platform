@@ -23,7 +23,7 @@ namespace JEGASolutions.ReportBuilder.Infrastructure.Services
             _areaRepository = areaRepository;
         }
 
-        // ==================== ADMIN OPERATIONS ====================
+        // ==================== SUPERUSUARIO OPERATIONS ====================
 
         public async Task<ConsolidatedTemplateDetailDto> CreateConsolidatedTemplateAsync(
             ConsolidatedTemplateCreateDto dto, 
