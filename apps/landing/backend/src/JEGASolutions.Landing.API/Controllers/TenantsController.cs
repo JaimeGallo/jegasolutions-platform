@@ -179,7 +179,9 @@ namespace JEGASolutions.Landing.API.Controllers
             return moduleName switch
             {
                 "Extra Hours" => "https://extrahours.jegasolutions.co",
+                "extra-hours" => "https://extrahours.jegasolutions.co",  // ✅ Agregar mapeo para minúsculas
                 "Report Builder" => "https://reportbuilder.jegasolutions.co",
+                "report-builder" => "https://reportbuilder.jegasolutions.co",  // ✅ Agregar mapeo para minúsculas
                 _ => "https://www.jegasolutions.co"
             };
         }

@@ -1,14 +1,15 @@
 # 📊 JEGASolutions Report Builder
 
-Sistema multi-tenant de construcción y gestión de reportes con capacidades de análisis mediante IA.
+Sistema multi-tenant de construcción y gestión de reportes con capacidades avanzadas de análisis mediante IA y generación automática de narrativas.
 
 ## 🏗️ Arquitectura
 
 - **Backend**: ASP.NET Core 9.0 con Clean Architecture
-- **Frontend**: React 18 + Vite + TailwindCSS
-- **Base de datos**: PostgreSQL 15
-- **Autenticación**: JWT con BCrypt
-- **IA**: Azure OpenAI (opcional)
+- **Frontend**: React 18 + Vite + TailwindCSS + React Router
+- **Base de datos**: PostgreSQL 15 con snake_case naming convention
+- **Autenticación**: JWT con SSO integrado (Landing API)
+- **IA**: Múltiples proveedores (OpenAI, Anthropic, DeepSeek, Groq, Ollama)
+- **Exportación**: PDF, Excel, CSV con motores especializados
 
 ## 📋 Requisitos Previos
 
@@ -49,6 +50,7 @@ docker-compose up -d
 ```
 
 Esto iniciará:
+
 - ✅ PostgreSQL en puerto **5433**
 - ✅ Backend API en puerto **5000**
 - ✅ Frontend en puerto **3001**
@@ -75,10 +77,12 @@ docker-compose logs -f
 ### 6. Credenciales de acceso
 
 **Usuario Admin:**
+
 - Email: `admin@jegasolutions.com`
 - Password: `password123`
 
 **Usuario Regular:**
+
 - Email: `user@jegasolutions.com`
 - Password: `password123`
 
@@ -123,24 +127,71 @@ npm run dev
 
 El frontend estará disponible en: http://localhost:3001
 
+## ✨ Características Principales
+
+### 🎯 **Generación Automática de Narrativas con IA**
+
+- **Múltiples proveedores de IA**: OpenAI, Anthropic Claude, DeepSeek, Groq, Ollama
+- **Generación inline**: Panel expandible en componentes de texto
+- **Configuración avanzada**: Idioma, tono, tipo de análisis
+- **Análisis automático**: Al cargar datos de Excel
+- **Vista previa live**: Resultado inmediato en el editor
+
+### 📊 **Editor de Plantillas Avanzado**
+
+- **Template Editor**: Creación visual de plantillas
+- **Hybrid Builder**: Constructor híbrido con pasos guiados
+- **Componentes drag & drop**: Texto, gráficos, tablas, KPIs
+- **Secciones dinámicas**: Organización modular de contenido
+- **Preview en tiempo real**: Visualización instantánea
+
+### 📈 **Análisis de Datos Inteligente**
+
+- **Carga de Excel**: Procesamiento automático de archivos
+- **Análisis estadístico**: Tendencias, correlaciones, insights
+- **Visualizaciones**: Gráficos automáticos con Chart.js y Recharts
+- **KPIs automáticos**: Métricas clave calculadas dinámicamente
+
+### 🔐 **Sistema de Autenticación SSO**
+
+- **Integración con Landing**: SSO centralizado
+- **Middleware de acceso**: Validación de módulos por usuario
+- **JWT tokens**: Autenticación segura con claims
+- **Multi-tenant**: Aislamiento por tenant
+
+### 📤 **Exportación Multi-formato**
+
+- **PDF**: Generación con iTextSharp
+- **Excel**: Exportación con ClosedXML
+- **CSV**: Datos estructurados
+- **Templates personalizados**: Sistema de plantillas reutilizables
+
+### 🔗 **Plantillas Consolidadas**
+
+- **Consolidated Templates**: Plantillas que combinan múltiples fuentes de datos
+- **Secciones modulares**: Organización por secciones independientes
+- **Reutilización**: Plantillas base que se pueden adaptar
+- **Gestión centralizada**: Control de versiones y actualizaciones
+
 ## 📦 Estructura del Proyecto
 
 ```
 apps/report-builder/
 ├── backend/
 │   ├── src/
-│   │   ├── JEGASolutions.ReportBuilder.API/          # Controladores, Program.cs
+│   │   ├── JEGASolutions.ReportBuilder.API/          # Controladores, Program.cs, Middleware
 │   │   ├── JEGASolutions.ReportBuilder.Core/         # Entidades, DTOs, Interfaces
 │   │   ├── JEGASolutions.ReportBuilder.Data/         # DbContext, Migraciones
-│   │   └── JEGASolutions.ReportBuilder.Infrastructure/ # Repositorios, Servicios
+│   │   └── JEGASolutions.ReportBuilder.Infrastructure/ # Repositorios, Servicios, AI Providers
 │   ├── Dockerfile
 │   └── JEGASolutions.ReportBuilder.sln
 ├── frontend/
 │   ├── src/
-│   │   ├── components/      # Componentes React
+│   │   ├── components/      # Componentes React optimizados
 │   │   ├── contexts/        # Context API (Auth, Tenant)
 │   │   ├── pages/          # Páginas de la aplicación
-│   │   └── services/       # Servicios de API
+│   │   ├── services/       # Servicios de API centralizados
+│   │   └── utils/          # Utilidades y feature flags
 │   ├── Dockerfile
 │   └── package.json
 ├── db-init/
@@ -151,31 +202,47 @@ apps/report-builder/
 
 ## 🔐 Autenticación y Seguridad
 
-### Sistema de Autenticación
+### Sistema de Autenticación SSO
 
-- **BCrypt** para hash de contraseñas (work factor 11)
-- **JWT Tokens** con claims: `sub`, `email`, `tenant_id`, `role`
+- **SSO Centralizado**: Integración con Landing API
+- **JWT Tokens** con claims: `sub`, `email`, `userId`, `role`, `tenant_id`
 - **Expiración**: 60 minutos (configurable)
-- **Refresh Token**: Endpoint `/api/auth/refresh` implementado
+- **Middleware de acceso**: Validación automática de módulos
+- **Multi-tenant**: Aislamiento por tenant automático
+
+### Flujo de Autenticación
+
+1. **Acceso desde Landing**: Usuario se autentica en Landing
+2. **Redirección con token**: Landing redirige con JWT token
+3. **Validación automática**: Report Builder valida token y acceso al módulo
+4. **Sesión activa**: Usuario accede directamente al dashboard
 
 ### Endpoints de Autenticación
 
 ```bash
-# Login
-POST /api/auth/login
-Content-Type: application/json
-{
-  "email": "admin@jegasolutions.com",
-  "password": "password123"
-}
-
-# Verificar token
+# Verificar token (SSO)
 GET /api/auth/verify
 Authorization: Bearer <token>
 
-# Refresh token
-POST /api/auth/refresh
-Authorization: Bearer <token>
+# Health check
+GET /health
+```
+
+### Configuración SSO
+
+```json
+{
+  "LandingApi": {
+    "BaseUrl": "https://jegasolutions-platform.onrender.com",
+    "ModuleName": "report-builder"
+  },
+  "JwtSettings": {
+    "SecretKey": "shared-secret-key",
+    "Issuer": "JEGASolutions.Landing.API",
+    "Audience": "jegasolutions-landing-client",
+    "ExpiryMinutes": 60
+  }
+}
 ```
 
 ## 🗄️ Base de Datos
@@ -183,15 +250,20 @@ Authorization: Bearer <token>
 ### Esquema Principal
 
 **Entidades:**
+
 - `users` - Usuarios del sistema
 - `areas` - Áreas organizacionales
 - `templates` - Plantillas de reportes
 - `report_submissions` - Reportes enviados
 - `ai_insights` - Insights generados por IA
+- `consolidated_templates` - Plantillas consolidadas
+- `consolidated_template_sections` - Secciones de plantillas consolidadas
+- `excel_uploads` - Archivos Excel cargados
 
 ### Multi-Tenancy
 
 Todas las entidades heredan de `TenantEntity`:
+
 - `tenant_id` - ID del tenant (default: 1)
 - `created_at` - Fecha de creación
 - `updated_at` - Fecha de actualización
@@ -221,28 +293,72 @@ dotnet ef migrations remove `
   --startup-project src/JEGASolutions.ReportBuilder.API
 ```
 
-## 🤖 Integración con OpenAI (Opcional)
+## 🤖 Integración con Múltiples Proveedores de IA
 
-El sistema puede funcionar completamente sin una API Key de OpenAI. Por defecto usa el valor `placeholder`.
+El sistema soporta múltiples proveedores de IA para máxima flexibilidad y disponibilidad.
 
-Para habilitar análisis de IA real:
+### Proveedores Soportados
 
-1. Obtén una API Key de [OpenAI](https://platform.openai.com/)
-2. Actualiza la variable de entorno:
+| Proveedor     | Modelo            | Características                             |
+| ------------- | ----------------- | ------------------------------------------- |
+| **OpenAI**    | GPT-4o-mini       | Análisis avanzado, narrativas profesionales |
+| **Anthropic** | Claude-3.5-Sonnet | Excelente para análisis financiero          |
+| **DeepSeek**  | DeepSeek-Chat     | Rápido y económico                          |
+| **Groq**      | Llama-3.3-70B     | Ultra rápido, ideal para desarrollo         |
+| **Ollama**    | Llama3.2          | Local, privacidad total                     |
 
-```bash
-# En docker-compose.yml
-OPENAI_API_KEY=tu-api-key-real
+### Configuración de Proveedores
 
-# O exporta en tu terminal
-export OPENAI_API_KEY=tu-api-key-real
+```json
+{
+  "AI": {
+    "OpenAI": {
+      "ApiKey": "sk-...",
+      "Model": "gpt-4o-mini"
+    },
+    "Anthropic": {
+      "ApiKey": "sk-ant-...",
+      "Model": "claude-3-5-sonnet-20241022",
+      "TimeoutSeconds": 120
+    },
+    "DeepSeek": {
+      "ApiKey": "sk-...",
+      "Model": "deepseek-chat",
+      "Endpoint": "https://api.deepseek.com"
+    },
+    "Groq": {
+      "ApiKey": "gsk_...",
+      "Model": "llama-3.3-70b-versatile"
+    },
+    "Ollama": {
+      "Endpoint": "http://localhost:11434",
+      "Model": "llama3.2",
+      "TimeoutSeconds": 600
+    }
+  }
+}
 ```
 
-3. Reinicia el servicio backend:
+### Variables de Entorno
 
 ```bash
-docker-compose restart backend
+# Configurar proveedores (opcional)
+OPENAI_API_KEY=sk-...
+ANTHROPIC_API_KEY=sk-ant-...
+DEEPSEEK_API_KEY=sk-...
+GROQ_API_KEY=gsk_...
+
+# Ollama (local)
+OLLAMA_ENDPOINT=http://localhost:11434
 ```
+
+### Características de IA
+
+- **Generación de narrativas**: Texto profesional automático
+- **Análisis de datos**: Insights y tendencias
+- **Configuración flexible**: Idioma, tono, tipo de análisis
+- **Fallback automático**: Si un proveedor falla, usa otro
+- **Caché inteligente**: Reutiliza análisis similares
 
 ## 📝 Comandos Útiles de Docker
 
@@ -293,9 +409,29 @@ npm test
 
 ## 🐛 Troubleshooting
 
-### Problema: Backend no puede conectarse a PostgreSQL
+### Problema: Error 404 en login (SSO)
+
+**Síntomas:** Error 404 al intentar hacer login desde Landing
+**Causa:** URL del API mal configurada en el frontend
 
 **Solución:**
+
+```bash
+# Verificar configuración de API URL
+echo $VITE_API_URL
+
+# Debe ser: http://localhost:5000 (sin /api)
+# El código añade /api automáticamente
+
+# Verificar que el backend responde
+curl http://localhost:5000/health
+```
+
+### Problema: Backend no puede conectarse a PostgreSQL
+
+**Síntomas:** Error de conexión a base de datos
+**Solución:**
+
 ```bash
 # Verificar que PostgreSQL está corriendo
 docker-compose ps
@@ -305,50 +441,78 @@ docker-compose logs postgres
 
 # Reiniciar PostgreSQL
 docker-compose restart postgres
+
+# Verificar migraciones automáticas
+docker-compose logs backend | grep "migrations"
 ```
 
 ### Problema: Puerto 5433 ya está en uso
 
+**Síntomas:** Error al iniciar PostgreSQL
 **Solución:**
+
 ```bash
 # Cambiar el puerto en docker-compose.yml
 ports:
   - "5434:5432"  # Usa otro puerto
 
-# Actualizar appsettings.Development.json
-"DefaultConnection": "Host=localhost;Port=5434;..."
+# Actualizar variables de entorno
+DB_HOST=localhost
+DB_PORT=5434
 ```
 
-### Problema: Las migraciones no se aplican
+### Problema: Error de acceso al módulo (SSO)
+
+**Síntomas:** "Access denied" después del login
+**Causa:** Usuario no tiene acceso al módulo report-builder
 
 **Solución:**
+
 ```bash
-# Detener todos los servicios
-docker-compose down -v
+# Verificar en Landing API que el usuario tiene acceso
+# El middleware ModuleAccessMiddleware valida automáticamente
 
-# Crear la migración manualmente
-cd backend
-dotnet ef migrations add InitialCreate --project src/JEGASolutions.ReportBuilder.Data --startup-project src/JEGASolutions.ReportBuilder.API
+# Verificar logs del backend
+docker-compose logs backend | grep "ModuleAccess"
+```
 
-# Reiniciar servicios
-cd ..
-docker-compose up -d
+### Problema: IA no responde o falla
+
+**Síntomas:** Error al generar narrativas con IA
+**Solución:**
+
+```bash
+# Verificar configuración de proveedores
+docker-compose logs backend | grep "AI"
+
+# Configurar al menos un proveedor
+export OPENAI_API_KEY=sk-...
+
+# Reiniciar backend
+docker-compose restart backend
 ```
 
 ### Problema: Frontend no puede conectarse al backend
 
+**Síntomas:** Error de red en el frontend
 **Solución:**
+
 ```bash
 # Verificar que el backend está corriendo
-curl http://localhost:5000/api/auth/verify
+curl http://localhost:5000/health
 
-# Revisar la configuración en frontend/.env o vite.config.js
-# Debe apuntar a: http://localhost:5000/api
+# Verificar configuración CORS
+docker-compose logs backend | grep "CORS"
+
+# Revisar la configuración en frontend
+# Debe apuntar a: http://localhost:5000 (sin /api)
 ```
 
 ### Problema: "dotnet: command not found" en Git Bash
 
+**Síntomas:** Error al ejecutar comandos dotnet
 **Solución:**
+
 ```bash
 # Usar PowerShell o CMD en Windows
 # O agregar dotnet al PATH en Git Bash
@@ -357,14 +521,41 @@ curl http://localhost:5000/api/auth/verify
 docker-compose up -d  # Las migraciones se aplican automáticamente
 ```
 
+### Problema: Error de CORS en producción
+
+**Síntomas:** CORS error en el navegador
+**Solución:**
+
+```bash
+# Verificar configuración CORS en Program.cs
+# Debe incluir el dominio de producción
+
+# Verificar variables de entorno
+echo $ASPNETCORE_ENVIRONMENT
+```
+
+### Problema: Migraciones no se aplican automáticamente
+
+**Síntomas:** Base de datos sin tablas
+**Solución:**
+
+```bash
+# Verificar logs de migraciones
+docker-compose logs backend | grep "migrations"
+
+# Aplicar migraciones manualmente si es necesario
+docker exec -it reportbuilder-backend dotnet ef database update
+```
+
 ## 📚 Endpoints API Principales
 
-### Autenticación
-- `POST /api/auth/login` - Login
-- `GET /api/auth/verify` - Verificar token
-- `POST /api/auth/refresh` - Refresh token
+### Autenticación y Salud
+
+- `GET /api/auth/verify` - Verificar token SSO
+- `GET /health` - Health check del servicio
 
 ### Templates
+
 - `GET /api/templates` - Listar plantillas
 - `GET /api/templates/{id}` - Obtener plantilla
 - `POST /api/templates` - Crear plantilla
@@ -373,36 +564,87 @@ docker-compose up -d  # Las migraciones se aplican automáticamente
 - `GET /api/templates/by-type/{type}` - Filtrar por tipo
 
 ### Report Submissions
+
 - `GET /api/reportsubmissions` - Listar reportes
 - `GET /api/reportsubmissions/{id}` - Obtener reporte
 - `POST /api/reportsubmissions` - Crear reporte
 - `PUT /api/reportsubmissions/{id}` - Actualizar reporte
 - `DELETE /api/reportsubmissions/{id}` - Eliminar reporte
 
-### AI Analysis
-- `POST /api/aianalysis/analyze` - Analizar reporte con IA
+### Consolidated Templates
+
+- `GET /api/consolidatedtemplates` - Listar plantillas consolidadas
+- `GET /api/consolidatedtemplates/{id}` - Obtener plantilla consolidada
+- `POST /api/consolidatedtemplates` - Crear plantilla consolidada
+- `PUT /api/consolidatedtemplates/{id}` - Actualizar plantilla consolidada
+- `DELETE /api/consolidatedtemplates/{id}` - Eliminar plantilla consolidada
+
+### Excel Uploads
+
+- `GET /api/exceluploads` - Listar archivos Excel
+- `POST /api/exceluploads` - Subir archivo Excel
+- `GET /api/exceluploads/{id}` - Obtener archivo Excel
+- `DELETE /api/exceluploads/{id}` - Eliminar archivo Excel
+
+### AI Analysis y Narrativas
+
+- `POST /api/aianalysis/analyze` - Analizar datos con IA
 - `GET /api/aianalysis/insights/{reportId}` - Obtener insights
+- `POST /api/narrative/generate` - Generar narrativa con IA
+- `POST /api/analytics/analyze` - Análisis estadístico avanzado
 
 ## 🔧 Variables de Entorno
 
 ### Backend (docker-compose.yml o appsettings.json)
 
 ```env
+# Configuración Base
 ASPNETCORE_ENVIRONMENT=Development
+ASPNETCORE_URLS=http://+:8080
+
+# Base de Datos
 DB_HOST=postgres
-DB_NAME=reportbuilder_db
+DB_NAME=reportbuilderdb
 DB_USER=postgres
-DB_PASSWORD=password
-JWT_SECRET=your-super-secret-key-minimum-32-characters-long
-JWT_ISSUER=ReportBuilder.API
-JWT_AUDIENCE=ReportBuilder.Client
+DB_PASSWORD=jega40
+
+# JWT y SSO
+JWT_SECRET=SuperClaveUltraSecretaParaReportes123456789RdollarTpercentU!
+JWT_ISSUER=ReportBuilderAPI
+JWT_AUDIENCE=report-builder-client
+
+# Proveedores de IA (opcionales)
 OPENAI_API_KEY=placeholder
+ANTHROPIC_API_KEY=
+DEEPSEEK_API_KEY=
+GROQ_API_KEY=
 ```
 
 ### Frontend
 
 ```env
-VITE_API_URL=http://localhost:5000/api
+# URL del API (se añade /api automáticamente)
+VITE_API_URL=http://localhost:5000
+```
+
+### Configuración de Producción
+
+```env
+# Landing API Integration
+LANDING_API_BASE_URL=https://jegasolutions-platform.onrender.com
+LANDING_API_MODULE_NAME=report-builder
+
+# Database (Producción)
+DB_HOST=your-production-db-host
+DB_NAME=reportbuilder_prod
+DB_USER=reportbuilder_user
+DB_PASSWORD=your-secure-password
+
+# AI Providers (Producción)
+OPENAI_API_KEY=sk-proj-...
+ANTHROPIC_API_KEY=sk-ant-...
+DEEPSEEK_API_KEY=sk-...
+GROQ_API_KEY=gsk_...
 ```
 
 ## 📖 Documentación Adicional
@@ -420,6 +662,46 @@ VITE_API_URL=http://localhost:5000/api
 3. Push a la rama: `git push origin feature/nueva-funcionalidad`
 4. Crear un Pull Request
 
+## 🚀 Estado Actual del Proyecto
+
+### ✅ Funcionalidades Implementadas
+
+- **✅ SSO Integration**: Autenticación centralizada con Landing API
+- **✅ Multi-AI Providers**: OpenAI, Anthropic, DeepSeek, Groq, Ollama
+- **✅ Template Editor**: Creación visual de plantillas
+- **✅ Hybrid Builder**: Constructor híbrido con pasos guiados
+- **✅ AI Narrative Generation**: Generación automática de narrativas
+- **✅ Excel Processing**: Carga y análisis de archivos Excel
+- **✅ Consolidated Templates**: Plantillas que combinan múltiples fuentes
+- **✅ Export System**: PDF, Excel, CSV con motores especializados
+- **✅ Multi-tenant**: Aislamiento por tenant automático
+- **✅ Real-time Preview**: Vista previa en tiempo real
+- **✅ Drag & Drop**: Componentes arrastrables
+- **✅ Auto-migrations**: Migraciones automáticas en Docker
+
+### 🔄 En Desarrollo
+
+- **🔄 Advanced Analytics**: Análisis estadístico más profundo
+- **🔄 Template Sharing**: Compartir plantillas entre usuarios
+- **🔄 Batch Processing**: Procesamiento masivo de reportes
+- **🔄 API Rate Limiting**: Control de límites de API
+
+### 📊 Métricas del Proyecto
+
+- **Backend**: 5 controladores, 15+ endpoints
+- **Frontend**: 30+ componentes React optimizados
+- **AI Providers**: 5 proveedores configurados
+- **Database**: 8 entidades principales con snake_case
+- **Docker**: 3 servicios (PostgreSQL, Backend, Frontend)
+
+### 🎯 Próximas Características
+
+- **📱 Mobile App**: Aplicación móvil nativa
+- **🔔 Notifications**: Sistema de notificaciones
+- **📊 Advanced Charts**: Más tipos de visualizaciones
+- **🤖 AI Training**: Entrenamiento de modelos personalizados
+- **🌐 Multi-language**: Soporte multi-idioma completo
+
 ## 📄 Licencia
 
 © 2024 JEGASolutions. Todos los derechos reservados.
@@ -431,4 +713,3 @@ Para soporte o preguntas, contacta al equipo de desarrollo de JEGASolutions.
 ---
 
 **¡Feliz Desarrollo! 🚀**
-
