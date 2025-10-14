@@ -101,11 +101,11 @@ namespace JEGASolutions.ExtraHours.API.Controller
                 var user = new User
                 {
                     id = (int)dto.Id,
-                    email = dto.Email ?? (dto.Name.ToLower().Replace(" ", ".") + "@empresa.com"),
-                    name = dto.Name,
+                    email = dto.Email ?? (dto.Name?.ToLower().Replace(" ", ".") + "@empresa.com") ?? "user@empresa.com",
+                    name = dto.Name ?? string.Empty,
                     passwordHash = hashedPassword,
-                    role = dto.Role,
-                    username = dto.Username ?? dto.Name.ToLower().Replace(" ", ".")
+                    role = dto.Role ?? "empleado",
+                    username = dto.Username ?? dto.Name?.ToLower().Replace(" ", ".") ?? "user"
                 };
                 await _userRepository.SaveAsync(user);
 
@@ -115,7 +115,7 @@ namespace JEGASolutions.ExtraHours.API.Controller
                     var newManager = new Manager
                     {
                         manager_id = dto.Id,
-                        manager_name = dto.Name
+                        manager_name = dto.Name ?? string.Empty
                     };
                     await _managerRepository.AddAsync(newManager);
                 }
@@ -124,8 +124,8 @@ namespace JEGASolutions.ExtraHours.API.Controller
                 var employee = new Employee
                 {
                     id = dto.Id,
-                    name = dto.Name,
-                    position = dto.Position,
+                    name = dto.Name ?? string.Empty,
+                    position = dto.Position ?? string.Empty,
                     salary = dto.Salary,
                     manager_id = dto.ManagerId,
                 };
@@ -163,7 +163,7 @@ namespace JEGASolutions.ExtraHours.API.Controller
 
                 // Verificar si el usuario existe
                 var user = await _userService.GetUserByIdAsync(id);
-                string currentRole = user?.role;
+                string currentRole = user?.role ?? "empleado";
 
                 // Si no se proporciona ManagerId, usamos el actual del empleado
                 if (dto.ManagerId == null)
@@ -193,14 +193,14 @@ namespace JEGASolutions.ExtraHours.API.Controller
                         var newManager = new Manager
                         {
                             manager_id = id,
-                            manager_name = dto.Name
+                            manager_name = dto.Name ?? string.Empty
                         };
                         await _managerRepository.AddAsync(newManager);
                     }
                     else if (existingManager.manager_name != dto.Name)
                     {
                         // Actualizar el nombre del manager si cambió
-                        existingManager.manager_name = dto.Name;
+                        existingManager.manager_name = dto.Name ?? string.Empty;
                         await _managerRepository.UpdateAsync(existingManager);
                     }
                 }
@@ -307,7 +307,7 @@ namespace JEGASolutions.ExtraHours.API.Controller
             try
             {
                 var user = await _userService.GetUserByIdAsync((int)id);
-                return user?.role;
+                return user?.role ?? "empleado";
             }
             catch
             {
@@ -336,7 +336,7 @@ namespace JEGASolutions.ExtraHours.API.Controller
                 failed = new List<object>(),
                 totalProcessed = 0
             };
-            
+
             int totalProcessed = 0;
 
             try
@@ -401,8 +401,8 @@ namespace JEGASolutions.ExtraHours.API.Controller
                         }
 
                         // Crear contraseña hasheada
-                        string plainPassword = string.IsNullOrEmpty(employeeDto.Password) 
-                            ? "password123" 
+                        string plainPassword = string.IsNullOrEmpty(employeeDto.Password)
+                            ? "password123"
                             : employeeDto.Password;
                         string hashedPassword = BCrypt.Net.BCrypt.HashPassword(plainPassword);
 
@@ -504,7 +504,7 @@ namespace JEGASolutions.ExtraHours.API.Controller
                     if (string.IsNullOrWhiteSpace(line)) continue;
 
                     var values = line.Split(',');
-                    
+
                     if (values.Length < 4)
                     {
                         continue; // Saltar líneas inválidas
@@ -516,20 +516,20 @@ namespace JEGASolutions.ExtraHours.API.Controller
                         Name = values[1].Trim(),
                         Email = values[2].Trim(),
                         Position = values[3].Trim(),
-                        Salary = values.Length > 4 && !string.IsNullOrEmpty(values[4].Trim()) 
-                            ? decimal.Parse(values[4].Trim()) 
+                        Salary = values.Length > 4 && !string.IsNullOrEmpty(values[4].Trim())
+                            ? decimal.Parse(values[4].Trim())
                             : 0,
-                        Role = values.Length > 5 && !string.IsNullOrEmpty(values[5].Trim()) 
-                            ? values[5].Trim() 
+                        Role = values.Length > 5 && !string.IsNullOrEmpty(values[5].Trim())
+                            ? values[5].Trim()
                             : "empleado",
-                        Username = values.Length > 6 && !string.IsNullOrEmpty(values[6].Trim()) 
-                            ? values[6].Trim() 
-                            : null,
-                        Password = values.Length > 7 && !string.IsNullOrEmpty(values[7].Trim()) 
-                            ? values[7].Trim() 
-                            : null,
-                        ManagerId = values.Length > 8 && !string.IsNullOrEmpty(values[8].Trim()) 
-                            ? long.Parse(values[8].Trim()) 
+                        Username = values.Length > 6 && !string.IsNullOrEmpty(values[6].Trim())
+                            ? values[6].Trim()
+                            : string.Empty,
+                        Password = values.Length > 7 && !string.IsNullOrEmpty(values[7].Trim())
+                            ? values[7].Trim()
+                            : string.Empty,
+                        ManagerId = values.Length > 8 && !string.IsNullOrEmpty(values[8].Trim())
+                            ? long.Parse(values[8].Trim())
                             : (long?)null
                     };
 
@@ -569,8 +569,8 @@ namespace JEGASolutions.ExtraHours.API.Controller
                                 Position = row.Cell(4).GetString(),
                                 Salary = row.Cell(5).IsEmpty() ? 0 : decimal.Parse(row.Cell(5).GetString()),
                                 Role = row.Cell(6).IsEmpty() ? "empleado" : row.Cell(6).GetString(),
-                                Username = row.Cell(7).IsEmpty() ? null : row.Cell(7).GetString(),
-                                Password = row.Cell(8).IsEmpty() ? null : row.Cell(8).GetString(),
+                                Username = row.Cell(7).IsEmpty() ? string.Empty : row.Cell(7).GetString(),
+                                Password = row.Cell(8).IsEmpty() ? string.Empty : row.Cell(8).GetString(),
                                 ManagerId = row.Cell(9).IsEmpty() ? (long?)null : long.Parse(row.Cell(9).GetString())
                             };
 
@@ -595,13 +595,13 @@ namespace JEGASolutions.ExtraHours.API.Controller
     public class BulkEmployeeDTO
     {
         public long Id { get; set; }
-        public string Name { get; set; }
-        public string Email { get; set; }
-        public string Position { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Position { get; set; } = string.Empty;
         public decimal Salary { get; set; }
-        public string Role { get; set; }
-        public string Username { get; set; }
-        public string Password { get; set; }
+        public string Role { get; set; } = string.Empty;
+        public string Username { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
         public long? ManagerId { get; set; }
     }
 

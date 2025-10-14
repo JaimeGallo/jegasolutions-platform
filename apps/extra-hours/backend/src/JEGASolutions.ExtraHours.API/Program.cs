@@ -39,16 +39,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtSettings["Issuer"],
+            ValidIssuer = "JEGASolutions.Landing.API",
             ValidAudience = jwtSettings["Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
 
             // ✅ MAPEO DE CLAIMS
             RoleClaimType = "role",
-            NameClaimType = ClaimTypes.Name,
-
-            // ✅ MAPEO ADICIONAL DE CLAIMS PARA SSO
-            ClaimsIssuer = "JEGASolutions.Landing.API"
+            NameClaimType = ClaimTypes.Name
         };
 
         // ✅ DEBUG: Agregar eventos para debuggear autenticación
@@ -62,7 +59,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             OnTokenValidated = context =>
             {
                 Console.WriteLine($"✅ JWT Token validated successfully");
-                Console.WriteLine($"🔍 User claims: {string.Join(", ", context.Principal.Claims.Select(c => $"{c.Type}={c.Value}"))}");
+                Console.WriteLine($"🔍 User claims: {string.Join(", ", context.Principal?.Claims.Select(c => $"{c.Type}={c.Value}") ?? Enumerable.Empty<string>())}");
                 return Task.CompletedTask;
             },
             OnChallenge = context =>

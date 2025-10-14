@@ -19,8 +19,8 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Services
 
         public JWTUtils(IConfiguration configuration)
         {
-            var secretString = configuration["JwtSettings:SecretKey"] 
-                ?? throw new ArgumentNullException("JwtSettings:SecretKey", 
+            var secretString = configuration["JwtSettings:SecretKey"]
+                ?? throw new ArgumentNullException("JwtSettings:SecretKey",
                     "JWT Secret Key not found in configuration");
             _key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretString));
         }
@@ -32,13 +32,13 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Services
         {
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, user.email.Trim()),
-                new Claim("role", user.role),
+                new Claim(ClaimTypes.Name, user.email?.Trim() ?? string.Empty),
+                new Claim("role", user.role ?? string.Empty),
                 new Claim("id", user.id.ToString()),
-                new Claim("name", user.name),
-                new Claim("tenant_id", user.TenantId.ToString())  //Incluir TenantId
+                new Claim("name", user.name ?? string.Empty),
+                new Claim("tenant_id", user.TenantId.ToString() ?? "0")  //Incluir TenantId
             };
-            
+
             return CreateToken(claims, ACCESS_TOKEN_EXPIRATION);
         }
 
@@ -49,11 +49,11 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Services
         {
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, user.email.Trim()),
+                new Claim(ClaimTypes.Name, user.email?.Trim() ?? string.Empty),
                 new Claim("id", user.id.ToString()),
-                new Claim("tenant_id", user.TenantId.ToString())  // Incluir TenantId
+                new Claim("tenant_id", user.TenantId.ToString() ?? "0")  // Incluir TenantId
             };
-            
+
             return CreateToken(claims, REFRESH_TOKEN_EXPIRATION);
         }
 
@@ -70,7 +70,7 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Services
                 Audience = "JEGASolutions.ExtraHours.Users",
                 SigningCredentials = new SigningCredentials(_key, SecurityAlgorithms.HmacSha256Signature)
             };
-            
+
             var tokenHandler = new JwtSecurityTokenHandler();
             var token = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(token);
@@ -94,7 +94,7 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Services
                 RoleClaimType = "role",
                 NameClaimType = ClaimTypes.Name
             };
-            
+
             return tokenHandler.ValidateToken(token, validationParameters, out _);
         }
 
@@ -109,9 +109,9 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Services
                 var username = principal.Identity?.Name;
                 var userId = principal.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
                 var tenantId = principal.Claims.FirstOrDefault(c => c.Type == "tenant_id")?.Value;
-                
+
                 // Validar que el token corresponde al usuario correcto
-                return username == user.email 
+                return username == user.email
                     && userId == user.id.ToString()
                     && tenantId == user.TenantId.ToString();  // ✅ También validar TenantId
             }

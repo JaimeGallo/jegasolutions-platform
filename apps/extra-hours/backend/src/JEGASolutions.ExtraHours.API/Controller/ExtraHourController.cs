@@ -299,16 +299,16 @@ namespace JEGASolutions.ExtraHours.API.Controller
                 // Enviar correo al manager si existe
                 if (employee?.manager_id != null)
                 {
-                    var managerEmail = employee?.manager?.User?.email;
+                    var managerEmail = employee?.manager?.User?.email ?? string.Empty;
 
                     if (!string.IsNullOrEmpty(managerEmail))
                     {
-                        var emailSubject = $"Nuevo Registro de Horas Extra - {employee.name}";
+                        var emailSubject = $"Nuevo Registro de Horas Extra - {employee?.name ?? string.Empty}";
                         var emailBody = $@"
                 <html>
                 <body>
                     <h2>Registro de Horas Extra</h2>
-                    <p><strong>Empleado:</strong> {employee.name}</p>
+                    <p><strong>Empleado:</strong> {employee?.name ?? string.Empty}</p>
                     <p><strong>Fecha:</strong> {extraHour.date:yyyy-MM-dd}</p>
                     <p><strong>Hora de Inicio:</strong> {extraHour.startTime}</p>
                     <p><strong>Hora de Fin:</strong> {extraHour.endTime}</p>
