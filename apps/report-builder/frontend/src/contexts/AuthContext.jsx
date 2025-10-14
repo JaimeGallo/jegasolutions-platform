@@ -16,6 +16,7 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -58,6 +59,7 @@ export const AuthProvider = ({ children }) => {
 
         setUser(userData);
         setLoading(false);
+        setIsInitialized(true);
 
         // Limpiar el token de la URL
         const cleanUrl = window.location.pathname;
@@ -85,9 +87,11 @@ export const AuthProvider = ({ children }) => {
         })
         .finally(() => {
           setLoading(false);
+          setIsInitialized(true);
         });
     } else {
       setLoading(false);
+      setIsInitialized(true);
     }
   }, [location.search, navigate]);
 
@@ -120,6 +124,7 @@ export const AuthProvider = ({ children }) => {
   const value = {
     user,
     loading,
+    isInitialized,
     login,
     logout,
     updateUser,
