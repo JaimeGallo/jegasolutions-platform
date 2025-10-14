@@ -97,7 +97,7 @@ builder.Services.AddScoped<ICompensationRequestService, CompensationRequestServi
 builder.Services.AddScoped<IEmailService, JEGASolutions.ExtraHours.Infrastructure.Services.EmailService>();
 
 // ========================================
-// 🔧 FIX: CORS CORRECTO PARA PRODUCCIÓN
+//CORS CORRECTO PARA PRODUCCIÓN
 // ========================================
 builder.Services.AddCors(options =>
 {
