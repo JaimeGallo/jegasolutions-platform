@@ -70,7 +70,14 @@ export const AuthProvider = ({ children }) => {
         return;
       } catch (error) {
         console.error('❌ SSO: Token inválido:', error);
-        // Si el token es inválido, continuar con el flujo normal
+        // Si el token es inválido o expirado, limpiar localStorage y redirigir a login
+        localStorage.removeItem('token');
+        localStorage.removeItem('userData');
+        setUser(null);
+        setLoading(false);
+        setIsInitialized(true);
+        navigate('/login');
+        return;
       }
     }
 
@@ -82,8 +89,11 @@ export const AuthProvider = ({ children }) => {
         .then(userData => {
           setUser(userData);
         })
-        .catch(() => {
+        .catch(error => {
+          console.error('❌ Token validation failed:', error);
           localStorage.removeItem('token');
+          localStorage.removeItem('userData');
+          setUser(null);
         })
         .finally(() => {
           setLoading(false);

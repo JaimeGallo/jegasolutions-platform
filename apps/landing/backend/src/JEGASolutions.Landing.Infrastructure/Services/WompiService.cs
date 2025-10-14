@@ -1079,9 +1079,9 @@ public class WompiService : IWompiService
             await using var connection = new NpgsqlConnection(connectionString);
             await connection.OpenAsync();
 
-            // Report Builder usa una estructura similar
-            var sql = @"INSERT INTO users (email, name, password, role, tenant_id)
-                       VALUES (@email, @name, @password, @role, @tenantId)";
+            // Report Builder usa full_name en lugar de name y requiere is_active
+            var sql = @"INSERT INTO users (email, full_name, password_hash, role, tenant_id, is_active)
+                       VALUES (@email, @name, @password, @role, @tenantId, @isActive)";
 
             await using var command = new NpgsqlCommand(sql, connection);
             command.Parameters.AddWithValue("@email", email);
@@ -1089,6 +1089,7 @@ public class WompiService : IWompiService
             command.Parameters.AddWithValue("@password", passwordHash);
             command.Parameters.AddWithValue("@role", "superusuario"); // Rol por defecto en Report Builder
             command.Parameters.AddWithValue("@tenantId", tenantId);
+            command.Parameters.AddWithValue("@isActive", true);
 
             await command.ExecuteNonQueryAsync();
 
