@@ -1,14 +1,14 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { authService } from "../services/authService";
-import { jwtDecode } from "jwt-decode";
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { authService } from '../services/authService';
+import { jwtDecode } from 'jwt-decode';
 
 const AuthContext = createContext();
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };
@@ -26,21 +26,34 @@ export const AuthProvider = ({ children }) => {
 
     if (ssoToken) {
       console.log('🔐 SSO: Token detectado en URL');
-      
+
       try {
         // Validar y decodificar el token
         const decodedToken = jwtDecode(ssoToken);
-        console.log('✅ SSO: Token válido, userId:', decodedToken.userId || decodedToken.id);
+        console.log(
+          '✅ SSO: Token válido, userId:',
+          decodedToken.userId || decodedToken.id
+        );
 
         // Guardar token en localStorage
-        localStorage.setItem("token", ssoToken);
+        localStorage.setItem('token', ssoToken);
+
+        // Mapear rol del SSO a roles internos
+        let userRole = Array.isArray(decodedToken.role)
+          ? decodedToken.role[0]
+          : decodedToken.role || 'employee';
+
+        // Mapear "superusuario" a "superusuario" para mantener consistencia
+        if (userRole.toLowerCase() === 'admin') {
+          userRole = 'superusuario';
+        }
 
         // Crear objeto de usuario desde el token
         const userData = {
           id: decodedToken.userId || decodedToken.id || decodedToken.sub,
           email: decodedToken.email || decodedToken.unique_name,
           name: decodedToken.name || decodedToken.unique_name,
-          role: Array.isArray(decodedToken.role) ? decodedToken.role[0] : (decodedToken.role || 'employee'),
+          role: userRole,
         };
 
         setUser(userData);
@@ -51,7 +64,7 @@ export const AuthProvider = ({ children }) => {
         window.history.replaceState({}, document.title, cleanUrl);
 
         console.log('🚀 SSO: Redirigiendo al dashboard...');
-        navigate("/dashboard");
+        navigate('/dashboard');
         return;
       } catch (error) {
         console.error('❌ SSO: Token inválido:', error);
@@ -60,15 +73,15 @@ export const AuthProvider = ({ children }) => {
     }
 
     // Flujo normal: verificar token existente
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem('token');
     if (token) {
       authService
         .verifyToken(token)
-        .then((userData) => {
+        .then(userData => {
           setUser(userData);
         })
         .catch(() => {
-          localStorage.removeItem("token");
+          localStorage.removeItem('token');
         })
         .finally(() => {
           setLoading(false);
@@ -83,25 +96,25 @@ export const AuthProvider = ({ children }) => {
       const response = await authService.login(email, password);
       const { token, user: userData } = response;
 
-      localStorage.setItem("token", token);
+      localStorage.setItem('token', token);
       setUser(userData);
 
       return { success: true };
     } catch (error) {
       return {
         success: false,
-        error: error.response?.data?.message || "Login failed",
+        error: error.response?.data?.message || 'Login failed',
       };
     }
   };
 
   const logout = () => {
-    localStorage.removeItem("token");
+    localStorage.removeItem('token');
     setUser(null);
   };
 
-  const updateUser = (userData) => {
-    setUser((prev) => ({ ...prev, ...userData }));
+  const updateUser = userData => {
+    setUser(prev => ({ ...prev, ...userData }));
   };
 
   const value = {

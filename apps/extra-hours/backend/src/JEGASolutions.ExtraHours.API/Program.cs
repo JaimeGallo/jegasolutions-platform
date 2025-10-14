@@ -46,11 +46,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             // ✅ MAPEO DE CLAIMS
             RoleClaimType = "role",
             NameClaimType = ClaimTypes.Name,
-            
+
             // ✅ MAPEO ADICIONAL DE CLAIMS PARA SSO
             ClaimsIssuer = "JEGASolutions.Landing.API"
         };
-        
+
         // ✅ DEBUG: Agregar eventos para debuggear autenticación
         options.Events = new JwtBearerEvents
         {
