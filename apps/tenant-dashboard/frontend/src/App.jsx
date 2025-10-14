@@ -23,7 +23,19 @@ const queryClient = new QueryClient({
 
 // Wrapper component to access tenant context
 function AppContent() {
-  const { tenant } = useTenant();
+  const { tenant, isLoading: tenantLoading } = useTenant();
+
+  // Mostrar loading mientras se carga el tenant
+  if (tenantLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-jega-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando tenant...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <AuthProvider tenantId={tenant?.id}>
