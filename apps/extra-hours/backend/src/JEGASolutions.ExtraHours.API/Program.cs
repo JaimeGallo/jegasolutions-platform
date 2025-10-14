@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
 using JEGASolutions.ExtraHours.Data;
 using JEGASolutions.ExtraHours.Core.Interfaces;
 using JEGASolutions.ExtraHours.Core.Services;
@@ -44,7 +45,31 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
             // ✅ MAPEO DE CLAIMS
             RoleClaimType = "role",
-            NameClaimType = ClaimTypes.Name
+            NameClaimType = ClaimTypes.Name,
+
+            // ✅ MAPEO ADICIONAL DE CLAIMS PARA SSO
+            ClaimsIssuer = "JEGASolutions.Landing.API"
+        };
+
+        // ✅ DEBUG: Agregar eventos para debuggear autenticación
+        options.Events = new JwtBearerEvents
+        {
+            OnAuthenticationFailed = context =>
+            {
+                Console.WriteLine($"❌ JWT Authentication failed: {context.Exception.Message}");
+                return Task.CompletedTask;
+            },
+            OnTokenValidated = context =>
+            {
+                Console.WriteLine($"✅ JWT Token validated successfully");
+                Console.WriteLine($"🔍 User claims: {string.Join(", ", context.Principal.Claims.Select(c => $"{c.Type}={c.Value}"))}");
+                return Task.CompletedTask;
+            },
+            OnChallenge = context =>
+            {
+                Console.WriteLine($"🚫 JWT Challenge: {context.Error} - {context.ErrorDescription}");
+                return Task.CompletedTask;
+            }
         };
     });
 
