@@ -1,14 +1,13 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { authService } from '../services/authService';
-import { jwtDecode } from 'jwt-decode';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { authService } from "../services/authService";
 
 const AuthContext = createContext();
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
@@ -16,125 +15,106 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isInitialized, setIsInitialized] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
 
-  // ✅ SSO: Detectar token en URL al cargar la aplicación
   useEffect(() => {
-    const urlParams = new URLSearchParams(location.search);
-    const ssoToken = urlParams.get('token');
-
-    if (ssoToken) {
-      console.log('🔐 SSO: Token detectado en URL');
-
+    /**
+     * 🔐 FLUJO SSO (Single Sign-On):
+     * 1. Primero buscar token en URL (desde tenant-dashboard)
+     * 2. Si no hay token en URL, buscar en localStorage
+     * 3. Validar el token encontrado
+     * 4. Si es válido, guardar y autenticar al usuario
+     */
+    const initializeAuth = async () => {
       try {
-        // Validar y decodificar el token
-        const decodedToken = jwtDecode(ssoToken);
-        console.log(
-          '✅ SSO: Token válido, userId:',
-          decodedToken.userId || decodedToken.id
-        );
+        // PASO 1: Buscar token en URL query parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const tokenFromUrl = urlParams.get("token");
 
-        // Guardar token en localStorage
-        localStorage.setItem('token', ssoToken);
+        let tokenToValidate = null;
 
-        // Mapear rol del SSO a roles internos
-        let userRole = Array.isArray(decodedToken.role)
-          ? decodedToken.role[0]
-          : decodedToken.role || 'employee';
+        if (tokenFromUrl) {
+          console.log("✅ Token recibido desde URL (SSO)");
+          tokenToValidate = tokenFromUrl;
 
-        // Mapear "superusuario" a "superusuario" para mantener consistencia
-        if (userRole.toLowerCase() === 'admin') {
-          userRole = 'superusuario';
+          // Guardar el token en localStorage inmediatamente
+          localStorage.setItem("token", tokenFromUrl);
+
+          // Limpiar el token de la URL por seguridad
+          window.history.replaceState({}, document.title, window.location.pathname);
+        } else {
+          // PASO 2: Si no hay token en URL, buscar en localStorage
+          tokenToValidate = localStorage.getItem("token");
+          if (tokenToValidate) {
+            console.log("✅ Token encontrado en localStorage");
+          }
         }
 
-        // Crear objeto de usuario desde el token
-        const userData = {
-          id: decodedToken.userId || decodedToken.id || decodedToken.sub,
-          email: decodedToken.email || decodedToken.unique_name,
-          name: decodedToken.name || decodedToken.unique_name,
-          role: userRole,
-        };
+        // PASO 3: Validar el token si existe
+        if (tokenToValidate) {
+          try {
+            const userData = await authService.verifyToken(tokenToValidate);
+            console.log("✅ Token validado exitosamente:", userData);
+            setUser(userData);
 
-        setUser(userData);
-        setLoading(false);
-        setIsInitialized(true);
+            // Si estamos en la raíz o login, redirigir al dashboard
+            if (window.location.pathname === "/" || window.location.pathname === "/login") {
+              navigate("/", { replace: true });
+            }
+          } catch (error) {
+            console.error("❌ Error al validar token:", error);
+            // Token inválido, limpiar
+            localStorage.removeItem("token");
 
-        // Limpiar el token de la URL
-        const cleanUrl = window.location.pathname;
-        window.history.replaceState({}, document.title, cleanUrl);
-
-        console.log('🚀 SSO: Redirigiendo al dashboard...');
-        navigate('/dashboard');
-        return;
+            // No redirigir automáticamente a login si venimos de URL con token
+            // El usuario podría necesitar ver un mensaje de error
+            if (!tokenFromUrl) {
+              navigate("/login");
+            }
+          }
+        } else {
+          console.log("ℹ️ No se encontró token en URL ni localStorage");
+        }
       } catch (error) {
-        console.error('❌ SSO: Token inválido:', error);
-        // Si el token es inválido o expirado, limpiar localStorage y redirigir a login
-        localStorage.removeItem('token');
-        localStorage.removeItem('userData');
-        setUser(null);
+        console.error("❌ Error en inicialización de autenticación:", error);
+      } finally {
         setLoading(false);
-        setIsInitialized(true);
-        navigate('/login');
-        return;
       }
-    }
+    };
 
-    // Flujo normal: verificar token existente
-    const token = localStorage.getItem('token');
-    if (token) {
-      authService
-        .verifyToken(token)
-        .then(userData => {
-          setUser(userData);
-        })
-        .catch(error => {
-          console.error('❌ Token validation failed:', error);
-          localStorage.removeItem('token');
-          localStorage.removeItem('userData');
-          setUser(null);
-        })
-        .finally(() => {
-          setLoading(false);
-          setIsInitialized(true);
-        });
-    } else {
-      setLoading(false);
-      setIsInitialized(true);
-    }
-  }, [location.search, navigate]);
+    initializeAuth();
+  }, [navigate]);
 
   const login = async (email, password) => {
     try {
       const response = await authService.login(email, password);
       const { token, user: userData } = response;
 
-      localStorage.setItem('token', token);
+      localStorage.setItem("token", token);
       setUser(userData);
 
       return { success: true };
     } catch (error) {
       return {
         success: false,
-        error: error.response?.data?.message || 'Login failed',
+        error: error.response?.data?.message || "Login failed",
       };
     }
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem("token");
     setUser(null);
+    navigate("/login");
   };
 
-  const updateUser = userData => {
-    setUser(prev => ({ ...prev, ...userData }));
+  const updateUser = (userData) => {
+    setUser((prev) => ({ ...prev, ...userData }));
   };
 
   const value = {
     user,
     loading,
-    isInitialized,
     login,
     logout,
     updateUser,
@@ -143,3 +123,7 @@ export const AuthProvider = ({ children }) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+
+
+
+

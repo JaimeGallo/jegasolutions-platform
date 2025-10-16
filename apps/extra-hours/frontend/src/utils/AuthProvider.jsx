@@ -1,29 +1,27 @@
-import { useState, useEffect } from 'react';
-import PropTypes from 'prop-types';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { jwtDecode } from 'jwt-decode';
-import { AuthContext } from './AuthContext'; // Importar el contexto desde su archivo
+import { useState, useEffect } from "react";
+import PropTypes from "prop-types";
+import { useNavigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
+import { AuthContext } from "./AuthContext";
 
 export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
-  const location = useLocation();
 
   const [auth, setAuth] = useState(() => {
-    const token = localStorage.getItem('token');
-    const role = localStorage.getItem('role');
-    const uniqueName = localStorage.getItem('unique_name');
+    const token = localStorage.getItem("token");
+    const role = localStorage.getItem("role");
+    const uniqueName = localStorage.getItem("unique_name");
 
     if (token && role) {
-      const decodedToken = jwtDecode(token); // Decodificar el token
-      console.log('Token decodificado:', decodedToken);
+      const decodedToken = jwtDecode(token);
+      console.log("Token decodificado:", decodedToken);
 
-      // Almacenar el ID del usuario en localStorage si no está presente
-      if (!localStorage.getItem('id')) {
-        localStorage.setItem('id', decodedToken.id);
+      if (!localStorage.getItem("id")) {
+        localStorage.setItem("id", decodedToken.id);
       }
 
       if (decodedToken.unique_name && !uniqueName) {
-        localStorage.setItem('unique_name', decodedToken.unique_name);
+        localStorage.setItem("unique_name", decodedToken.unique_name);
       }
 
       return {
@@ -35,100 +33,75 @@ export const AuthProvider = ({ children }) => {
     return null;
   });
 
-  // ✅ SSO: Detectar token en URL al cargar la aplicación
+  /**
+   * 🔐 NUEVO: Capturar token desde URL para SSO
+   */
   useEffect(() => {
-    const urlParams = new URLSearchParams(location.search);
-    const ssoToken = urlParams.get('token');
+    const initializeAuthFromUrl = () => {
+      // Buscar token en URL query parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      const tokenFromUrl = urlParams.get("token");
 
-    console.log('🔍 SSO: Verificando URL:', window.location.href);
-    console.log('🔍 SSO: Token en URL:', ssoToken);
+      if (tokenFromUrl) {
+        console.log("✅ Token recibido desde URL (SSO)");
 
-    if (ssoToken) {
-      console.log('🔐 SSO: Token detectado en URL');
-      console.log('🔐 SSO: Token completo:', ssoToken);
+        try {
+          // Decodificar el token
+          const decodedToken = jwtDecode(tokenFromUrl);
+          console.log("✅ Token decodificado:", decodedToken);
 
-      try {
-        // Validar y decodificar el token
-        const decodedToken = jwtDecode(ssoToken);
-        console.log('✅ SSO: Token decodificado exitosamente:', decodedToken);
-        console.log('✅ SSO: userId:', decodedToken.userId || decodedToken.id);
-        console.log('✅ SSO: role:', decodedToken.role);
-        console.log('✅ SSO: email:', decodedToken.email);
+          // Extraer información del token
+          const role = decodedToken.role || decodedToken["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
+          const uniqueName = decodedToken.unique_name || decodedToken["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"];
+          const userId = decodedToken.userId || decodedToken.sub || decodedToken.id;
 
-        // Extraer rol del token (puede venir como 'role' o dentro de un array)
-        let userRole = decodedToken.role;
-        if (Array.isArray(userRole)) {
-          userRole = userRole[0];
+          // Formatear el rol (eliminar corchetes si los tiene)
+          const formattedRole = role ? role.replace(/[[\]]/g, "") : "user";
+
+          // Guardar en localStorage
+          localStorage.setItem("token", tokenFromUrl);
+          localStorage.setItem("role", formattedRole);
+          localStorage.setItem("id", userId);
+
+          if (uniqueName) {
+            localStorage.setItem("unique_name", uniqueName);
+          }
+
+          // Actualizar estado de autenticación
+          setAuth({
+            token: tokenFromUrl,
+            role: formattedRole,
+            uniqueName: uniqueName,
+          });
+
+          // Limpiar el token de la URL por seguridad
+          window.history.replaceState({}, document.title, window.location.pathname);
+
+          // Redirigir al menu
+          console.log("✅ Redirigiendo al menú principal");
+          navigate("/menu", { replace: true });
+        } catch (error) {
+          console.error("❌ Error al procesar token desde URL:", error);
+          // Si hay error, limpiar y redirigir a login
+          localStorage.clear();
+          navigate("/", { replace: true });
         }
-        if (!userRole) {
-          userRole = 'employee'; // Rol por defecto
-        }
-
-        // Mapear "Admin" a "superusuario" para mantener consistencia
-        if (userRole.toLowerCase() === 'admin') {
-          userRole = 'superusuario';
-        }
-
-        console.log('🔐 SSO: Rol procesado:', userRole);
-
-        // Usar la función login existente para configurar la autenticación
-        const formattedRole = userRole.replace(/[[\]]/g, '');
-
-        localStorage.setItem('token', ssoToken);
-        localStorage.setItem('role', formattedRole);
-        localStorage.setItem(
-          'id',
-          decodedToken.userId || decodedToken.id || decodedToken.sub
-        );
-
-        if (decodedToken.unique_name || decodedToken.email) {
-          localStorage.setItem(
-            'unique_name',
-            decodedToken.unique_name || decodedToken.email
-          );
-        }
-
-        console.log('🔐 SSO: Datos guardados en localStorage');
-        console.log('🔐 SSO: token:', ssoToken);
-        console.log('🔐 SSO: role:', formattedRole);
-        console.log(
-          '🔐 SSO: id:',
-          decodedToken.userId || decodedToken.id || decodedToken.sub
-        );
-
-        setAuth({
-          token: ssoToken,
-          role: formattedRole,
-          uniqueName: decodedToken.unique_name || decodedToken.email,
-        });
-
-        // Limpiar el token de la URL y redirigir al menú
-        const cleanUrl = window.location.pathname;
-        window.history.replaceState({}, document.title, cleanUrl);
-
-        console.log('🚀 SSO: Redirigiendo al menú...');
-        navigate('/menu');
-      } catch (error) {
-        console.error('❌ SSO: Error al decodificar token:', error);
-        console.error('❌ SSO: Token que causó el error:', ssoToken);
-        // Si el token es inválido, continuar con el flujo normal de login
       }
-    } else {
-      console.log('🔍 SSO: No se encontró token en la URL');
-    }
-  }, [location.search, navigate]);
+    };
+
+    initializeAuthFromUrl();
+  }, [navigate]);
 
   const login = ({ token, role }) => {
-    const formattedRole = role.replace(/[[\]]/g, '');
-    const decodedToken = jwtDecode(token); // Decodificar el token
+    const formattedRole = role.replace(/[[\]]/g, "");
+    const decodedToken = jwtDecode(token);
 
-    // Almacenar el rol y el ID del usuario en localStorage
-    localStorage.setItem('token', token);
-    localStorage.setItem('role', formattedRole);
-    localStorage.setItem('id', decodedToken.id);
+    localStorage.setItem("token", token);
+    localStorage.setItem("role", formattedRole);
+    localStorage.setItem("id", decodedToken.id);
 
     if (decodedToken.unique_name) {
-      localStorage.setItem('unique_name', decodedToken.unique_name);
+      localStorage.setItem("unique_name", decodedToken.unique_name);
     }
 
     setAuth({
@@ -136,16 +109,16 @@ export const AuthProvider = ({ children }) => {
       role: formattedRole,
       uniqueName: decodedToken.unique_name,
     });
-    navigate('/menu');
+    navigate("/menu");
   };
 
   const logout = () => {
     setAuth(null);
-    localStorage.removeItem('token');
-    localStorage.removeItem('role');
-    localStorage.removeItem('id');
-    localStorage.removeItem('unique_name');
-    navigate('/');
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    localStorage.removeItem("id");
+    localStorage.removeItem("unique_name");
+    navigate("/");
   };
 
   return (
