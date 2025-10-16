@@ -98,6 +98,8 @@ export const TenantProvider = ({ children }) => {
         '📦 Modules data detailed:',
         JSON.stringify(modulesResponse.data, null, 2)
       );
+      console.log('🔍 Total modules received:', modulesResponse.data.length);
+      console.log('🔍 Module names:', modulesResponse.data.map(m => m.moduleName));
       setModules(modulesResponse.data);
 
       setIsLoading(false);
