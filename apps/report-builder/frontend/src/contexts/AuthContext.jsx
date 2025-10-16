@@ -22,8 +22,9 @@ export const AuthProvider = ({ children }) => {
 
   // ✅ SSO: Detectar token en URL al cargar la aplicación
   useEffect(() => {
-    const urlParams = new URLSearchParams(location.search);
-    const ssoToken = urlParams.get('token');
+    try {
+      const urlParams = new URLSearchParams(location.search);
+      const ssoToken = urlParams.get('token');
 
     if (ssoToken) {
       console.log('🔐 SSO: Token detectado en URL');
@@ -31,6 +32,7 @@ export const AuthProvider = ({ children }) => {
       try {
         // Validar y decodificar el token
         const decodedToken = jwtDecode(ssoToken);
+        console.log('🔍 SSO: Token decodificado:', decodedToken);
         console.log(
           '✅ SSO: Token válido, userId:',
           decodedToken.userId || decodedToken.id
@@ -52,8 +54,10 @@ export const AuthProvider = ({ children }) => {
         // Crear objeto de usuario desde el token
         const userData = {
           id: decodedToken.userId || decodedToken.id || decodedToken.sub,
-          email: decodedToken.email || decodedToken.unique_name,
-          name: decodedToken.name || decodedToken.unique_name,
+          email: Array.isArray(decodedToken.email) 
+            ? decodedToken.email[0] 
+            : decodedToken.email || decodedToken.unique_name,
+          name: decodedToken.name || decodedToken.unique_name || decodedToken.firstName,
           role: userRole,
         };
 
@@ -100,6 +104,11 @@ export const AuthProvider = ({ children }) => {
           setIsInitialized(true);
         });
     } else {
+      setLoading(false);
+      setIsInitialized(true);
+    }
+    } catch (error) {
+      console.error('❌ Error en AuthContext useEffect:', error);
       setLoading(false);
       setIsInitialized(true);
     }
