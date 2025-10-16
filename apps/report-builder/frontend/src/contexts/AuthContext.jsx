@@ -26,87 +26,90 @@ export const AuthProvider = ({ children }) => {
       const urlParams = new URLSearchParams(location.search);
       const ssoToken = urlParams.get('token');
 
-    if (ssoToken) {
-      console.log('🔐 SSO: Token detectado en URL');
+      if (ssoToken) {
+        console.log('🔐 SSO: Token detectado en URL');
 
-      try {
-        // Validar y decodificar el token
-        const decodedToken = jwtDecode(ssoToken);
-        console.log('🔍 SSO: Token decodificado:', decodedToken);
-        console.log(
-          '✅ SSO: Token válido, userId:',
-          decodedToken.userId || decodedToken.id
-        );
+        try {
+          // Validar y decodificar el token
+          const decodedToken = jwtDecode(ssoToken);
+          console.log('🔍 SSO: Token decodificado:', decodedToken);
+          console.log(
+            '✅ SSO: Token válido, userId:',
+            decodedToken.userId || decodedToken.id
+          );
 
-        // Guardar token en localStorage
-        localStorage.setItem('token', ssoToken);
+          // Guardar token en localStorage
+          localStorage.setItem('token', ssoToken);
 
-        // Mapear rol del SSO a roles internos
-        let userRole = Array.isArray(decodedToken.role)
-          ? decodedToken.role[0]
-          : decodedToken.role || 'employee';
+          // Mapear rol del SSO a roles internos
+          let userRole = Array.isArray(decodedToken.role)
+            ? decodedToken.role[0]
+            : decodedToken.role || 'employee';
 
-        // Mapear "superusuario" a "superusuario" para mantener consistencia
-        if (userRole.toLowerCase() === 'admin') {
-          userRole = 'superusuario';
-        }
+          // Mapear "superusuario" a "superusuario" para mantener consistencia
+          if (userRole.toLowerCase() === 'admin') {
+            userRole = 'superusuario';
+          }
 
-        // Crear objeto de usuario desde el token
-        const userData = {
-          id: decodedToken.userId || decodedToken.id || decodedToken.sub,
-          email: Array.isArray(decodedToken.email) 
-            ? decodedToken.email[0] 
-            : decodedToken.email || decodedToken.unique_name,
-          name: decodedToken.name || decodedToken.unique_name || decodedToken.firstName,
-          role: userRole,
-        };
+          // Crear objeto de usuario desde el token
+          const userData = {
+            id: decodedToken.userId || decodedToken.id || decodedToken.sub,
+            email: Array.isArray(decodedToken.email)
+              ? decodedToken.email[0]
+              : decodedToken.email || decodedToken.unique_name,
+            name:
+              decodedToken.name ||
+              decodedToken.unique_name ||
+              decodedToken.firstName,
+            role: userRole,
+          };
 
-        setUser(userData);
-        setLoading(false);
-        setIsInitialized(true);
-
-        // Limpiar el token de la URL
-        const cleanUrl = window.location.pathname;
-        window.history.replaceState({}, document.title, cleanUrl);
-
-        console.log('🚀 SSO: Redirigiendo al dashboard...');
-        navigate('/dashboard');
-        return;
-      } catch (error) {
-        console.error('❌ SSO: Token inválido:', error);
-        // Si el token es inválido o expirado, limpiar localStorage y redirigir a login
-        localStorage.removeItem('token');
-        localStorage.removeItem('userData');
-        setUser(null);
-        setLoading(false);
-        setIsInitialized(true);
-        navigate('/login');
-        return;
-      }
-    }
-
-    // Flujo normal: verificar token existente
-    const token = localStorage.getItem('token');
-    if (token) {
-      authService
-        .verifyToken(token)
-        .then(userData => {
           setUser(userData);
-        })
-        .catch(error => {
-          console.error('❌ Token validation failed:', error);
+          setLoading(false);
+          setIsInitialized(true);
+
+          // Limpiar el token de la URL
+          const cleanUrl = window.location.pathname;
+          window.history.replaceState({}, document.title, cleanUrl);
+
+          console.log('🚀 SSO: Redirigiendo al dashboard...');
+          navigate('/dashboard');
+          return;
+        } catch (error) {
+          console.error('❌ SSO: Token inválido:', error);
+          // Si el token es inválido o expirado, limpiar localStorage y redirigir a login
           localStorage.removeItem('token');
           localStorage.removeItem('userData');
           setUser(null);
-        })
-        .finally(() => {
           setLoading(false);
           setIsInitialized(true);
-        });
-    } else {
-      setLoading(false);
-      setIsInitialized(true);
-    }
+          navigate('/login');
+          return;
+        }
+      }
+
+      // Flujo normal: verificar token existente (solo si no hay SSO)
+      const token = localStorage.getItem('token');
+      if (token && !ssoToken) {
+        authService
+          .verifyToken(token)
+          .then(userData => {
+            setUser(userData);
+          })
+          .catch(error => {
+            console.error('❌ Token validation failed:', error);
+            localStorage.removeItem('token');
+            localStorage.removeItem('userData');
+            setUser(null);
+          })
+          .finally(() => {
+            setLoading(false);
+            setIsInitialized(true);
+          });
+      } else {
+        setLoading(false);
+        setIsInitialized(true);
+      }
     } catch (error) {
       console.error('❌ Error en AuthContext useEffect:', error);
       setLoading(false);
