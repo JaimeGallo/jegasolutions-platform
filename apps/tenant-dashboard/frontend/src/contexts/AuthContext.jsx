@@ -16,7 +16,7 @@ export const AuthProvider = ({ children, tenantId }) => {
 
   useEffect(() => {
     // Check for existing auth token
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('token');
     const userData = localStorage.getItem('userData');
 
     if (token && userData) {
@@ -24,7 +24,7 @@ export const AuthProvider = ({ children, tenantId }) => {
         setUser(JSON.parse(userData));
       } catch (error) {
         console.error('Error parsing user data:', error);
-        localStorage.removeItem('authToken');
+        localStorage.removeItem('token');
         localStorage.removeItem('userData');
       }
     }
@@ -64,7 +64,7 @@ export const AuthProvider = ({ children, tenantId }) => {
           tenantId: data.user.tenantId,
         };
 
-        localStorage.setItem('authToken', data.token);
+        localStorage.setItem('token', data.token);
         localStorage.setItem('userData', JSON.stringify(userData));
         setUser(userData);
 
@@ -82,7 +82,7 @@ export const AuthProvider = ({ children, tenantId }) => {
   };
 
   const logout = () => {
-    localStorage.removeItem('authToken');
+    localStorage.removeItem('token');
     localStorage.removeItem('userData');
     setUser(null);
   };
