@@ -37,9 +37,9 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TenantProvider>
-          <Router>
+      <Router>
+        <AuthProvider>
+          <TenantProvider>
             <div className="min-h-screen bg-gray-50">
               <Routes>
                 <Route path="/login" element={<LoginPage />} />
@@ -107,9 +107,9 @@ function App() {
                 theme="colored"
               />
             </div>
-          </Router>
-        </TenantProvider>
-      </AuthProvider>
+          </TenantProvider>
+        </AuthProvider>
+      </Router>
     </QueryClientProvider>
   );
 }
