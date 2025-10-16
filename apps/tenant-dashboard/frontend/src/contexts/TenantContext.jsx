@@ -13,6 +13,7 @@ export const useTenant = () => {
 export const TenantProvider = ({ children }) => {
   const [tenant, setTenant] = useState(null);
   const [modules, setModules] = useState([]);
+  const [stats, setStats] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -29,11 +30,27 @@ export const TenantProvider = ({ children }) => {
 
   const loadTenantData = async (subdomain) => {
     try {
-      const response = await fetch(`/api/tenants/${subdomain}`);
-      if (response.ok) {
-        const data = await response.json();
-        setTenant(data.tenant);
-        setModules(data.modules || []);
+      // Primero obtener el tenant por subdomain
+      const tenantResponse = await fetch(`/api/tenants/by-subdomain/${subdomain}`);
+      if (tenantResponse.ok) {
+        const tenantData = await tenantResponse.json();
+        setTenant(tenantData);
+        
+        // Luego obtener los módulos del tenant
+        const modulesResponse = await fetch(`/api/tenants/${tenantData.id}/modules`);
+        if (modulesResponse.ok) {
+          const modulesData = await modulesResponse.json();
+          setModules(modulesData || []);
+        }
+        
+        // También obtener las estadísticas
+        const statsResponse = await fetch(`/api/tenants/${tenantData.id}/stats`);
+        if (statsResponse.ok) {
+          const statsData = await statsResponse.json();
+          setStats(statsData);
+        }
+      } else {
+        console.error("Error loading tenant:", await tenantResponse.text());
       }
     } catch (error) {
       console.error("Error loading tenant data:", error);
@@ -43,9 +60,8 @@ export const TenantProvider = ({ children }) => {
   };
 
   const getModuleStatus = (moduleName) => {
-    return (
-      modules.find((m) => m.moduleName === moduleName)?.status === "ACTIVE"
-    );
+    const module = modules.find((m) => m.moduleName === moduleName);
+    return module?.status?.toUpperCase() === "ACTIVE";
   };
 
   /**
@@ -81,6 +97,7 @@ export const TenantProvider = ({ children }) => {
   const value = {
     tenant,
     modules,
+    stats,
     isLoading,
     getModuleStatus,
     getModuleUrl,

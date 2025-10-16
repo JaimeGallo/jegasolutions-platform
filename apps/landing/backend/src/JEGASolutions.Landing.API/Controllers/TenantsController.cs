@@ -147,7 +147,7 @@ namespace JEGASolutions.Landing.API.Controllers
                     totalModules = await _context.TenantModules
                         .CountAsync(tm => tm.TenantId == id),
                     activeModules = await _context.TenantModules
-                        .CountAsync(tm => tm.TenantId == id && tm.Status == "active"),
+                        .CountAsync(tm => tm.TenantId == id && tm.Status.ToUpper() == "ACTIVE"),
                     totalUsers = await _context.Users
                         .CountAsync(u => u.TenantId == id && u.IsActive),
                     lastActivity = DateTime.UtcNow
@@ -169,7 +169,9 @@ namespace JEGASolutions.Landing.API.Controllers
             return moduleName switch
             {
                 "Extra Hours" => "/extra-hours",
+                "extra-hours" => "/extra-hours",
                 "Report Builder" => "/report-builder",
+                "report-builder" => "/report-builder",
                 _ => "/"
             };
         }
@@ -191,7 +193,9 @@ namespace JEGASolutions.Landing.API.Controllers
             return moduleName switch
             {
                 "Extra Hours" => "Gestión completa de horas extra, compensaciones y aprobaciones",
+                "extra-hours" => "Gestión completa de horas extra, compensaciones y aprobaciones",
                 "Report Builder" => "Generación inteligente de reportes con múltiples IAs",
+                "report-builder" => "Generación inteligente de reportes con múltiples IAs",
                 _ => "Módulo del sistema"
             };
         }
@@ -201,7 +205,9 @@ namespace JEGASolutions.Landing.API.Controllers
             return moduleName switch
             {
                 "Extra Hours" => "clock",
+                "extra-hours" => "clock",
                 "Report Builder" => "file-text",
+                "report-builder" => "file-text",
                 _ => "package"
             };
         }

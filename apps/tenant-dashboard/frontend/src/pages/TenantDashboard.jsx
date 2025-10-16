@@ -20,28 +20,12 @@ const TenantDashboard = () => {
   const {
     tenant,
     modules,
+    stats,
     isLoading,
     getModuleStatus,
     getModuleUrl,
     tenantName,
   } = useTenant();
-  const [stats, setStats] = useState({
-    totalModules: 0,
-    activeModules: 0,
-    totalUsers: 0,
-    lastActivity: null,
-  });
-
-  useEffect(() => {
-    if (modules) {
-      setStats({
-        totalModules: modules.length,
-        activeModules: modules.filter((m) => m.status === "ACTIVE").length,
-        totalUsers: 0,
-        lastActivity: new Date().toLocaleDateString(),
-      });
-    }
-  }, [modules]);
 
   const availableModules = [
     {
@@ -165,7 +149,7 @@ const TenantDashboard = () => {
               <div>
                 <p className="text-sm text-gray-600">Total Módulos</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {stats.totalModules}
+                  {stats?.totalModules || 0}
                 </p>
               </div>
               <BarChart3 className="h-8 w-8 text-jega-blue-600" />
@@ -177,7 +161,7 @@ const TenantDashboard = () => {
               <div>
                 <p className="text-sm text-gray-600">Módulos Activos</p>
                 <p className="text-2xl font-bold text-green-600">
-                  {stats.activeModules}
+                  {stats?.activeModules || 0}
                 </p>
               </div>
               <CheckCircle className="h-8 w-8 text-green-600" />
@@ -189,7 +173,7 @@ const TenantDashboard = () => {
               <div>
                 <p className="text-sm text-gray-600">Usuarios</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {stats.totalUsers}
+                  {stats?.totalUsers || 0}
                 </p>
               </div>
               <Users className="h-8 w-8 text-jega-blue-600" />
@@ -201,7 +185,7 @@ const TenantDashboard = () => {
               <div>
                 <p className="text-sm text-gray-600">Última Actividad</p>
                 <p className="text-sm font-medium text-gray-900">
-                  {stats.lastActivity}
+                  {stats?.lastActivity ? new Date(stats.lastActivity).toLocaleDateString() : new Date().toLocaleDateString()}
                 </p>
               </div>
               <Clock className="h-8 w-8 text-jega-blue-600" />
