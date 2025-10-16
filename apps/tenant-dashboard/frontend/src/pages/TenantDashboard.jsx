@@ -156,7 +156,7 @@ const TenantDashboard = () => {
   const handleModuleClick = module => {
     if (module.isActive) {
       // ✅ SSO: Pasar token JWT al módulo
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('token');
       const urlWithToken = token
         ? `${module.url}?token=${encodeURIComponent(token)}`
         : module.url;
