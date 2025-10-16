@@ -966,7 +966,7 @@ public class WompiService : IWompiService
     {
         modules.Add("extra-hours");
     }
-    else if (reference.Contains("REPORTBUILDER", StringComparison.OrdinalIgnoreCase))
+    else if (reference.Contains("REPORTS", StringComparison.OrdinalIgnoreCase))
     {
         modules.Add("report-builder");
     }
