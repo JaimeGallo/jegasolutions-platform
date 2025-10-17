@@ -14,6 +14,7 @@ using Npgsql;
 
 namespace JEGASolutions.Landing.Infrastructure.Services;
 
+// WompiService - Handles payment processing and webhook validation
 public class WompiService : IWompiService
 {
     private readonly HttpClient _httpClient;
@@ -966,7 +967,7 @@ public class WompiService : IWompiService
     {
         modules.Add("extra-hours");
     }
-    else if (reference.Contains("REPORTBUILDER", StringComparison.OrdinalIgnoreCase))
+    else if (reference.Contains("REPORTS", StringComparison.OrdinalIgnoreCase))
     {
         modules.Add("report-builder");
     }
