@@ -1,14 +1,14 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { jwtDecode } from 'jwt-decode';
-import { authService } from '../services/authService';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
+import { authService } from "../services/authService";
 
 const AuthContext = createContext();
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
@@ -18,65 +18,53 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Effect 1: SSO Token Handler - Ejecuta PRIMERO
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const ssoToken = urlParams.get('token');
+    const initAuth = async () => {
+      // PASO 1: Verificar SSO token en URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const ssoToken = urlParams.get('token');
 
-    if (ssoToken) {
-      console.log('🔐 SSO token detected in URL');
-      try {
-        // Decodificar el JWT para obtener los datos del usuario
-        const decoded = jwtDecode(ssoToken);
-        console.log('✅ Token decoded successfully:', decoded);
+      if (ssoToken) {
+        console.log('🔐 SSO token detected in URL');
+        try {
+          const decoded = jwtDecode(ssoToken);
+          console.log('✅ Token decoded successfully:', decoded);
 
-        // Guardar token en localStorage
-        localStorage.setItem('token', ssoToken);
+          localStorage.setItem('token', ssoToken);
+          localStorage.setItem('ssoValidated', 'true');
 
-        // CRÍTICO: Marcar que este token viene de SSO y ya está validado
-        localStorage.setItem('ssoValidated', 'true');
+          setUser(decoded);
+          setLoading(false);
 
-        // Setear el usuario desde el token decodificado
-        setUser(decoded);
-        setLoading(false);
+          navigate('/', { replace: true });
 
-        // Limpiar la URL para quitar el token
-        navigate('/', { replace: true });
-
-        console.log('✅ SSO login successful, redirecting to dashboard');
-      } catch (error) {
-        console.error('❌ Error decoding SSO token:', error);
-        localStorage.removeItem('ssoValidated');
-        setLoading(false);
+          console.log('✅ SSO login successful, redirecting to dashboard');
+          return;
+        } catch (error) {
+          console.error('❌ Error decoding SSO token:', error);
+          localStorage.removeItem('ssoValidated');
+          setLoading(false);
+          return;
+        }
       }
-      return;
-    }
-  }, [navigate]);
 
-  // Effect 2: Token Verification - Solo para tokens NO-SSO
-  useEffect(() => {
-    const checkAuth = async () => {
+      // PASO 2: Verificar token existente
       const token = localStorage.getItem('token');
       const isSSOValidated = localStorage.getItem('ssoValidated') === 'true';
 
-      // Si no hay token, terminar loading
       if (!token) {
         setLoading(false);
         return;
       }
 
-      // CRÍTICO: Si el token viene de SSO, solo decodificarlo, NO llamar al backend
       if (isSSOValidated) {
-        console.log(
-          '✅ SSO token detected in localStorage, skipping backend verification'
-        );
+        console.log('✅ SSO token detected in localStorage, skipping backend verification');
         try {
           const decoded = jwtDecode(token);
           setUser(decoded);
           console.log('✅ User loaded from SSO token:', decoded);
         } catch (error) {
           console.error('❌ Error decoding stored SSO token:', error);
-          // Si el token es inválido, limpiar todo
           localStorage.removeItem('token');
           localStorage.removeItem('ssoValidated');
           setUser(null);
@@ -85,7 +73,6 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
-      // Solo para tokens NO-SSO: Verificar contra el backend
       console.log('🔍 Non-SSO token detected, verifying against backend...');
       try {
         const response = await authService.verifyToken(token);
@@ -101,19 +88,15 @@ export const AuthProvider = ({ children }) => {
       }
     };
 
-    // Solo ejecutar si loading es true
-    if (loading) {
-      checkAuth();
-    }
-  }, [loading]);
+    initAuth();
+  }, [navigate]);
 
   const login = async (email, password) => {
     try {
       const response = await authService.login(email, password);
       const { token, user: userData } = response;
 
-      localStorage.setItem('token', token);
-      // Marcar como NO-SSO para que se verifique en el futuro
+      localStorage.setItem("token", token);
       localStorage.removeItem('ssoValidated');
       setUser(userData);
 
@@ -121,20 +104,20 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       return {
         success: false,
-        error: error.response?.data?.message || 'Login failed',
+        error: error.response?.data?.message || "Login failed",
       };
     }
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('ssoValidated');
+    localStorage.removeItem("token");
+    localStorage.removeItem("ssoValidated");
     setUser(null);
     navigate('/login');
   };
 
-  const updateUser = userData => {
-    setUser(prev => ({ ...prev, ...userData }));
+  const updateUser = (userData) => {
+    setUser((prev) => ({ ...prev, ...userData }));
   };
 
   const value = {
