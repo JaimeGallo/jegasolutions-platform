@@ -848,8 +848,8 @@ public class WompiService : IWompiService
             // Determinar URL del módulo
             string moduleUrl = moduleName.ToLower() switch
             {
-                "extra hours" => "https://extrahours.jegasolutions.co",
-                "report builder" => "https://reportbuilder.jegasolutions.co",
+                "extra-hours" => "https://extrahours.jegasolutions.co",
+                "report-builder" => "https://reportbuilder.jegasolutions.co",
                 _ => "https://extrahours.jegasolutions.co"
             };
 
@@ -948,6 +948,29 @@ public class WompiService : IWompiService
             _logger.LogWarning(emailEx, "Failed to send module purchase email to {Email}",
                 payment.CustomerEmail);
         }
+    }
+
+    private string ExtractModuleNameFromReference(string reference)
+    {
+        var upperRef = reference.ToUpper();
+
+        // Buscar "EXTRAHOURS" que viene del frontend cuando modules.extraHours = true
+        if (upperRef.Contains("EXTRAHOURS"))
+        {
+            _logger.LogInformation("Detected extra-hours module in reference: {Reference}", reference);
+            return "extra-hours";
+        }
+
+        // Buscar "REPORTS" que viene del frontend cuando modules.reports = true
+        if (upperRef.Contains("REPORTS"))
+        {
+            _logger.LogInformation("Detected report-builder module in reference: {Reference}", reference);
+            return "report-builder";
+        }
+
+        // Log de advertencia si no se detecta ningún módulo conocido
+        _logger.LogWarning("Could not extract module from reference: {Reference}. Defaulting to extra-hours", reference);
+        return "extra-hours"; // Default
     }
 
     private List<string> ExtractModulesFromReference(string reference)
