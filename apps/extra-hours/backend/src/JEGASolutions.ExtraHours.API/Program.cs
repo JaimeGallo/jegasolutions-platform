@@ -10,8 +10,14 @@ using JEGASolutions.ExtraHours.Core.Services;
 using JEGASolutions.ExtraHours.Infrastructure.Repositories;
 using JEGASolutions.ExtraHours.Infrastructure.Services;
 using JEGASolutions.ExtraHours.API.Middleware;
+using System.IdentityModel.Tokens.Jwt;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Esto evita que ASP.NET transforme "role" → "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+// DEBE IR ANTES de AddControllers() y AddAuthentication()
+JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -40,19 +46,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
             ValidIssuer = jwtSettings["Issuer"],
-
-            // ✅ SOPORTAR MÚLTIPLES AUDIENCES (Landing SSO + Tokens propios del módulo)
-            ValidAudiences = new[]
-            {
-                "jegasolutions-landing-client",      // Token del Landing (SSO)
-                "JEGASolutions.ExtraHours.Users"     // Tokens propios del módulo (fallback)
-            },
-
+            ValidAudience = jwtSettings["Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
 
             // ✅ MAPEO DE CLAIMS
             RoleClaimType = "role",
-            NameClaimType = ClaimTypes.Name
+            NameClaimType = "unique_name"
         };
 
         // ✅ DEBUG: Agregar eventos para debuggear autenticación
@@ -156,6 +155,9 @@ if (app.Environment.IsDevelopment())
 // ✅ CORS PRIMERO
 app.UseCors("AllowAll");
 
+// 4. Finalmente middleware de tenant (puede leer claims de context.User)
+app.UseMiddleware<TenantMiddleware>();
+
 // ORDEN CRÍTICO DEL PIPELINE:
 // 1. Primero autenticación (valida JWT y establece context.User con claims)
 app.UseAuthentication();
@@ -165,8 +167,6 @@ app.UseAuthorization();
 // 3. ✅ SSO: Validar acceso al módulo extra-hours (TEMPORALMENTE DESHABILITADO)
 // app.UseMiddleware<ModuleAccessMiddleware>();
 
-// 4. Finalmente middleware de tenant (puede leer claims de context.User)
-app.UseMiddleware<TenantMiddleware>();
 
 app.MapControllers();
 
