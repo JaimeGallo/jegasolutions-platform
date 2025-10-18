@@ -1,12 +1,12 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { useAuth } from "./AuthContext";
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from './AuthContext';
 
 const TenantContext = createContext();
 
 export const useTenant = () => {
   const context = useContext(TenantContext);
   if (!context) {
-    throw new Error("useTenant must be used within a TenantProvider");
+    throw new Error('useTenant must be used within a TenantProvider');
   }
   return context;
 };
@@ -29,19 +29,25 @@ export const TenantProvider = ({ children }) => {
       const tenantId = user.tenantId || user.tenant_id || 1;
       const tenantInfo = {
         id: tenantId,
-        name: user.tenantName || user.firstName || "Default Tenant",
-        domain: user.tenantDomain || "jegasolutions.co",
+        name: user.tenantName || user.firstName || 'Default Tenant',
+        domain: user.tenantDomain || 'jegasolutions.co',
         settings: {
-          theme: "light",
-          timezone: "America/Bogota",
-          currency: "COP",
-          language: "es",
+          theme: 'light',
+          timezone: 'America/Bogota',
+          currency: 'COP',
+          language: 'es',
         },
       };
 
-      setTenant(tenantInfo);
+      // Solo actualizar si el tenant es diferente
+      setTenant(prevTenant => {
+        if (prevTenant && prevTenant.id === tenantInfo.id) {
+          return prevTenant; // No cambiar si es el mismo
+        }
+        console.log('✅ Tenant created:', tenantInfo);
+        return tenantInfo;
+      });
       setLoading(false);
-      console.log('✅ Tenant created:', tenantInfo);
     } else {
       // No hay user, limpiar tenant
       setTenant(null);
@@ -50,8 +56,8 @@ export const TenantProvider = ({ children }) => {
     }
   }, [user, authLoading]); // ← Depende de AMBOS
 
-  const updateTenantSettings = (newSettings) => {
-    setTenant((prev) => ({
+  const updateTenantSettings = newSettings => {
+    setTenant(prev => ({
       ...prev,
       settings: {
         ...prev.settings,
@@ -73,5 +79,3 @@ export const TenantProvider = ({ children }) => {
     <TenantContext.Provider value={value}>{children}</TenantContext.Provider>
   );
 };
-
-
