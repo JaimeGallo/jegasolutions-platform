@@ -81,6 +81,7 @@ function App() {
                   }
                 >
                   <Route index element={<DashboardPage />} />
+                  <Route path="dashboard" element={<DashboardPage />} />
                   <Route path="templates" element={<TemplatesPage />} />
                   <Route path="reports" element={<ReportsPage />} />
                   <Route
