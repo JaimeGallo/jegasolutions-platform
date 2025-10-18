@@ -19,6 +19,36 @@ export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Listener para detectar cuando el usuario regresa a la aplicación
+    const handleVisibilityChange = () => {
+      if (!document.hidden && user) {
+        // Verificar si el token sigue siendo válido cuando el usuario regresa
+        const token = localStorage.getItem('token');
+        const isSSOValidated = localStorage.getItem('ssoValidated') === 'true';
+        
+        if (token && isSSOValidated) {
+          try {
+            const decoded = jwtDecode(token);
+            const currentTime = Math.floor(Date.now() / 1000);
+            
+            if (decoded.exp && decoded.exp < currentTime) {
+              console.log('🔄 Token expired while away, clearing session');
+              localStorage.removeItem('token');
+              localStorage.removeItem('ssoValidated');
+              setUser(null);
+            }
+          } catch (error) {
+            console.log('🔄 Invalid token while away, clearing session');
+            localStorage.removeItem('token');
+            localStorage.removeItem('ssoValidated');
+            setUser(null);
+          }
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     const initAuth = async () => {
       // PASO 1: Verificar SSO token en URL
       const urlParams = new URLSearchParams(window.location.search);
@@ -61,6 +91,18 @@ export const AuthProvider = ({ children }) => {
         console.log('✅ SSO token detected in localStorage, skipping backend verification');
         try {
           const decoded = jwtDecode(token);
+          
+          // Verificar si el token ha expirado
+          const currentTime = Math.floor(Date.now() / 1000);
+          if (decoded.exp && decoded.exp < currentTime) {
+            console.log('❌ SSO token has expired, clearing session');
+            localStorage.removeItem('token');
+            localStorage.removeItem('ssoValidated');
+            setUser(null);
+            setLoading(false);
+            return;
+          }
+          
           setUser(decoded);
           console.log('✅ User loaded from SSO token:', decoded);
         } catch (error) {
@@ -89,7 +131,12 @@ export const AuthProvider = ({ children }) => {
     };
 
     initAuth();
-  }, [navigate]);
+
+    // Cleanup del event listener
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [navigate, user]);
 
   const login = async (email, password) => {
     try {
