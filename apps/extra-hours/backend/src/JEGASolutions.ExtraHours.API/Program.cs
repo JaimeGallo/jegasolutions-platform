@@ -39,8 +39,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = "JEGASolutions.Landing.API",
-            ValidAudience = jwtSettings["Audience"],
+            ValidIssuer = jwtSettings["Issuer"],
+
+            // ✅ SOPORTAR MÚLTIPLES AUDIENCES (Landing SSO + Tokens propios del módulo)
+            ValidAudiences = new[]
+            {
+                "jegasolutions-landing-client",      // Token del Landing (SSO)
+                "JEGASolutions.ExtraHours.Users"     // Tokens propios del módulo (fallback)
+            },
+
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
 
             // ✅ MAPEO DE CLAIMS

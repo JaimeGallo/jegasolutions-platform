@@ -1,14 +1,14 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { jwtDecode } from "jwt-decode";
-import { authService } from "../services/authService";
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';
+import { authService } from '../services/authService';
 
 const AuthContext = createContext();
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };
@@ -25,12 +25,12 @@ export const AuthProvider = ({ children }) => {
         // Verificar si el token sigue siendo válido cuando el usuario regresa
         const token = localStorage.getItem('token');
         const isSSOValidated = localStorage.getItem('ssoValidated') === 'true';
-        
+
         if (token && isSSOValidated) {
           try {
             const decoded = jwtDecode(token);
             const currentTime = Math.floor(Date.now() / 1000);
-            
+
             if (decoded.exp && decoded.exp < currentTime) {
               console.log('🔄 Token expired while away, clearing session');
               localStorage.removeItem('token');
@@ -88,10 +88,12 @@ export const AuthProvider = ({ children }) => {
       }
 
       if (isSSOValidated) {
-        console.log('✅ SSO token detected in localStorage, skipping backend verification');
+        console.log(
+          '✅ SSO token detected in localStorage, skipping backend verification'
+        );
         try {
           const decoded = jwtDecode(token);
-          
+
           // Verificar si el token ha expirado
           const currentTime = Math.floor(Date.now() / 1000);
           if (decoded.exp && decoded.exp < currentTime) {
@@ -102,7 +104,7 @@ export const AuthProvider = ({ children }) => {
             setLoading(false);
             return;
           }
-          
+
           setUser(decoded);
           console.log('✅ User loaded from SSO token:', decoded);
         } catch (error) {
@@ -143,7 +145,7 @@ export const AuthProvider = ({ children }) => {
       const response = await authService.login(email, password);
       const { token, user: userData } = response;
 
-      localStorage.setItem("token", token);
+      localStorage.setItem('token', token);
       localStorage.removeItem('ssoValidated');
       setUser(userData);
 
@@ -151,20 +153,20 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       return {
         success: false,
-        error: error.response?.data?.message || "Login failed",
+        error: error.response?.data?.message || 'Login failed',
       };
     }
   };
 
   const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("ssoValidated");
+    localStorage.removeItem('token');
+    localStorage.removeItem('ssoValidated');
     setUser(null);
     navigate('/login');
   };
 
-  const updateUser = (userData) => {
-    setUser((prev) => ({ ...prev, ...userData }));
+  const updateUser = userData => {
+    setUser(prev => ({ ...prev, ...userData }));
   };
 
   const value = {

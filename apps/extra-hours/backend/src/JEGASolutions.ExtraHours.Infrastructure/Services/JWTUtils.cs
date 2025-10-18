@@ -66,8 +66,8 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Services
             {
                 Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.UtcNow.AddMilliseconds(expiration),
-                Issuer = "JEGASolutions.ExtraHours",
-                Audience = "JEGASolutions.ExtraHours.Users",
+                Issuer = "JEGASolutions.Landing.API",        // ✅ CAMBIAR: antes era "JEGASolutions.ExtraHours"
+                Audience = "jegasolutions-landing-client",   // ✅ CAMBIAR: antes era "JEGASolutions.ExtraHours.Users"
                 SigningCredentials = new SigningCredentials(_key, SecurityAlgorithms.HmacSha256Signature)
             };
 
@@ -88,8 +88,8 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Services
                 IssuerSigningKey = _key,
                 ValidateIssuer = true,
                 ValidateAudience = true,
-                ValidIssuer = "JEGASolutions.ExtraHours",
-                ValidAudience = "JEGASolutions.ExtraHours.Users",
+                ValidIssuer = "JEGASolutions.Landing.API",        // ✅ CAMBIAR
+                ValidAudience = "jegasolutions-landing-client",   // ✅ CAMBIAR
                 ClockSkew = TimeSpan.Zero,
                 RoleClaimType = "role",
                 NameClaimType = ClaimTypes.Name
