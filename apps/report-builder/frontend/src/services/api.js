@@ -33,7 +33,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       // Solo limpiar token si NO es un token SSO válido
       const isSSOValidated = localStorage.getItem('ssoValidated') === 'true';
-      
+
       if (!isSSOValidated) {
         // Token normal expirado o inválido
         localStorage.removeItem('token');
@@ -41,7 +41,9 @@ api.interceptors.response.use(
       } else {
         // Token SSO válido pero backend no lo reconoce
         // No limpiar el token, solo loggear el error
-        console.warn('⚠️ SSO token not recognized by backend, but keeping session');
+        console.warn(
+          '⚠️ SSO token not recognized by backend, but keeping session'
+        );
       }
     }
     return Promise.reject(error);
