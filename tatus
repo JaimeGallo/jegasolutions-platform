@@ -1,0 +1,36 @@
+  debug/module-availability-logs                           [m 6b6f20a debug(backend): Agregar log detallado de userModules en GetUserModules
+  deploy-b11f659-only                                      [m b11f659 Merge pull request #154 from JaimeGallo/fix/tenant-dashboard-auth-context-error
+  deploy-from-75bbc42                                      [m 75bbc42 fix: remove tenant_id from Report Builder user creation SQL
+  deploy-from-b11f659                                      [m 12f75cc [ahead 5] Merge pull request #157 from JaimeGallo/deploy-from-b11f659
+  dev                                                      [m 4269c58 Merge pull request #84 from JaimeGallo/feature/bulk-user-upload
+  feature/add-pricing-button-to-modules                    [m 576f39a fix: adjust buttons layout and card flip behavior
+  feature/backend-excel-multiai-report-builder             [m 440c82b docs: update platform status to 95% backend complete1
+  feature/bulk-user-upload                                 [m 3166ff8 chore: Add .gitignore files for extra-hours and report-builder frontends
+  feature/centralize-tenant-management                     [m 5ae8507 feat: Implementar sincronización condicional de usuarios entre bases de datos
+  feature/consolidated-templates-enhanced-ui               [m e773d2a fix: re-run checks after removing obsolete Vercel project
+  feature/consolidated-templates-multi-tenant-ReportBuilder[m 85fbc61 feat: Implement Consolidated Templates MVP with Multi-Tenant Architecture1
+  feature/contact-form-emailjs-whatsapp                    [m 4462f6f chore: update pnpm-lock.yaml for EmailJS dependency
+  feature/extra-hours-docker-setup                         [m 759e1de feat: Configurar Extra Hours con Docker completo
+  feature/improve-Wompi-payment-integration                [m eb1eef1 feat(payments): activar modo prueba con precios de 0 COP
+  feature/improve-sso-login-page                           [m ff788ef feat(report-builder): Agregar configuraciÃ³n de Vercel para frontend
+  feature/landing-click-to-flip-cards                      [m bf8b4c6 feat(landing): improve card flip interaction from hover to click
+  feature/landing-video-demos-and-cta-updates              [m e764ace feat(landing): add video demo modals and update CTAs
+  feature/report-builder-frontend-complete-implementation  [m ff06f86 feat: Complete Report Builder Frontend Implementation
+  feature/sso-centralized-authentication-phase1            [m 6bb469e [behind 5] feat(sso): Implementar SSO centralizado - Fase 1 Landing Backend
+  feature/sso-phase2-extra-hours                           [m f88f3e6 fix: Actualizar pnpm-lock.yaml con jwt-decode dependency
+  feature/sso-user-permissions                             [m 92a2cc9 feat(sso): Implementar control de permisos por usuario en Tenant Dashboard
+  feature/testing-pricing-mode                             [m d7a388e fix: evitar doble creación de transacción en flujo de pago
+  feature/update-tenant-dashboard-logo                     [m 4a95fe4 fix(extra-hours): Corregir mapeo de columnas ExtraHoursConfig a snake_case
+  fix/auth-context-improvements                            [m b11f659 Merge pull request #154 from JaimeGallo/fix/tenant-dashboard-auth-context-error
+  fix/extra-hours-backend-superusuario-role                [m 6a7ca7d fix(report-builder): Corregir autenticación SSO y mapeo de roles
+  fix/extra-hours-compilation-errors                       [m fe2d551 fix: resolve compilation errors and nullable warnings
+  fix/landing-build-errors                                 [m f6ddb17 fix: resolve Landing backend build errors (165 compilation errors)
+  fix/module-extraction-bug                                [m b59bc74 fix: correct module extraction from payment reference
+* [32mfix/sso-timeout-report-builder                           [m 87ba8cc fix: resolve SSO timeout issue in report-builder
+  fix/sso-token-consistency                                [m 89e181e chore: add comment to WompiService to trigger deployment
+  fix/tenant-dashboard-auth-context-error                  [m 75bbc42 fix: remove tenant_id from Report Builder user creation SQL
+  fix/tenant-dashboard-deploy                              [m b11f659 Merge pull request #154 from JaimeGallo/fix/tenant-dashboard-auth-context-error
+  fix/tenant-dashboard-login-authentication                [m dc9b6e1 fix(tenant-dashboard): Implementar autenticaciÃ³n con AuthController en Landing Backend
+  fix/wompi-service-column-names                           [m d14e0e8 fix(wompi): Corregir nomenclatura de columnas en creaciÃ³n de usuarios
+  main                                                     [m 0802438 Force redeploy for rollback
+  update/landing-contact-info                              [m 781d54a Remove Twitter/X and GitHub icons, add Instagram

@@ -1,28 +1,28 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "react-query";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from 'react-query';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import './styles/animations.css';
 
 // Context Providers
-import { AuthProvider } from "./contexts/AuthContext";
-import { TenantProvider } from "./contexts/TenantContext";
+import { AuthProvider } from './contexts/AuthContext';
+import { TenantProvider } from './contexts/TenantContext';
 
 // Pages
-import LoginPage from "./pages/LoginPage";
-import DashboardPage from "./pages/DashboardPage";
-import TemplatesPage from "./pages/TemplatesPage";
-import ReportsPage from "./pages/ReportsPage";
-import AIAnalysisPage from "./pages/AIAnalysisPage";
-import TemplateEditorPage from "./pages/TemplateEditorPage";
-import ConsolidatedTemplatesPage from "./pages/ConsolidatedTemplatesPage";
-import MyTasksPage from "./pages/MyTasksPage";
-import ExcelUploadsPage from "./pages/ExcelUploadsPage";
-import HybridTemplateBuilderPageOptimized from "./pages/HybridTemplateBuilderPageOptimized";
+import LoginPage from './pages/LoginPage';
+import DashboardPage from './pages/DashboardPage';
+import TemplatesPage from './pages/TemplatesPage';
+import ReportsPage from './pages/ReportsPage';
+import AIAnalysisPage from './pages/AIAnalysisPage';
+import TemplateEditorPage from './pages/TemplateEditorPage';
+import ConsolidatedTemplatesPage from './pages/ConsolidatedTemplatesPage';
+import MyTasksPage from './pages/MyTasksPage';
+import ExcelUploadsPage from './pages/ExcelUploadsPage';
+import HybridTemplateBuilderPageOptimized from './pages/HybridTemplateBuilderPageOptimized';
 
 // Components
-import PrivateRoute from "./components/PrivateRoute";
-import Layout from "./components/Layout";
+import PrivateRoute from './components/PrivateRoute';
+import Layout from './components/Layout';
 
 // Create a client
 const queryClient = new QueryClient({
