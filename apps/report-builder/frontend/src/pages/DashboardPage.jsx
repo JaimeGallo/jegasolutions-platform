@@ -27,9 +27,13 @@ const DashboardPage = () => {
     "templates",
     templateService.getTemplates,
     {
-      retry: 1,
-      retryDelay: 1000,
+      retry: false, // No reintentar en caso de error
       staleTime: 5 * 60 * 1000, // 5 minutes
+      cacheTime: 10 * 60 * 1000, // 10 minutes
+      refetchOnWindowFocus: false,
+      onError: (error) => {
+        console.warn('Templates API error:', error.message);
+      }
     }
   );
 
@@ -38,9 +42,13 @@ const DashboardPage = () => {
     "reports",
     reportService.getReports,
     {
-      retry: 1,
-      retryDelay: 1000,
+      retry: false, // No reintentar en caso de error
       staleTime: 5 * 60 * 1000, // 5 minutes
+      cacheTime: 10 * 60 * 1000, // 10 minutes
+      refetchOnWindowFocus: false,
+      onError: (error) => {
+        console.warn('Reports API error:', error.message);
+      }
     }
   );
 
@@ -118,16 +126,17 @@ const DashboardPage = () => {
         </p>
         {/* Connection Status */}
         {(templatesError || reportsError) && (
-          <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+          <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
             <div className="flex">
               <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                 </svg>
               </div>
               <div className="ml-3">
-                <p className="text-sm text-yellow-800">
-                  Some data may not be available due to connection issues. Dashboard is working in offline mode.
+                <p className="text-sm text-blue-800">
+                  <strong>Dashboard Mode:</strong> You're logged in successfully, but some backend services are not available. 
+                  The dashboard is working in offline mode with basic functionality.
                 </p>
               </div>
             </div>

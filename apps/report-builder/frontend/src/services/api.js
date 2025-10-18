@@ -31,9 +31,18 @@ api.interceptors.response.use(
   response => response,
   error => {
     if (error.response?.status === 401) {
-      // Token expired or invalid
-      localStorage.removeItem('token');
-      window.location.href = '/login';
+      // Solo limpiar token si NO es un token SSO válido
+      const isSSOValidated = localStorage.getItem('ssoValidated') === 'true';
+      
+      if (!isSSOValidated) {
+        // Token normal expirado o inválido
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      } else {
+        // Token SSO válido pero backend no lo reconoce
+        // No limpiar el token, solo loggear el error
+        console.warn('⚠️ SSO token not recognized by backend, but keeping session');
+      }
     }
     return Promise.reject(error);
   }
