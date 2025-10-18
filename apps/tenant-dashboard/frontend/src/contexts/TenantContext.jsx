@@ -99,7 +99,10 @@ export const TenantProvider = ({ children }) => {
         JSON.stringify(modulesResponse.data, null, 2)
       );
       console.log('🔍 Total modules received:', modulesResponse.data.length);
-      console.log('🔍 Module names:', modulesResponse.data.map(m => m.moduleName));
+      console.log(
+        '🔍 Module names:',
+        modulesResponse.data.map(m => m.moduleName)
+      );
       setModules(modulesResponse.data);
 
       setIsLoading(false);
@@ -164,18 +167,18 @@ export const TenantProvider = ({ children }) => {
     console.log(`🔍 hasModuleAccess check for: ${moduleName}`);
     console.log(`  - normalizedModuleName: ${normalizedModuleName}`);
     console.log(`  - userModules:`, userModules);
-    
-    const hasAccess = userModules.some(
-      module => {
-        const normalizedUserModule = module.moduleName.toLowerCase();
-        const matches = normalizedUserModule === normalizedModuleName;
-        console.log(`  - Checking module: ${module.moduleName} (${normalizedUserModule})`);
-        console.log(`  - Matches: ${matches}`);
-        console.log(`  - isActive: ${module.isActive}`);
-        return matches && module.isActive;
-      }
-    );
-    
+
+    const hasAccess = userModules.some(module => {
+      const normalizedUserModule = module.moduleName.toLowerCase();
+      const matches = normalizedUserModule === normalizedModuleName;
+      console.log(
+        `  - Checking module: ${module.moduleName} (${normalizedUserModule})`
+      );
+      console.log(`  - Matches: ${matches}`);
+      console.log(`  - isActive: ${module.isActive}`);
+      return matches && module.isActive;
+    });
+
     console.log(`  - Final hasAccess: ${hasAccess}`);
     return hasAccess;
   };

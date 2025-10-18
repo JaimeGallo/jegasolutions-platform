@@ -12,18 +12,25 @@ export const useTenant = () => {
 };
 
 export const TenantProvider = ({ children }) => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth(); // ← 🔥 Obtener authLoading
   const [tenant, setTenant] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // 🔥 CRÍTICO: Si AuthContext está cargando, esperar
+    if (authLoading) {
+      return;
+    }
+
+    // Si hay user, crear tenant inmediatamente
     if (user) {
-      // Extract tenant information from user claims or fetch from API
-      const tenantId = user.tenantId || 1; // Default tenant for development
+      console.log('🏢 Creating tenant from user:', user);
+
+      const tenantId = user.tenantId || user.tenant_id || 1;
       const tenantInfo = {
         id: tenantId,
-        name: user.tenantName || "Default Tenant",
-        domain: user.tenantDomain || "localhost",
+        name: user.tenantName || user.firstName || "Default Tenant",
+        domain: user.tenantDomain || "jegasolutions.co",
         settings: {
           theme: "light",
           timezone: "America/Bogota",
@@ -34,11 +41,14 @@ export const TenantProvider = ({ children }) => {
 
       setTenant(tenantInfo);
       setLoading(false);
+      console.log('✅ Tenant created:', tenantInfo);
     } else {
+      // No hay user, limpiar tenant
       setTenant(null);
       setLoading(false);
+      console.log('❌ No user, tenant cleared');
     }
-  }, [user]);
+  }, [user, authLoading]); // ← Depende de AMBOS
 
   const updateTenantSettings = (newSettings) => {
     setTenant((prev) => ({
@@ -63,3 +73,5 @@ export const TenantProvider = ({ children }) => {
     <TenantContext.Provider value={value}>{children}</TenantContext.Provider>
   );
 };
+
+
