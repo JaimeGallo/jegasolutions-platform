@@ -36,7 +36,7 @@ export const AuthProvider = ({ children }) => {
           setUser(decoded);
           setLoading(false);
 
-          navigate('/', { replace: true });
+          navigate('/dashboard', { replace: true });
 
           console.log('✅ SSO login successful, redirecting to dashboard');
           return;
