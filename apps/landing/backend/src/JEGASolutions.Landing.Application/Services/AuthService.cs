@@ -141,6 +141,10 @@ public class AuthService : IAuthService
 
     public string GenerateJwtToken(User user)
     {
+        // ✅ AGREGAR ESTAS LÍNEAS AQUÍ
+        JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+        JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
+
         var key = Encoding.UTF8.GetBytes(_configuration["JWT:SecretKey"]!);
         var fullName = $"{user.FirstName} {user.LastName}".Trim();
 
