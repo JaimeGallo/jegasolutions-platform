@@ -1,7 +1,4 @@
-﻿// ARCHIVO: apps/extra-hours/backend/src/JEGASolutions.ExtraHours.Infrastructure/Services/JWTUtils.cs
-// FIX CRÍTICO: Agregar tenant_id a los claims del JWT para multi-tenant
-
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.Extensions.Configuration;
@@ -34,19 +31,15 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Services
         /// </summary>
         public string GenerateToken(User user)
         {
-            // CRÍTICO: Limpiar mapeo antes de generar tokens
-            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
-            JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
-
             var claims = new List<Claim>
             {
-                new Claim("email", user.email?.Trim() ?? string.Empty),           // ✅ Nombre corto (NO ClaimTypes.Name)
-                new Claim("role", user.role ?? string.Empty),                    // ✅ Nombre corto
+                new Claim(ClaimTypes.Name, user.email.Trim()),
+                new Claim("role", user.role),
                 new Claim("id", user.id.ToString()),
-                new Claim("name", user.name ?? string.Empty),                    // ✅ Nombre corto
-                new Claim("tenant_id", user.TenantId?.ToString() ?? "1")        // ✅ AGREGAR ESTE CLAIM
+                new Claim("name", user.name),
+                new Claim("tenant_id", user.TenantId.ToString()),
+                new Claim("tenantId", user.TenantId.ToString()) // fallback para compatibilidad
             };
-
             return CreateToken(claims, ACCESS_TOKEN_EXPIRATION);
         }
 
@@ -57,11 +50,12 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Services
         {
             var claims = new List<Claim>
             {
-                new Claim("email", user.email?.Trim() ?? string.Empty),
+                new Claim(ClaimTypes.Name, user.email.Trim()),
                 new Claim("id", user.id.ToString()),
-                new Claim("tenant_id", user.TenantId.ToString() ?? "0")  // Incluir TenantId
+                // ✅ TAMBIÉN AGREGAR AQUÍ
+                new Claim("tenant_id", user.TenantId.ToString()),
+                new Claim("tenantId", user.TenantId.ToString())
             };
-
             return CreateToken(claims, REFRESH_TOKEN_EXPIRATION);
         }
 
