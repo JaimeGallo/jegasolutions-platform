@@ -94,6 +94,17 @@ builder.Services.AddAuthentication(options =>
                 {
                     logger.LogError("❌ NO role claim found at all!");
                 }
+
+                // ✅ VERIFICAR CLAIM DE TENANT
+                var tenantClaim = identity.FindFirst("tenantId");
+                if (tenantClaim != null)
+                {
+                    logger.LogInformation($"✅ TenantId claim found: {tenantClaim.Value}");
+                }
+                else
+                {
+                    logger.LogWarning("⚠️ TenantId claim NOT found in token");
+                }
                 
                 // Verificar IsInRole
                 logger.LogInformation($"🔍 User.IsInRole('superusuario'): {context.HttpContext.User.IsInRole("superusuario")}");
@@ -217,14 +228,14 @@ if (app.Environment.IsDevelopment())
 // ✅ CORS PRIMERO
 app.UseCors("AllowAll");
 
-// 4. Finalmente middleware de tenant (puede leer claims de context.User)
-app.UseMiddleware<TenantMiddleware>();
-
 // ORDEN CRÍTICO DEL PIPELINE:
 // 1. Primero autenticación (valida JWT y establece context.User con claims)
 app.UseAuthentication();
 // 2. Luego autorización (verifica roles usando context.User)
 app.UseAuthorization();
+
+// 3. Después middleware de tenant (puede leer claims de context.User)
+app.UseMiddleware<TenantMiddleware>();
 
 // 3. ✅ SSO: Validar acceso al módulo extra-hours (TEMPORALMENTE DESHABILITADO)
 // app.UseMiddleware<ModuleAccessMiddleware>();

@@ -17,6 +17,17 @@ namespace JEGASolutions.ExtraHours.API.Middleware
 
         public async Task InvokeAsync(HttpContext context, ITenantContextService tenantContextService)
         {
+            // Debug: Log all available claims
+            if (context.User?.Identity?.IsAuthenticated == true)
+            {
+                var allClaims = context.User.Claims.Select(c => $"{c.Type}={c.Value}").ToList();
+                Console.WriteLine($"[TenantMiddleware] 🔍 All available claims: {string.Join(", ", allClaims)}");
+            }
+            else
+            {
+                Console.WriteLine("[TenantMiddleware] ⚠️ User not authenticated or no identity");
+            }
+
             // Intenta extraer tenant_id del JWT
             var tenantIdClaim = context.User.FindFirst("tenant_id")?.Value;
             var tenantIdClaimAlt = context.User.FindFirst("tenantId")?.Value;
