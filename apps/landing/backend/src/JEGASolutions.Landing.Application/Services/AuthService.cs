@@ -141,21 +141,21 @@ public class AuthService : IAuthService
 
     public string GenerateJwtToken(User user)
     {
-        // CRÍTICO: Limpiar mapeo ANTES de crear tokens
-        JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
-        JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
+        // ⚡ CRÍTICO: Limpiar mapeo ANTES de crear tokens
+        System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+        System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
 
         var key = Encoding.UTF8.GetBytes(_configuration["JWT:SecretKey"]!);
         var fullName = $"{user.FirstName} {user.LastName}".Trim();
 
-        // ✅ SOLO NOMBRES CORTOS - NUNCA ClaimTypes.*
+        // ✅ SOLO usar nombres CORTOS - NUNCA ClaimTypes.*
         var claims = new List<Claim>
         {
             new Claim("userId", user.Id.ToString()),
-            new Claim("email", user.Email),
+            new Claim("email", user.Email),                  // ✅ "email" NO ClaimTypes.Email
             new Claim("tenantId", user.TenantId.ToString()),
-            new Claim("role", user.Role),                    // ✅ Nombre corto
-            new Claim("name", fullName),                     // ✅ Nombre corto (NO ClaimTypes.Name)
+            new Claim("role", user.Role),                    // ✅ "role" NO ClaimTypes.Role
+            new Claim("name", fullName),                     // ✅ "name" NO ClaimTypes.Name
             new Claim("firstName", user.FirstName),
             new Claim("lastName", user.LastName)
         };
@@ -172,9 +172,15 @@ public class AuthService : IAuthService
                 SecurityAlgorithms.HmacSha256Signature)
         };
 
-        var tokenHandler = new JwtSecurityTokenHandler();
+        var tokenHandler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
         var token = tokenHandler.CreateToken(tokenDescriptor);
-        return tokenHandler.WriteToken(token);
+        
+        var tokenString = tokenHandler.WriteToken(token);
+        
+        // 🔍 LOGGING PARA VERIFICAR
+        _logger.LogInformation("✅ Token generado con claims cortos para usuario: {Email}", user.Email);
+        
+        return tokenString;
     }
 
     public bool VerifyPassword(string password, string hash)
