@@ -31,6 +31,14 @@ namespace JEGASolutions.ExtraHours.API.Controller
         [Authorize(Roles = "superusuario")]
         public async Task<IActionResult> UpdateConfig([FromBody] ExtraHoursConfig config)
         {
+            // ✅ AGREGAR LOGS PARA DEBUGGING
+            var userRole = User.FindFirst("role")?.Value;
+            var userId = User.FindFirst("id")?.Value;
+            var tenantId = User.FindFirst("tenant_id")?.Value ?? User.FindFirst("tenantId")?.Value;
+
+            Console.WriteLine($"[UpdateConfig] User: {userId}, Role: {userRole}, TenantId: {tenantId}");
+            Console.WriteLine($"[UpdateConfig] All claims: {string.Join(", ", User.Claims.Select(c => $"{c.Type}={c.Value}"))}");
+
             if (config == null)
                 return BadRequest(new { error = "Datos de configuración no pueden ser nulos" });
 

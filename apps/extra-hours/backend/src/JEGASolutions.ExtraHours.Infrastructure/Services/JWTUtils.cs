@@ -43,7 +43,8 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Services
                 new Claim("email", user.email?.Trim() ?? string.Empty),           // ✅ Nombre corto (NO ClaimTypes.Name)
                 new Claim("role", user.role ?? string.Empty),                    // ✅ Nombre corto
                 new Claim("id", user.id.ToString()),
-                new Claim("name", user.name ?? string.Empty)                     // ✅ Nombre corto
+                new Claim("name", user.name ?? string.Empty),                    // ✅ Nombre corto
+                new Claim("tenant_id", user.TenantId?.ToString() ?? "1")        // ✅ AGREGAR ESTE CLAIM
             };
 
             return CreateToken(claims, ACCESS_TOKEN_EXPIRATION);
