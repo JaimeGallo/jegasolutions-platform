@@ -36,6 +36,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured");
 
+// Debug: Log JWT configuration
+Console.WriteLine($"🔧 JWT Configuration:");
+Console.WriteLine($"   Issuer: {jwtSettings["Issuer"]}");
+Console.WriteLine($"   Audience: {jwtSettings["Audience"]}");
+Console.WriteLine($"   SecretKey length: {secretKey.Length}");
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -65,6 +71,23 @@ builder.Services.AddAuthentication(options =>
 
     options.Events = new JwtBearerEvents
     {
+        OnMessageReceived = context =>
+        {
+            var logger = context.HttpContext.RequestServices
+                .GetRequiredService<ILogger<Program>>();
+            
+            var token = context.Request.Headers.Authorization.FirstOrDefault()?.Split(" ").Last();
+            if (!string.IsNullOrEmpty(token))
+            {
+                logger.LogInformation($"🔍 JWT Token received: {token.Substring(0, Math.Min(50, token.Length))}...");
+            }
+            else
+            {
+                logger.LogWarning("⚠️ No JWT token found in Authorization header");
+            }
+            
+            return Task.CompletedTask;
+        },
         OnTokenValidated = context =>
         {
             var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
@@ -118,6 +141,8 @@ builder.Services.AddAuthentication(options =>
             var logger = context.HttpContext.RequestServices
                 .GetRequiredService<ILogger<Program>>();
             logger.LogError($"❌ Authentication failed: {context.Exception.Message}");
+            logger.LogError($"❌ Exception type: {context.Exception.GetType().Name}");
+            logger.LogError($"❌ Stack trace: {context.Exception.StackTrace}");
             return Task.CompletedTask;
         },
         OnChallenge = context =>

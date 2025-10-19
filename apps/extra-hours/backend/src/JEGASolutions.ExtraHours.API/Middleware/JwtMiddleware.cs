@@ -1,4 +1,9 @@
-﻿using JEGASolutions.ExtraHours.Core.Interfaces;
+﻿/// <summary>
+/// DEPRECATED: This middleware is not used.
+/// JWT authentication is handled by app.UseAuthentication() in Program.cs
+/// which uses Microsoft.AspNetCore.Authentication.JwtBearer
+/// </summary>
+using JEGASolutions.ExtraHours.Core.Interfaces;
 using System.Security.Claims;
 
 namespace JEGASolutions.ExtraHours.API.Middleware
