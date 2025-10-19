@@ -377,3 +377,5 @@ Ver [DNS_CONFIGURATION.md](./DNS_CONFIGURATION.md) para más detalles.
 - ✅ **Multi-tenancy completa**
 
 **La funcionalidad multi-tenant está ahora 100% completa** con el Dashboard Central como punto de entrada principal para todos los tenants.
+
+<!-- Deploy trigger: b11f659 -->

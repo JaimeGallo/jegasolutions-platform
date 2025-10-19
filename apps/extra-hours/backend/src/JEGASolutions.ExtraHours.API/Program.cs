@@ -12,9 +12,11 @@ using JEGASolutions.ExtraHours.Infrastructure.Services;
 using JEGASolutions.ExtraHours.API.Middleware;
 using System.IdentityModel.Tokens.Jwt;
 
-var builder = WebApplication.CreateBuilder(args);
+// ⚡⚡⚡ CRÍTICO: Estas líneas DEBEN estar ANTES de crear el builder ⚡⚡⚡
+JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
 
-// JWT claim mapping will be cleared in the authentication configuration below
+var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -30,9 +32,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 );
 
 // JWT Authentication
-// CRÍTICO: Limpiar mapeo ANTES de configurar autenticación
-JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
-JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured");
@@ -68,28 +67,32 @@ builder.Services.AddAuthentication(options =>
     {
         OnTokenValidated = context =>
         {
-            var logger = context.HttpContext.RequestServices
-                .GetRequiredService<ILogger<Program>>();
-
+            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+            
             if (context.Principal?.Identity is ClaimsIdentity identity)
             {
                 logger.LogInformation("✅ JWT Token validated successfully");
-
-                var claims = identity.Claims
-                    .Select(c => $"{c.Type}={c.Value}")
-                    .ToList();
-
-                logger.LogInformation($"🔍 User claims: {string.Join(", ", claims)}");
-
-                // ✅ VERIFICAR CLAIM DE ROL
-                var roleClaim = identity.FindFirst("role");
-                if (roleClaim != null)
+                
+                var allClaims = identity.Claims.Select(c => $"{c.Type}={c.Value}").ToList();
+                logger.LogInformation($"🔍 ALL claims: {string.Join(", ", allClaims)}");
+                
+                // Verificar claim de rol CON AMBOS NOMBRES
+                var roleShort = identity.FindFirst("role");
+                var roleLong = identity.FindFirst("http://schemas.microsoft.com/ws/2008/06/identity/claims/role");
+                
+                if (roleShort != null)
                 {
-                    logger.LogInformation($"✅ Role claim found: {roleClaim.Value}");
+                    logger.LogInformation($"✅✅✅ Role (SHORT) found: {roleShort.Value}");
+                }
+                else if (roleLong != null)
+                {
+                    logger.LogWarning($"⚠️⚠️⚠️ Role found but with LONG URI: {roleLong.Value}");
+                    logger.LogWarning("⚠️ This means the token was generated BEFORE updating Landing API!");
+                    logger.LogWarning("⚠️ YOU MUST LOGOUT AND LOGIN AGAIN to get a new token!");
                 }
                 else
                 {
-                    logger.LogWarning("⚠️ Role claim NOT found in token");
+                    logger.LogError("❌ NO role claim found at all!");
                 }
 
                 // ✅ VERIFICAR CLAIM DE TENANT
@@ -102,8 +105,12 @@ builder.Services.AddAuthentication(options =>
                 {
                     logger.LogWarning("⚠️ TenantId claim NOT found in token");
                 }
+                
+                // Verificar IsInRole
+                logger.LogInformation($"🔍 User.IsInRole('superusuario'): {context.HttpContext.User.IsInRole("superusuario")}");
+                logger.LogInformation($"🔍 User.IsInRole('manager'): {context.HttpContext.User.IsInRole("manager")}");
             }
-
+            
             return Task.CompletedTask;
         },
         OnAuthenticationFailed = context =>
@@ -122,18 +129,21 @@ builder.Services.AddAuthentication(options =>
         },
         OnForbidden = context =>
         {
-            var logger = context.HttpContext.RequestServices
-                .GetRequiredService<ILogger<Program>>();
-
+            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
             var user = context.HttpContext.User;
-            var roles = user.Claims
-                .Where(c => c.Type == "role")
-                .Select(c => c.Value)
-                .ToList();
-
-            logger.LogWarning($"🚫 Access forbidden. User roles: {string.Join(", ", roles)}");
-            logger.LogWarning($"🚫 Required endpoint: {context.HttpContext.Request.Path}");
-
+            
+            var rolesShort = user.Claims.Where(c => c.Type == "role").Select(c => c.Value).ToList();
+            var rolesLong = user.Claims.Where(c => c.Type == "http://schemas.microsoft.com/ws/2008/06/identity/claims/role").Select(c => c.Value).ToList();
+            
+            logger.LogWarning($"🚫 FORBIDDEN - Endpoint: {context.HttpContext.Request.Path}");
+            logger.LogWarning($"🚫 Roles (short): {string.Join(", ", rolesShort)} - Count: {rolesShort.Count}");
+            logger.LogWarning($"🚫 Roles (long): {string.Join(", ", rolesLong)} - Count: {rolesLong.Count}");
+            
+            if (rolesLong.Any() && !rolesShort.Any())
+            {
+                logger.LogError("❌❌❌ TOKEN IS OLD! User must LOGOUT and LOGIN again!");
+            }
+            
             return Task.CompletedTask;
         }
     };
