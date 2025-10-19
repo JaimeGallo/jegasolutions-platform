@@ -17,47 +17,37 @@ namespace JEGASolutions.ExtraHours.API.Middleware
 
         public async Task InvokeAsync(HttpContext context, ITenantContextService tenantContextService)
         {
-            // Extract tenant ID from JWT token claims
-            var tenantIdClaim = context.User.FindFirst("tenant_id");
+            // Intenta extraer tenant_id del JWT
+            var tenantIdClaim = context.User.FindFirst("tenant_id")?.Value;
+            var tenantIdClaimAlt = context.User.FindFirst("tenantId")?.Value;
 
-            // ✅ AGREGAR LOG PARA DEBUGGING
-            Console.WriteLine($"[TenantMiddleware] tenant_id claim: {tenantIdClaim?.Value}");
+            Console.WriteLine($"[TenantMiddleware] tenant_id claim: {tenantIdClaim}");
+            Console.WriteLine($"[TenantMiddleware] tenantId claim: {tenantIdClaimAlt}");
 
-            if (tenantIdClaim != null && int.TryParse(tenantIdClaim.Value, out int tenantId))
+            if (!string.IsNullOrEmpty(tenantIdClaim) && int.TryParse(tenantIdClaim, out int tenantId))
             {
                 tenantContextService.SetCurrentTenantId(tenantId);
-                Console.WriteLine($"[TenantMiddleware] Tenant context set to: {tenantId}");
+                Console.WriteLine($"[TenantMiddleware] ✅ Tenant set from JWT: {tenantId}");
+            }
+            else if (!string.IsNullOrEmpty(tenantIdClaimAlt) && int.TryParse(tenantIdClaimAlt, out int tenantIdAlt))
+            {
+                tenantContextService.SetCurrentTenantId(tenantIdAlt);
+                Console.WriteLine($"[TenantMiddleware] ✅ Tenant set from JWT (alt): {tenantIdAlt}");
+            }
+            else if (context.Request.Headers.ContainsKey("X-Tenant-Id"))
+            {
+                var headerTenantId = context.Request.Headers["X-Tenant-Id"].FirstOrDefault();
+                if (int.TryParse(headerTenantId, out int headerTenantIdInt))
+                {
+                    tenantContextService.SetCurrentTenantId(headerTenantIdInt);
+                    Console.WriteLine($"[TenantMiddleware] ✅ Tenant set from header: {headerTenantIdInt}");
+                }
             }
             else
             {
-                // Para backwards compatibility con tokens del Landing
-                if (context.Request.Headers.ContainsKey("X-Tenant-Id"))
-                {
-                    var headerTenantId = context.Request.Headers["X-Tenant-Id"].FirstOrDefault();
-                    if (int.TryParse(headerTenantId, out int headerTenantIdInt))
-                    {
-                        tenantContextService.SetCurrentTenantId(headerTenantIdInt);
-                        Console.WriteLine($"[TenantMiddleware] Tenant from header: {headerTenantIdInt}");
-                    }
-                }
-                else
-                {
-                    // Buscar también "tenantId" (sin guion bajo) por compatibilidad con Landing
-                    var alternativeClaim = context.User.FindFirst("tenantId")?.Value;
-                    Console.WriteLine($"[TenantMiddleware] tenantId claim: {alternativeClaim}");
-
-                    if (alternativeClaim != null && int.TryParse(alternativeClaim, out int altTenantId))
-                    {
-                        tenantContextService.SetCurrentTenantId(altTenantId);
-                        Console.WriteLine($"[TenantMiddleware] Tenant from 'tenantId' claim: {altTenantId}");
-                    }
-                    else
-                    {
-                        // Default tenant ID para compatibilidad
-                        tenantContextService.SetCurrentTenantId(1);
-                        Console.WriteLine("[TenantMiddleware] Using default tenant: 1");
-                    }
-                }
+                // Default tenant ID para backwards compatibility
+                tenantContextService.SetCurrentTenantId(1);
+                Console.WriteLine("[TenantMiddleware] ⚠️ Using default tenant: 1");
             }
 
             await _next(context);
