@@ -37,8 +37,8 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Services
                 new Claim("role", user.role),
                 new Claim("id", user.id.ToString()),
                 new Claim("name", user.name),
-                new Claim("tenant_id", user.TenantId.ToString()),
-                new Claim("tenantId", user.TenantId.ToString()) // fallback para compatibilidad
+                new Claim("tenant_id", user.TenantId?.ToString() ?? "1"),
+                new Claim("tenantId", user.TenantId?.ToString() ?? "1") // fallback para compatibilidad
             };
             return CreateToken(claims, ACCESS_TOKEN_EXPIRATION);
         }
@@ -53,8 +53,8 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Services
                 new Claim(ClaimTypes.Name, user.email.Trim()),
                 new Claim("id", user.id.ToString()),
                 // ✅ TAMBIÉN AGREGAR AQUÍ
-                new Claim("tenant_id", user.TenantId.ToString()),
-                new Claim("tenantId", user.TenantId.ToString())
+                new Claim("tenant_id", user.TenantId?.ToString() ?? "1"),
+                new Claim("tenantId", user.TenantId?.ToString() ?? "1")
             };
             return CreateToken(claims, REFRESH_TOKEN_EXPIRATION);
         }
@@ -115,7 +115,7 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Services
                 // Validar que el token corresponde al usuario correcto
                 return email == user.email
                     && userId == user.id.ToString()
-                    && tenantId == user.TenantId.ToString();  // ✅ También validar TenantId
+                    && tenantId == (user.TenantId?.ToString() ?? "1");  // ✅ También validar TenantId
             }
             catch
             {
