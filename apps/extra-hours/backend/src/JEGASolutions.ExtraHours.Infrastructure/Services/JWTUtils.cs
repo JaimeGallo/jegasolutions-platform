@@ -23,6 +23,10 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Services
                 ?? throw new ArgumentNullException("JwtSettings:SecretKey",
                     "JWT Secret Key not found in configuration");
             _key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretString));
+
+            // ✅ AGREGAR ESTAS LÍNEAS
+            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+            JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
         }
 
         /// <summary>
@@ -32,8 +36,8 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Services
         {
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, user.email?.Trim() ?? string.Empty),
-                new Claim("role", user.role ?? string.Empty),
+                new Claim("email", user.email?.Trim() ?? string.Empty),
+                new Claim("role", user.role ?? string.Empty),  // ✅ Usar "role" sin ClaimTypes.Role
                 new Claim("id", user.id.ToString()),
                 new Claim("name", user.name ?? string.Empty),
                 new Claim("tenant_id", user.TenantId.ToString() ?? "0")  //Incluir TenantId
@@ -49,7 +53,7 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Services
         {
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, user.email?.Trim() ?? string.Empty),
+                new Claim("email", user.email?.Trim() ?? string.Empty),
                 new Claim("id", user.id.ToString()),
                 new Claim("tenant_id", user.TenantId.ToString() ?? "0")  // Incluir TenantId
             };
@@ -106,12 +110,12 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Services
             try
             {
                 var principal = ExtractClaims(token);
-                var username = principal.Identity?.Name;
+                var email = principal.Claims.FirstOrDefault(c => c.Type == "email")?.Value;
                 var userId = principal.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
                 var tenantId = principal.Claims.FirstOrDefault(c => c.Type == "tenant_id")?.Value;
 
                 // Validar que el token corresponde al usuario correcto
-                return username == user.email
+                return email == user.email
                     && userId == user.id.ToString()
                     && tenantId == user.TenantId.ToString();  // ✅ También validar TenantId
             }

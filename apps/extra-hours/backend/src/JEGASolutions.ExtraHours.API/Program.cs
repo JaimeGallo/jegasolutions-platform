@@ -36,44 +36,52 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured");
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;  // ✅ Esta línea es importante
+})
+.AddJwtBearer(options =>
+{
+    options.SaveToken = true;
+    options.RequireHttpsMetadata = false;
+
+    options.TokenValidationParameters = new TokenValidationParameters
     {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtSettings["Issuer"],
-            ValidAudience = jwtSettings["Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidAudience = jwtSettings["Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
+        ClockSkew = TimeSpan.Zero,
 
-            // ✅ MAPEO DE CLAIMS
-            RoleClaimType = "role",
-            NameClaimType = "unique_name"
-        };
+        // ✅ ESTAS LÍNEAS DEBEN ESTAR PRESENTES
+        RoleClaimType = "role",
+        NameClaimType = "name"
+    };
 
-        // ✅ DEBUG: Agregar eventos para debuggear autenticación
-        options.Events = new JwtBearerEvents
+    // ✅ AGREGAR ESTOS EVENTOS PARA LOGGING (OPCIONAL PERO RECOMENDADO)
+    options.Events = new JwtBearerEvents
+    {
+        OnAuthenticationFailed = context =>
         {
-            OnAuthenticationFailed = context =>
+            Console.WriteLine($"❌ JWT Authentication failed: {context.Exception.Message}");
+            return Task.CompletedTask;
+        },
+        OnTokenValidated = context =>
+        {
+            Console.WriteLine("✅ JWT Token validated successfully");
+            var claims = context.Principal?.Claims.Select(c => $"{c.Type}={c.Value}");
+            if (claims != null)
             {
-                Console.WriteLine($"❌ JWT Authentication failed: {context.Exception.Message}");
-                return Task.CompletedTask;
-            },
-            OnTokenValidated = context =>
-            {
-                Console.WriteLine($"✅ JWT Token validated successfully");
-                Console.WriteLine($"🔍 User claims: {string.Join(", ", context.Principal?.Claims.Select(c => $"{c.Type}={c.Value}") ?? Enumerable.Empty<string>())}");
-                return Task.CompletedTask;
-            },
-            OnChallenge = context =>
-            {
-                Console.WriteLine($"🚫 JWT Challenge: {context.Error} - {context.ErrorDescription}");
-                return Task.CompletedTask;
+                Console.WriteLine($"🔍 User claims: {string.Join(", ", claims)}");
             }
-        };
+            return Task.CompletedTask;
+        }
+    };
     });
 
 builder.Services.AddAuthorization();
