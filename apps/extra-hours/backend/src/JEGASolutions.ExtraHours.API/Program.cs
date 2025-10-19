@@ -14,10 +14,7 @@ using System.IdentityModel.Tokens.Jwt;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Esto evita que ASP.NET transforme "role" → "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
-// DEBE IR ANTES de AddControllers() y AddAuthentication()
-JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
-JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
+// JWT claim mapping will be cleared in the authentication configuration below
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -33,6 +30,10 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 );
 
 // JWT Authentication
+// CRÍTICO: Limpiar mapeo ANTES de configurar autenticación
+JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
+
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured");
 
@@ -40,7 +41,7 @@ builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;  // ✅ Esta línea es importante
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
 })
 .AddJwtBearer(options =>
 {
@@ -58,31 +59,74 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
         ClockSkew = TimeSpan.Zero,
 
-        // ✅ ESTAS LÍNEAS DEBEN ESTAR PRESENTES
+        // ✅ MAPEO DE CLAIMS CORTOS
         RoleClaimType = "role",
         NameClaimType = "name"
     };
 
-    // ✅ AGREGAR ESTOS EVENTOS PARA LOGGING (OPCIONAL PERO RECOMENDADO)
     options.Events = new JwtBearerEvents
     {
-        OnAuthenticationFailed = context =>
-        {
-            Console.WriteLine($"❌ JWT Authentication failed: {context.Exception.Message}");
-            return Task.CompletedTask;
-        },
         OnTokenValidated = context =>
         {
-            Console.WriteLine("✅ JWT Token validated successfully");
-            var claims = context.Principal?.Claims.Select(c => $"{c.Type}={c.Value}");
-            if (claims != null)
+            var logger = context.HttpContext.RequestServices
+                .GetRequiredService<ILogger<Program>>();
+
+            if (context.Principal?.Identity is ClaimsIdentity identity)
             {
-                Console.WriteLine($"🔍 User claims: {string.Join(", ", claims)}");
+                logger.LogInformation("✅ JWT Token validated successfully");
+
+                var claims = identity.Claims
+                    .Select(c => $"{c.Type}={c.Value}")
+                    .ToList();
+
+                logger.LogInformation($"🔍 User claims: {string.Join(", ", claims)}");
+
+                // ✅ VERIFICAR CLAIM DE ROL
+                var roleClaim = identity.FindFirst("role");
+                if (roleClaim != null)
+                {
+                    logger.LogInformation($"✅ Role claim found: {roleClaim.Value}");
+                }
+                else
+                {
+                    logger.LogWarning("⚠️ Role claim NOT found in token");
+                }
             }
+
+            return Task.CompletedTask;
+        },
+        OnAuthenticationFailed = context =>
+        {
+            var logger = context.HttpContext.RequestServices
+                .GetRequiredService<ILogger<Program>>();
+            logger.LogError($"❌ Authentication failed: {context.Exception.Message}");
+            return Task.CompletedTask;
+        },
+        OnChallenge = context =>
+        {
+            var logger = context.HttpContext.RequestServices
+                .GetRequiredService<ILogger<Program>>();
+            logger.LogWarning($"⚠️ Authentication challenge: {context.Error}, {context.ErrorDescription}");
+            return Task.CompletedTask;
+        },
+        OnForbidden = context =>
+        {
+            var logger = context.HttpContext.RequestServices
+                .GetRequiredService<ILogger<Program>>();
+
+            var user = context.HttpContext.User;
+            var roles = user.Claims
+                .Where(c => c.Type == "role")
+                .Select(c => c.Value)
+                .ToList();
+
+            logger.LogWarning($"🚫 Access forbidden. User roles: {string.Join(", ", roles)}");
+            logger.LogWarning($"🚫 Required endpoint: {context.HttpContext.Request.Path}");
+
             return Task.CompletedTask;
         }
     };
-    });
+});
 
 builder.Services.AddAuthorization();
 

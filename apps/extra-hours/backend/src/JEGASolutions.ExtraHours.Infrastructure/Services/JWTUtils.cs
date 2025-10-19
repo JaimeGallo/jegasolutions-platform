@@ -34,13 +34,16 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Services
         /// </summary>
         public string GenerateToken(User user)
         {
+            // CRÍTICO: Limpiar mapeo antes de generar tokens
+            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+            JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
+
             var claims = new List<Claim>
             {
-                new Claim("email", user.email?.Trim() ?? string.Empty),
-                new Claim("role", user.role ?? string.Empty),  // ✅ Usar "role" sin ClaimTypes.Role
+                new Claim("email", user.email?.Trim() ?? string.Empty),           // ✅ Nombre corto (NO ClaimTypes.Name)
+                new Claim("role", user.role ?? string.Empty),                    // ✅ Nombre corto
                 new Claim("id", user.id.ToString()),
-                new Claim("name", user.name ?? string.Empty),
-                new Claim("tenant_id", user.TenantId.ToString() ?? "0")  //Incluir TenantId
+                new Claim("name", user.name ?? string.Empty)                     // ✅ Nombre corto
             };
 
             return CreateToken(claims, ACCESS_TOKEN_EXPIRATION);
@@ -92,11 +95,11 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Services
                 IssuerSigningKey = _key,
                 ValidateIssuer = true,
                 ValidateAudience = true,
-                ValidIssuer = "JEGASolutions.Landing.API",        // ✅ CAMBIAR
-                ValidAudience = "jegasolutions-landing-client",   // ✅ CAMBIAR
+                ValidIssuer = "JEGASolutions.Landing.API",                    // ✅ Mismo que Landing
+                ValidAudience = "jegasolutions-landing-client",               // ✅ Mismo que Landing
                 ClockSkew = TimeSpan.Zero,
                 RoleClaimType = "role",
-                NameClaimType = ClaimTypes.Name
+                NameClaimType = "name"                                        // ✅ Nombre corto
             };
 
             return tokenHandler.ValidateToken(token, validationParameters, out _);

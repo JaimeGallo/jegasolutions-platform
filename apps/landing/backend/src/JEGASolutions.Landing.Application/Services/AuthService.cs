@@ -141,26 +141,28 @@ public class AuthService : IAuthService
 
     public string GenerateJwtToken(User user)
     {
-        // ✅ AGREGAR ESTAS LÍNEAS AQUÍ
+        // CRÍTICO: Limpiar mapeo ANTES de crear tokens
         JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
         JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
 
         var key = Encoding.UTF8.GetBytes(_configuration["JWT:SecretKey"]!);
         var fullName = $"{user.FirstName} {user.LastName}".Trim();
 
+        // ✅ SOLO NOMBRES CORTOS - NUNCA ClaimTypes.*
+        var claims = new List<Claim>
+        {
+            new Claim("userId", user.Id.ToString()),
+            new Claim("email", user.Email),
+            new Claim("tenantId", user.TenantId.ToString()),
+            new Claim("role", user.Role),                    // ✅ Nombre corto
+            new Claim("name", fullName),                     // ✅ Nombre corto (NO ClaimTypes.Name)
+            new Claim("firstName", user.FirstName),
+            new Claim("lastName", user.LastName)
+        };
+
         var tokenDescriptor = new SecurityTokenDescriptor
         {
-            Subject = new ClaimsIdentity(new[]
-            {
-                new Claim("userId", user.Id.ToString()),
-                new Claim("email", user.Email),
-                new Claim("tenantId", user.TenantId.ToString()),
-                new Claim("role", user.Role),
-                new Claim(ClaimTypes.Name, fullName),
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim("firstName", user.FirstName),
-                new Claim("lastName", user.LastName)
-            }),
+            Subject = new ClaimsIdentity(claims),
             Expires = DateTime.UtcNow.AddMinutes(
                 int.TryParse(_configuration["JWT:ExpirationMinutes"], out var minutes) ? minutes : 60),
             Issuer = _configuration["JWT:Issuer"],
