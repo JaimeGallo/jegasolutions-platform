@@ -1,34 +1,27 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using System.Text;
-using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using JEGASolutions.ExtraHours.Core.Interfaces;
+using System.IdentityModel.Tokens.Jwt;
 using JEGASolutions.ExtraHours.Core.Entities.Models;
+using JEGASolutions.ExtraHours.Core.Interfaces;
+using Microsoft.Extensions.Configuration;
 
 namespace JEGASolutions.ExtraHours.Infrastructure.Services
 {
     public class JWTUtils : IJWTUtils
     {
-        private const long ACCESS_TOKEN_EXPIRATION = 3600000; // 1 hora en milisegundos
-        private const long REFRESH_TOKEN_EXPIRATION = 604800000; // 7 días en milisegundos
         private readonly SymmetricSecurityKey _key;
+        private const long ACCESS_TOKEN_EXPIRATION = 3600000; // 1 hora
+        private const long REFRESH_TOKEN_EXPIRATION = 604800000; // 7 días
 
         public JWTUtils(IConfiguration configuration)
         {
-            var secretString = configuration["JwtSettings:SecretKey"]
-                ?? throw new ArgumentNullException("JwtSettings:SecretKey",
-                    "JWT Secret Key not found in configuration");
+            var secretString = configuration["JwtSettings:SecretKey"];
+            if (string.IsNullOrEmpty(secretString))
+                throw new Exception("JWT SecretKey is not configured.");
             _key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretString));
-
-            // ✅ AGREGAR ESTAS LÍNEAS
-            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
-            JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
         }
 
-        /// <summary>
-        /// Genera un token JWT de acceso con todos los claims del usuario, incluyendo TenantId
-        /// </summary>
         public string GenerateToken(User user)
         {
             var claims = new List<Claim>
@@ -37,50 +30,41 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Services
                 new Claim("role", user.role),
                 new Claim("id", user.id.ToString()),
                 new Claim("name", user.name),
+                // ✅ NUEVO: Agregar tenant_id para soporte multi-tenant
                 new Claim("tenant_id", user.TenantId?.ToString() ?? "1"),
                 new Claim("tenantId", user.TenantId?.ToString() ?? "1") // fallback para compatibilidad
             };
             return CreateToken(claims, ACCESS_TOKEN_EXPIRATION);
         }
 
-        /// <summary>
-        /// Genera un refresh token con claims mínimos, incluyendo TenantId
-        /// </summary>
         public string GenerateRefreshToken(User user)
         {
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, user.email.Trim()),
                 new Claim("id", user.id.ToString()),
-                // ✅ TAMBIÉN AGREGAR AQUÍ
+                // ✅ NUEVO: Agregar tenant_id también en refresh token
                 new Claim("tenant_id", user.TenantId?.ToString() ?? "1"),
                 new Claim("tenantId", user.TenantId?.ToString() ?? "1")
             };
             return CreateToken(claims, REFRESH_TOKEN_EXPIRATION);
         }
 
-        /// <summary>
-        /// Crea el token JWT con los claims y expiración especificados
-        /// </summary>
         private string CreateToken(IEnumerable<Claim> claims, long expiration)
         {
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.UtcNow.AddMilliseconds(expiration),
-                Issuer = "JEGASolutions.Landing.API",        // ✅ CAMBIAR: antes era "JEGASolutions.ExtraHours"
-                Audience = "jegasolutions-landing-client",   // ✅ CAMBIAR: antes era "JEGASolutions.ExtraHours.Users"
+                Issuer = "JEGASolutions.ExtraHours",
+                Audience = "JEGASolutions.ExtraHours.Users",
                 SigningCredentials = new SigningCredentials(_key, SecurityAlgorithms.HmacSha256Signature)
             };
-
             var tokenHandler = new JwtSecurityTokenHandler();
             var token = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(token);
         }
 
-        /// <summary>
-        /// Extrae los claims de un token JWT
-        /// </summary>
         public ClaimsPrincipal ExtractClaims(string token)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -90,32 +74,23 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Services
                 IssuerSigningKey = _key,
                 ValidateIssuer = true,
                 ValidateAudience = true,
-                ValidIssuer = "JEGASolutions.Landing.API",                    // ✅ Mismo que Landing
-                ValidAudience = "jegasolutions-landing-client",               // ✅ Mismo que Landing
+                ValidIssuer = "JEGASolutions.ExtraHours",
+                ValidAudience = "JEGASolutions.ExtraHours.Users",
                 ClockSkew = TimeSpan.Zero,
                 RoleClaimType = "role",
-                NameClaimType = "name"                                        // ✅ Nombre corto
+                NameClaimType = ClaimTypes.Name
             };
-
             return tokenHandler.ValidateToken(token, validationParameters, out _);
         }
 
-        /// <summary>
-        /// Valida que el token sea válido para el usuario especificado
-        /// </summary>
         public bool IsTokenValid(string token, User user)
         {
             try
             {
                 var principal = ExtractClaims(token);
-                var email = principal.Claims.FirstOrDefault(c => c.Type == "email")?.Value;
+                var username = principal.Identity?.Name;
                 var userId = principal.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
-                var tenantId = principal.Claims.FirstOrDefault(c => c.Type == "tenant_id")?.Value;
-
-                // Validar que el token corresponde al usuario correcto
-                return email == user.email
-                    && userId == user.id.ToString()
-                    && tenantId == (user.TenantId?.ToString() ?? "1");  // ✅ También validar TenantId
+                return username == user.email && userId == user.id.ToString();
             }
             catch
             {
@@ -124,3 +99,5 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Services
         }
     }
 }
+
+
