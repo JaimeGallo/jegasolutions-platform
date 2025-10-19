@@ -30,8 +30,9 @@ namespace JEGASolutions.ExtraHours.API.Controller
                 {
                     return NotFound(new { error = "Configuración no encontrada" });
                 }
-
-                _logger.LogInformation("✅ Config retrieved successfully: {@Config}", config);
+                
+                _logger.LogInformation("✅ Config retrieved: weeklyLimit={Weekly}, diurnalEnd={End}", 
+                    config.weeklyExtraHoursLimit, config.diurnalEnd);
                 return Ok(config);
             }
             catch (Exception ex)
@@ -52,14 +53,19 @@ namespace JEGASolutions.ExtraHours.API.Controller
                     return BadRequest(new { error = "Datos de configuración no pueden ser nulos" });
                 }
 
-                _logger.LogInformation("📝 Updating config with data: {@Config}", config);
-                _logger.LogInformation($"📝 User authenticated: {User.Identity?.IsAuthenticated}");
-                _logger.LogInformation($"📝 User roles: {string.Join(", ", User.Claims.Where(c => c.Type == "role").Select(c => c.Value))}");
+                _logger.LogInformation("📝 UPDATING CONFIG - User: {User}", User.Identity?.Name);
+                _logger.LogInformation("📝 User authenticated: {Auth}", User.Identity?.IsAuthenticated);
+                _logger.LogInformation("📝 User roles: {Roles}", 
+                    string.Join(", ", User.Claims.Where(c => c.Type == "role").Select(c => c.Value)));
+                _logger.LogInformation("📝 New values - weeklyLimit: {Weekly}, diurnalEnd: {End}", 
+                    config.weeklyExtraHoursLimit, config.diurnalEnd);
 
                 var updatedConfig = await _configService.UpdateConfigAsync(config);
-
-                _logger.LogInformation("✅ Config updated successfully: {@UpdatedConfig}", updatedConfig);
-
+                
+                _logger.LogInformation("✅✅✅ CONFIG UPDATED SUCCESSFULLY!");
+                _logger.LogInformation("✅ Final values - weeklyLimit: {Weekly}, diurnalEnd: {End}", 
+                    updatedConfig.weeklyExtraHoursLimit, updatedConfig.diurnalEnd);
+                
                 return Ok(updatedConfig);
             }
             catch (Exception ex)
