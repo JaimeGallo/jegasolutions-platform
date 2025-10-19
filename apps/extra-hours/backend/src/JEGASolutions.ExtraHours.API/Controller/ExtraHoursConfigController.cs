@@ -10,33 +10,63 @@ namespace JEGASolutions.ExtraHours.API.Controller
     public class ExtraHoursConfigController : ControllerBase
     {
         private readonly IExtraHoursConfigService _configService;
+        private readonly ILogger<ExtraHoursConfigController> _logger;
 
-        public ExtraHoursConfigController(IExtraHoursConfigService configService)
+        public ExtraHoursConfigController(
+            IExtraHoursConfigService configService,
+            ILogger<ExtraHoursConfigController> logger)
         {
             _configService = configService;
+            _logger = logger;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetConfig()
         {
-            var config = await _configService.GetConfigAsync();
-            if (config == null)
+            try
             {
-                return NotFound(new { error = "Configuración no encontrada" });
+                var config = await _configService.GetConfigAsync();
+                if (config == null)
+                {
+                    return NotFound(new { error = "Configuración no encontrada" });
+                }
+
+                _logger.LogInformation("✅ Config retrieved successfully: {@Config}", config);
+                return Ok(config);
             }
-            return Ok(config);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error getting config");
+                return StatusCode(500, new { error = ex.Message });
+            }
         }
 
         [HttpPut]
         [Authorize(Roles = "superusuario")]
         public async Task<IActionResult> UpdateConfig([FromBody] ExtraHoursConfig config)
         {
-            if (config == null)
-                return BadRequest(new { error = "Datos de configuración no pueden ser nulos" });
+            try
+            {
+                if (config == null)
+                {
+                    return BadRequest(new { error = "Datos de configuración no pueden ser nulos" });
+                }
 
-            var updatedConfig = await _configService.UpdateConfigAsync(config);
-            return Ok(updatedConfig);
+                _logger.LogInformation("📝 Updating config with data: {@Config}", config);
+                _logger.LogInformation($"📝 User authenticated: {User.Identity?.IsAuthenticated}");
+                _logger.LogInformation($"📝 User roles: {string.Join(", ", User.Claims.Where(c => c.Type == "role").Select(c => c.Value))}");
 
+                var updatedConfig = await _configService.UpdateConfigAsync(config);
+
+                _logger.LogInformation("✅ Config updated successfully: {@UpdatedConfig}", updatedConfig);
+
+                return Ok(updatedConfig);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error updating config");
+                return StatusCode(500, new { error = ex.Message });
+            }
         }
     }
 }
