@@ -61,8 +61,37 @@ namespace JEGASolutions.ExtraHours.Data
                 .HasForeignKey(cr => cr.ApprovedById)
                 .OnDelete(DeleteBehavior.SetNull);
 
+            // ✅ Configuración explícita de tabla CompensationRequest
+            modelBuilder.Entity<CompensationRequest>()
+                .ToTable("compensation_requests"); // Usar snake_case para PostgreSQL
+
             // Datos iniciales para ExtraHoursConfig
             modelBuilder.Entity<ExtraHoursConfig>().HasData(new ExtraHoursConfig { id = 1 });
+
+            // ✅ Conversión automática de audit fields a UTC para ExtraHoursConfig
+            modelBuilder.Entity<ExtraHoursConfig>()
+                .Property(e => e.CreatedAt)
+                .HasConversion(
+                    v => v.HasValue ? (v.Value.Kind == DateTimeKind.Unspecified 
+                        ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) 
+                        : v.Value.ToUniversalTime()) : (DateTime?)null,
+                    v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) : (DateTime?)null);
+
+            modelBuilder.Entity<ExtraHoursConfig>()
+                .Property(e => e.UpdatedAt)
+                .HasConversion(
+                    v => v.HasValue ? (v.Value.Kind == DateTimeKind.Unspecified 
+                        ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) 
+                        : v.Value.ToUniversalTime()) : (DateTime?)null,
+                    v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) : (DateTime?)null);
+
+            modelBuilder.Entity<ExtraHoursConfig>()
+                .Property(e => e.DeletedAt)
+                .HasConversion(
+                    v => v.HasValue ? (v.Value.Kind == DateTimeKind.Unspecified 
+                        ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) 
+                        : v.Value.ToUniversalTime()) : (DateTime?)null,
+                    v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) : (DateTime?)null);
 
             // Configuración de fechas en UTC
             modelBuilder.Entity<ExtraHour>()

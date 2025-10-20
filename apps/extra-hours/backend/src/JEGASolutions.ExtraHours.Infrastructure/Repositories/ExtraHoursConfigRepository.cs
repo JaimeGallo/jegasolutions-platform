@@ -22,35 +22,51 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Repositories
 
         public async Task<ExtraHoursConfig> UpdateConfigAsync(ExtraHoursConfig config)
         {
-            // Buscar la configuración existente
-            var existing = await _context.extraHoursConfigs.FirstOrDefaultAsync(c => c.id == config.id);
-
-            if (existing == null)
+            // ✅ SOLUCIÓN: Asegurar que todos los DateTime sean UTC antes de guardar
+            config.MarkAsUpdated(); // Esto ya establece UpdatedAt en UTC
+            
+            // Asegurar que CreatedAt sea UTC si existe
+            if (config.CreatedAt.HasValue)
             {
-                throw new KeyNotFoundException($"Configuración con ID {config.id} no encontrada");
+                if (config.CreatedAt.Value.Kind == DateTimeKind.Unspecified)
+                {
+                    config.CreatedAt = DateTime.SpecifyKind(config.CreatedAt.Value, DateTimeKind.Utc);
+                }
+                else if (config.CreatedAt.Value.Kind == DateTimeKind.Local)
+                {
+                    config.CreatedAt = config.CreatedAt.Value.ToUniversalTime();
+                }
             }
-
-            // Actualizar TODOS los campos explícitamente
-            existing.weeklyExtraHoursLimit = config.weeklyExtraHoursLimit;
-            existing.diurnalMultiplier = config.diurnalMultiplier;
-            existing.nocturnalMultiplier = config.nocturnalMultiplier;
-            existing.diurnalHolidayMultiplier = config.diurnalHolidayMultiplier;
-            existing.nocturnalHolidayMultiplier = config.nocturnalHolidayMultiplier;
-            existing.diurnalStart = config.diurnalStart;
-            existing.diurnalEnd = config.diurnalEnd;
-
-            // Actualizar campos de auditoría (si existen en TenantEntity)
-            if (existing is TenantEntity tenantEntity)
+            
+            // Asegurar que UpdatedAt sea UTC
+            if (config.UpdatedAt.HasValue)
             {
-                tenantEntity.MarkAsUpdated();
+                if (config.UpdatedAt.Value.Kind == DateTimeKind.Unspecified)
+                {
+                    config.UpdatedAt = DateTime.SpecifyKind(config.UpdatedAt.Value, DateTimeKind.Utc);
+                }
+                else if (config.UpdatedAt.Value.Kind == DateTimeKind.Local)
+                {
+                    config.UpdatedAt = config.UpdatedAt.Value.ToUniversalTime();
+                }
             }
-
-            // Marcar la entidad como modificada explícitamente
-            _context.Entry(existing).State = EntityState.Modified;
-
+            
+            // Asegurar que DeletedAt sea UTC si existe
+            if (config.DeletedAt.HasValue)
+            {
+                if (config.DeletedAt.Value.Kind == DateTimeKind.Unspecified)
+                {
+                    config.DeletedAt = DateTime.SpecifyKind(config.DeletedAt.Value, DateTimeKind.Utc);
+                }
+                else if (config.DeletedAt.Value.Kind == DateTimeKind.Local)
+                {
+                    config.DeletedAt = config.DeletedAt.Value.ToUniversalTime();
+                }
+            }
+            
+            _context.extraHoursConfigs.Update(config);
             await _context.SaveChangesAsync();
-
-            return existing;
+            return config;
         }
     }
 }
