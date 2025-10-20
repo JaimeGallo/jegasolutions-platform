@@ -30,8 +30,8 @@ namespace JEGASolutions.ExtraHours.API.Controller
                 {
                     return NotFound(new { error = "Configuración no encontrada" });
                 }
-                
-                _logger.LogInformation("✅ Config retrieved: weeklyLimit={Weekly}, diurnalEnd={End}", 
+
+                _logger.LogInformation("✅ Config retrieved: weeklyLimit={Weekly}, diurnalEnd={End}",
                     config.weeklyExtraHoursLimit, config.diurnalEnd);
                 return Ok(config);
             }
@@ -46,36 +46,32 @@ namespace JEGASolutions.ExtraHours.API.Controller
         [Authorize(Roles = "superusuario")]
         public async Task<IActionResult> UpdateConfig([FromBody] ExtraHoursConfig config)
         {
-            // ✅ AGREGAR LOGS PARA DEBUGGING
+            // ✅ Log para debugging
             var userRole = User.FindFirst("role")?.Value;
-            var userId = User.FindFirst("id")?.Value;
-            var tenantId = User.FindFirst("tenant_id")?.Value ?? User.FindFirst("tenantId")?.Value;
+            var userId = User.FindFirst("userId")?.Value ?? User.FindFirst("id")?.Value;
+            var userName = User.Identity?.Name;
 
-            Console.WriteLine($"[UpdateConfig] User: {userId}, Role: {userRole}, TenantId: {tenantId}");
-            Console.WriteLine($"[UpdateConfig] All claims: {string.Join(", ", User.Claims.Select(c => $"{c.Type}={c.Value}"))}");
+            Console.WriteLine($"🔍 UpdateConfig called by - Role: {userRole}, UserId: {userId}, Name: {userName}");
+            Console.WriteLine($"🔍 All claims: {string.Join(", ", User.Claims.Select(c => $"{c.Type}={c.Value}"))}");
 
             if (config == null)
                 return BadRequest(new { error = "Datos de configuración no pueden ser nulos" });
+
             try
             {
-                if (config == null)
-                {
-                    return BadRequest(new { error = "Datos de configuración no pueden ser nulos" });
-                }
-
                 _logger.LogInformation("📝 UPDATING CONFIG - User: {User}", User.Identity?.Name);
                 _logger.LogInformation("📝 User authenticated: {Auth}", User.Identity?.IsAuthenticated);
-                _logger.LogInformation("📝 User roles: {Roles}", 
+                _logger.LogInformation("📝 User roles: {Roles}",
                     string.Join(", ", User.Claims.Where(c => c.Type == "role").Select(c => c.Value)));
-                _logger.LogInformation("📝 New values - weeklyLimit: {Weekly}, diurnalEnd: {End}", 
+                _logger.LogInformation("📝 New values - weeklyLimit: {Weekly}, diurnalEnd: {End}",
                     config.weeklyExtraHoursLimit, config.diurnalEnd);
 
                 var updatedConfig = await _configService.UpdateConfigAsync(config);
-                
+
                 _logger.LogInformation("✅✅✅ CONFIG UPDATED SUCCESSFULLY!");
-                _logger.LogInformation("✅ Final values - weeklyLimit: {Weekly}, diurnalEnd: {End}", 
+                _logger.LogInformation("✅ Final values - weeklyLimit: {Weekly}, diurnalEnd: {End}",
                     updatedConfig.weeklyExtraHoursLimit, updatedConfig.diurnalEnd);
-                
+
                 return Ok(updatedConfig);
             }
             catch (Exception ex)

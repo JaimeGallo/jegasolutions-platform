@@ -68,7 +68,9 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Services
         public ClaimsPrincipal ExtractClaims(string token)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var validationParameters = new TokenValidationParameters
+
+            // Intentar con el issuer del Extra Hours API primero
+            var extraHoursValidation = new TokenValidationParameters
             {
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = _key,
@@ -80,7 +82,41 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Services
                 RoleClaimType = "role",
                 NameClaimType = ClaimTypes.Name
             };
-            return tokenHandler.ValidateToken(token, validationParameters, out _);
+
+            try
+            {
+                return tokenHandler.ValidateToken(token, extraHoursValidation, out _);
+            }
+            catch
+            {
+                // Si falla, intentar con el issuer del Landing API
+                var landingValidation = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = _key,
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidIssuer = "JEGASolutions.Landing.API",
+                    ValidAudience = "jegasolutions-landing-client",
+                    ClockSkew = TimeSpan.Zero,
+                    RoleClaimType = "role",
+                    NameClaimType = ClaimTypes.Name
+                };
+
+                var principal = tokenHandler.ValidateToken(token, landingValidation, out _);
+
+                // Normalizar los claims para que sean compatibles
+                var identity = (ClaimsIdentity)principal.Identity!;
+
+                // Si existe "userId" pero no "id", agregar "id"
+                var userId = principal.FindFirst("userId")?.Value;
+                if (!string.IsNullOrEmpty(userId) && principal.FindFirst("id") == null)
+                {
+                    identity.AddClaim(new Claim("id", userId));
+                }
+
+                return principal;
+            }
         }
 
         public bool IsTokenValid(string token, User user)
