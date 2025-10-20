@@ -33,7 +33,11 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
            .UseSnakeCaseNamingConvention()
+           .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
 );
+
+// ✅ Configure global DateTime handling for PostgreSQL
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 // JWT Authentication
 

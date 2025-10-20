@@ -167,19 +167,31 @@ namespace JEGASolutions.ExtraHours.Data
             {
                 if (typeof(JEGASolutions.ExtraHours.Core.Entities.TenantEntity).IsAssignableFrom(entityType.ClrType))
                 {
+                    // Configure CreatedAt with UTC conversion
                     modelBuilder.Entity(entityType.ClrType)
                         .Property("CreatedAt")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                        .IsRequired(false);
+                        .IsRequired(false)
+                        .HasConversion(
+                            v => v.HasValue ? v.Value.ToUniversalTime() : (DateTime?)null,
+                            v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) : (DateTime?)null);
 
+                    // Configure UpdatedAt with UTC conversion
                     modelBuilder.Entity(entityType.ClrType)
                         .Property("UpdatedAt")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                        .IsRequired(false);
+                        .IsRequired(false)
+                        .HasConversion(
+                            v => v.HasValue ? v.Value.ToUniversalTime() : (DateTime?)null,
+                            v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) : (DateTime?)null);
 
+                    // Configure DeletedAt with UTC conversion
                     modelBuilder.Entity(entityType.ClrType)
                         .Property("DeletedAt")
-                        .IsRequired(false);
+                        .IsRequired(false)
+                        .HasConversion(
+                            v => v.HasValue ? v.Value.ToUniversalTime() : (DateTime?)null,
+                            v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) : (DateTime?)null);
                 }
             }
         }
