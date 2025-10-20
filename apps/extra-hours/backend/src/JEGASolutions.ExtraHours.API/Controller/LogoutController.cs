@@ -1,5 +1,6 @@
 ﻿using JEGASolutions.ExtraHours.Core.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace JEGASolutions.ExtraHours.API.Controller
 {
@@ -15,6 +16,7 @@ namespace JEGASolutions.ExtraHours.API.Controller
         }
 
         [HttpPost]
+        [AllowAnonymous]
         public IActionResult Logout([FromHeader(Name = "Authorization")] string token)
         {
             try
