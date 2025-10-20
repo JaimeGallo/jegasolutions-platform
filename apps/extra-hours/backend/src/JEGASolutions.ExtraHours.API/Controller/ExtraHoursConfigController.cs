@@ -46,38 +46,31 @@ namespace JEGASolutions.ExtraHours.API.Controller
         [Authorize(Roles = "superusuario")]
         public async Task<IActionResult> UpdateConfig([FromBody] ExtraHoursConfig config)
         {
-            // ✅ Log para debugging
-            var userRole = User.FindFirst("role")?.Value;
-            var userId = User.FindFirst("userId")?.Value ?? User.FindFirst("id")?.Value;
-            var userName = User.Identity?.Name;
-
-            Console.WriteLine($"🔍 UpdateConfig called by - Role: {userRole}, UserId: {userId}, Name: {userName}");
-            Console.WriteLine($"🔍 All claims: {string.Join(", ", User.Claims.Select(c => $"{c.Type}={c.Value}"))}");
-
-            if (config == null)
-                return BadRequest(new { error = "Datos de configuración no pueden ser nulos" });
-
             try
             {
-                _logger.LogInformation("📝 UPDATING CONFIG - User: {User}", User.Identity?.Name);
-                _logger.LogInformation("📝 User authenticated: {Auth}", User.Identity?.IsAuthenticated);
-                _logger.LogInformation("📝 User roles: {Roles}",
-                    string.Join(", ", User.Claims.Where(c => c.Type == "role").Select(c => c.Value)));
-                _logger.LogInformation("📝 New values - weeklyLimit: {Weekly}, diurnalEnd: {End}",
-                    config.weeklyExtraHoursLimit, config.diurnalEnd);
+                // Log de debugging
+                var userRole = User.FindFirst("role")?.Value;
+                var userId = User.FindFirst("userId")?.Value ?? User.FindFirst("id")?.Value;
+                var userName = User.Identity?.Name;
+                
+                _logger.LogInformation($"🔍 UpdateConfig called by - Role: {userRole}, UserId: {userId}, Name: {userName}");
+                
+                if (config == null)
+                {
+                    return BadRequest(new { error = "Datos de configuración no pueden ser nulos" });
+                }
 
                 var updatedConfig = await _configService.UpdateConfigAsync(config);
-
-                _logger.LogInformation("✅✅✅ CONFIG UPDATED SUCCESSFULLY!");
-                _logger.LogInformation("✅ Final values - weeklyLimit: {Weekly}, diurnalEnd: {End}",
-                    updatedConfig.weeklyExtraHoursLimit, updatedConfig.diurnalEnd);
-
                 return Ok(updatedConfig);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error updating config");
-                return StatusCode(500, new { error = ex.Message });
+                return StatusCode(500, new 
+                { 
+                    error = "Error actualizando la configuración",
+                    details = ex.Message 
+                });
             }
         }
     }
