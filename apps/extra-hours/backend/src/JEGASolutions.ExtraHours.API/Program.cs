@@ -55,16 +55,27 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtSettings["Issuer"],
-            ValidAudience = jwtSettings["Audience"],
+
+            // ✅ ACEPTAR MÚLTIPLES ISSUERS Y AUDIENCES
+            ValidIssuers = new[]
+            {
+                jwtSettings["Issuer"],           // "JEGASolutions.Landing.API"
+                "JEGASolutions.ExtraHours"       // Extra Hours API issuer
+            },
+            ValidAudiences = new[]
+            {
+                jwtSettings["Audience"],         // "jegasolutions-landing-client"
+                "JEGASolutions.ExtraHours.Users" // Extra Hours API audience
+            },
+
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
 
-            // Mapeo de claims
+            // ✅ MAPEO DE CLAIMS
             RoleClaimType = "role",
-            NameClaimType = "name"
+            NameClaimType = ClaimTypes.Name
         };
 
-        // ✅ AGREGAR: Eventos para suprimir warnings en endpoints públicos
+        // ✅ AGREGAR: Eventos para debugging y manejo de endpoints públicos
         options.Events = new JwtBearerEvents
         {
             OnAuthenticationFailed = context =>
@@ -79,8 +90,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 // Solo loggear si NO es un endpoint público
                 if (!isPublicEndpoint)
                 {
-                    Console.WriteLine($"⚠️ Authentication failed for {context.Request.Path}: {context.Exception.Message}");
+                    Console.WriteLine($"🔴 Auth failed: {context.Exception.Message}");
                 }
+                return Task.CompletedTask;
+            },
+            OnTokenValidated = context =>
+            {
+                var role = context.Principal?.FindFirst("role")?.Value;
+                var userId = context.Principal?.FindFirst("userId")?.Value
+                          ?? context.Principal?.FindFirst("id")?.Value;
+                Console.WriteLine($"✅ Token válido - Role: {role}, UserId: {userId}");
                 return Task.CompletedTask;
             },
             OnChallenge = context =>
@@ -106,8 +125,8 @@ builder.Services.AddAuthorization();
 
 // Register Services
 builder.Services.AddScoped<ITenantContextService, TenantContextService>();
-// ❌ SSO: Ya no se usa AuthService ni JWTUtils locales, el Landing maneja la autenticación
-// builder.Services.AddScoped<IJWTUtils, JEGASolutions.ExtraHours.Infrastructure.Services.JWTUtils>();
+// ✅ SSO: Registrar JWTUtils para manejar tokens del Landing API
+builder.Services.AddScoped<IJWTUtils, JEGASolutions.ExtraHours.Infrastructure.Services.JWTUtils>();
 // builder.Services.AddScoped<IAuthService, JEGASolutions.ExtraHours.Infrastructure.Services.AuthService>();
 builder.Services.AddScoped<IColombianHolidayService, JEGASolutions.ExtraHours.Infrastructure.Services.ColombianHolidayService>();
 
@@ -184,10 +203,12 @@ app.UseCors("AllowAll");
 // ORDEN CRÍTICO DEL PIPELINE:
 // 1. Primero autenticación (valida JWT y establece context.User con claims)
 app.UseAuthentication();
-// 2. Luego autorización (verifica roles usando context.User)
+// 2. Luego middleware JWT personalizado (mapea claims)
+app.UseMiddleware<JwtMiddleware>();
+// 3. Después autorización (verifica roles usando context.User)
 app.UseAuthorization();
 
-// 3. Después middleware de tenant (puede leer claims de context.User)
+// 4. Después middleware de tenant (puede leer claims de context.User)
 app.UseMiddleware<TenantMiddleware>();
 
 // 3. ✅ SSO: Validar acceso al módulo extra-hours (TEMPORALMENTE DESHABILITADO)
