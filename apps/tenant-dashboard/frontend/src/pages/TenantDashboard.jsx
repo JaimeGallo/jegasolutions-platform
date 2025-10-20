@@ -15,6 +15,7 @@ import {
   CheckCircle,
   XCircle,
 } from 'lucide-react';
+import UserMenu from '../components/layout/UserMenu';
 
 const TenantDashboard = () => {
   const navigate = useNavigate();
@@ -214,13 +215,7 @@ const TenantDashboard = () => {
                 </p>
                 <p className="text-xs text-gray-500">{user?.email}</p>
               </div>
-              <button
-                onClick={handleLogout}
-                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                <LogOut className="h-4 w-4" />
-                <span className="text-sm">Salir</span>
-              </button>
+              <UserMenu />
             </div>
           </div>
         </div>

@@ -1,0 +1,208 @@
+version: '3.8'
+
+networks:
+  jega-network:
+    driver: bridge
+
+services:
+  # ==========================================
+  # LANDING PAGE
+  # ==========================================
+  landing-backend:
+    build:
+      context: ./apps/landing/backend
+      dockerfile: Dockerfile
+    container_name: jega-landing-backend
+    env_file:
+      - docker.env
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - DATABASE_URL=postgresql://neondb_owner:npg_Dw6xKpSZ1CAJ@ep-dawn-mode-a8l72imn-pooler.eastus2.azure.neon.tech/neondb?sslmode=require&channel_binding=require
+      - ConnectionStrings__ExtraHoursConnection=Host=ep-dawn-mode-a8l72imn-pooler.eastus2.azure.neon.tech;Port=5432;Database=extrahours_db;Username=neondb_owner;Password=npg_Dw6xKpSZ1CAJ;SSL Mode=Require;Trust Server Certificate=true
+      - ConnectionStrings__ReportBuilderConnection=Host=ep-dawn-mode-a8l72imn-pooler.eastus2.azure.neon.tech;Port=5432;Database=reportbuilder_db;Username=neondb_owner;Password=npg_Dw6xKpSZ1CAJ;SSL Mode=Require;Trust Server Certificate=true
+      - JWT_SECRET=HqGobvuadjxYCo8XL0Z2QEFKSJf7oeY+ItXOHoiKH9o=
+      - Wompi__BaseUrl=https://sandbox.wompi.co/v1/
+      - Wompi__PublicKey=pub_test_igA8bSRjaCepeDu8dKix4fSF0KgsUqeu
+      - Wompi__PrivateKey=prv_test_gDNaHJY811U2thwFtYXj4fYEqTEgb8o5
+      - Wompi__RedirectUrl=http://localhost:5174/payment-success
+      - Email__SmtpServer=smtp.gmail.com
+      - Email__Port=587
+      - Email__Username=jaialgallo@gmail.com
+      - Email__Password=babe cjcj nhph ltaj
+      - Email__FromEmail=jaialgallo@gmail.com
+    ports:
+      - '8080:8080'
+    depends_on:
+      landing-db:
+        condition: service_healthy
+    networks:
+      - jega-network
+
+  landing-frontend:
+    build:
+      context: ./apps/landing/frontend
+      dockerfile: Dockerfile
+    container_name: jega-landing-frontend
+    environment:
+      - VITE_API_URL=http://localhost:8080/api
+    ports:
+      - '5174:80'
+    depends_on:
+      - landing-backend
+    networks:
+      - jega-network
+
+  landing-db:
+    image: postgres:15-alpine
+    container_name: jega-landing-db
+    environment:
+      POSTGRES_DB: landingdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: jega40
+    ports:
+      - '5434:5432'
+    volumes:
+      - landing-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - jega-network
+
+  # ==========================================
+  # EXTRA HOURS MODULE
+  # ==========================================
+  extrahours-db:
+    image: postgres:latest
+    container_name: jega-extrahours-db
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: jega40
+    ports:
+      - '5432:5432'
+    volumes:
+      - extrahours-pgdata:/var/lib/postgresql/data
+      - ./apps/extra-hours/db-backup/backup_with_compensation.sql:/docker-entrypoint-initdb.d/backup.sql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - jega-network
+
+  extrahours-backend:
+    build:
+      context: ./apps/extra-hours/backend
+      dockerfile: Dockerfile
+    container_name: jega-extrahours-backend
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__DefaultConnection=Host=extrahours-db;Port=5432;Database=postgres;Username=postgres;Password=jega40
+      - JWT_SECRET=${JWT_SECRET:-SuperSecretKey123456789}
+    ports:
+      - '7086:80'
+    depends_on:
+      extrahours-db:
+        condition: service_healthy
+    networks:
+      - jega-network
+
+  extrahours-frontend:
+    build:
+      context: ./apps/extra-hours/frontend
+      dockerfile: Dockerfile
+    container_name: jega-extrahours-frontend
+    environment:
+      - VITE_API_URL=http://localhost:7086/api
+    ports:
+      - '5173:80'
+    depends_on:
+      - extrahours-backend
+    networks:
+      - jega-network
+
+  # ==========================================
+  # REPORT BUILDER MODULE
+  # ==========================================
+  reportbuilder-db:
+    image: postgres:15-alpine
+    container_name: jega-reportbuilder-db
+    environment:
+      POSTGRES_DB: reportbuilderdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: jega40
+    ports:
+      - '5433:5432'
+    volumes:
+      - reportbuilder-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - jega-network
+
+  reportbuilder-backend:
+    build:
+      context: ./apps/report-builder/backend
+      dockerfile: Dockerfile
+    container_name: jega-reportbuilder-backend
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - DB_HOST=reportbuilder-db
+      - DB_NAME=reportbuilderdb
+      - DB_USER=postgres
+      - DB_PASSWORD=jega40
+      - JWT_SECRET=${JWT_SECRET:-SuperClaveUltraSecretaParaReportes123456789}
+      - JWT_ISSUER=ReportBuilderAPI
+      - JWT_AUDIENCE=report-builder-client
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-placeholder}
+    ports:
+      - '5000:8080'
+    depends_on:
+      reportbuilder-db:
+        condition: service_healthy
+    networks:
+      - jega-network
+
+  reportbuilder-frontend:
+    build:
+      context: ./apps/report-builder/frontend
+      dockerfile: Dockerfile
+    container_name: jega-reportbuilder-frontend
+    environment:
+      - VITE_API_URL=http://localhost:5000/api
+    ports:
+      - '3001:3001'
+    depends_on:
+      - reportbuilder-backend
+    networks:
+      - jega-network
+
+  # ==========================================
+  # TENANT DASHBOARD (Solo Frontend)
+  # ==========================================
+  tenant-dashboard-frontend:
+    build:
+      context: ./apps/tenant-dashboard/frontend
+      dockerfile: Dockerfile
+    container_name: jega-tenant-dashboard-frontend
+    environment:
+      - VITE_API_URL=http://localhost:8081/api
+    ports:
+      - '3002:80'
+    networks:
+      - jega-network
+
+volumes:
+  landing-pgdata:
+  extrahours-pgdata:
+  reportbuilder-pgdata:

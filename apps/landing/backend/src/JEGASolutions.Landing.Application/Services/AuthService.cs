@@ -174,12 +174,12 @@ public class AuthService : IAuthService
 
         var tokenHandler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
         var token = tokenHandler.CreateToken(tokenDescriptor);
-        
+
         var tokenString = tokenHandler.WriteToken(token);
-        
+
         // 🔍 LOGGING PARA VERIFICAR
         _logger.LogInformation("✅ Token generado con claims cortos para usuario: {Email}", user.Email);
-        
+
         return tokenString;
     }
 
@@ -191,5 +191,94 @@ public class AuthService : IAuthService
     public string HashPassword(string password)
     {
         return BCrypt.Net.BCrypt.HashPassword(password);
+    }
+
+    public async Task ChangePasswordAsync(int userId, string currentPassword, string newPassword)
+    {
+        try
+        {
+            _logger.LogInformation("🔄 Password change attempt for user: {UserId}", userId);
+
+            // 1. Obtener usuario por ID
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                _logger.LogWarning("❌ User not found: {UserId}", userId);
+                throw new KeyNotFoundException("Usuario no encontrado");
+            }
+
+            // 2. Verificar contraseña actual con BCrypt
+            if (!BCrypt.Net.BCrypt.Verify(currentPassword, user.PasswordHash))
+            {
+                _logger.LogWarning("❌ Invalid current password for user: {UserId}", userId);
+                throw new UnauthorizedAccessException("Contraseña actual incorrecta");
+            }
+
+            // 3. Validar nueva contraseña (mínimo 8 caracteres)
+            if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < 8)
+            {
+                _logger.LogWarning("❌ Invalid new password for user: {UserId}", userId);
+                throw new ArgumentException("La nueva contraseña debe tener al menos 8 caracteres");
+            }
+
+            // 4. Verificar que la nueva contraseña sea diferente a la actual
+            if (BCrypt.Net.BCrypt.Verify(newPassword, user.PasswordHash))
+            {
+                _logger.LogWarning("❌ New password same as current for user: {UserId}", userId);
+                throw new ArgumentException("La nueva contraseña debe ser diferente a la actual");
+            }
+
+            // 5. Hashear nueva contraseña con BCrypt (work factor 11)
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword, workFactor: 11);
+            user.UpdatedAt = DateTime.UtcNow;
+
+            // 6. Actualizar en base de datos
+            await _userRepository.UpdateAsync(user);
+            await _unitOfWork.SaveAsync();
+
+            _logger.LogInformation("✅ Password updated successfully for user: {UserId}", userId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "💥 Error changing password for user: {UserId}", userId);
+            throw;
+        }
+    }
+
+    public async Task ChangePasswordAdminAsync(int userId, string newPassword)
+    {
+        try
+        {
+            _logger.LogInformation("🔄 Admin password change for user: {UserId}", userId);
+
+            // 1. Obtener usuario por ID
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                _logger.LogWarning("❌ User not found: {UserId}", userId);
+                throw new KeyNotFoundException("Usuario no encontrado");
+            }
+
+            // 2. Validar nueva contraseña (mínimo 8 caracteres)
+            if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < 8)
+            {
+                _logger.LogWarning("❌ Invalid new password for user: {UserId}", userId);
+                throw new ArgumentException("La nueva contraseña debe tener al menos 8 caracteres");
+            }
+
+            // 3. Hashear y actualizar directamente (sin validar contraseña actual)
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword, workFactor: 11);
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await _userRepository.UpdateAsync(user);
+            await _unitOfWork.SaveAsync();
+
+            _logger.LogInformation("✅ Password updated by admin for user: {UserId}", userId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "💥 Error changing password (admin) for user: {UserId}", userId);
+            throw;
+        }
     }
 }
