@@ -18,6 +18,10 @@ JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ✅ AGREGAR: Configurar logging para reducir ruido de autenticación
+builder.Logging.AddFilter("Microsoft.AspNetCore.Authentication", LogLevel.Error);
+builder.Logging.AddFilter("Microsoft.AspNetCore.Authorization", LogLevel.Warning);
+
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -42,137 +46,61 @@ Console.WriteLine($"   Issuer: {jwtSettings["Issuer"]}");
 Console.WriteLine($"   Audience: {jwtSettings["Audience"]}");
 Console.WriteLine($"   SecretKey length: {secretKey.Length}");
 
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.SaveToken = true;
-    options.RequireHttpsMetadata = false;
-
-    options.TokenValidationParameters = new TokenValidationParameters
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
     {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = jwtSettings["Issuer"],
-        ValidAudience = jwtSettings["Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
-        ClockSkew = TimeSpan.Zero,
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtSettings["Issuer"],
+            ValidAudience = jwtSettings["Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
 
-        // ✅ MAPEO DE CLAIMS CORTOS
-        RoleClaimType = "role",
-        NameClaimType = "name"
-    };
+            // Mapeo de claims
+            RoleClaimType = "role",
+            NameClaimType = ClaimTypes.Name
+        };
 
-    options.Events = new JwtBearerEvents
-    {
-        OnMessageReceived = context =>
+        // ✅ AGREGAR: Eventos para suprimir warnings en endpoints públicos
+        options.Events = new JwtBearerEvents
         {
-            var logger = context.HttpContext.RequestServices
-                .GetRequiredService<ILogger<Program>>();
-            
-            var token = context.Request.Headers.Authorization.FirstOrDefault()?.Split(" ").Last();
-            if (!string.IsNullOrEmpty(token))
+            OnAuthenticationFailed = context =>
             {
-                logger.LogInformation($"🔍 JWT Token received: {token.Substring(0, Math.Min(50, token.Length))}...");
-            }
-            else
-            {
-                logger.LogWarning("⚠️ No JWT token found in Authorization header");
-            }
-            
-            return Task.CompletedTask;
-        },
-        OnTokenValidated = context =>
-        {
-            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
-            
-            if (context.Principal?.Identity is ClaimsIdentity identity)
-            {
-                logger.LogInformation("✅ JWT Token validated successfully");
-                
-                var allClaims = identity.Claims.Select(c => $"{c.Type}={c.Value}").ToList();
-                logger.LogInformation($"🔍 ALL claims: {string.Join(", ", allClaims)}");
-                
-                // Verificar claim de rol CON AMBOS NOMBRES
-                var roleShort = identity.FindFirst("role");
-                var roleLong = identity.FindFirst("http://schemas.microsoft.com/ws/2008/06/identity/claims/role");
-                
-                if (roleShort != null)
-                {
-                    logger.LogInformation($"✅✅✅ Role (SHORT) found: {roleShort.Value}");
-                }
-                else if (roleLong != null)
-                {
-                    logger.LogWarning($"⚠️⚠️⚠️ Role found but with LONG URI: {roleLong.Value}");
-                    logger.LogWarning("⚠️ This means the token was generated BEFORE updating Landing API!");
-                    logger.LogWarning("⚠️ YOU MUST LOGOUT AND LOGIN AGAIN to get a new token!");
-                }
-                else
-                {
-                    logger.LogError("❌ NO role claim found at all!");
-                }
+                // Lista de endpoints públicos que no requieren autenticación
+                var isPublicEndpoint =
+                    context.Request.Path.StartsWithSegments("/api/logout") ||
+                    context.Request.Path.StartsWithSegments("/api/extra-hour/calculate") ||
+                    context.Request.Path.StartsWithSegments("/health") ||
+                    context.Request.Path.StartsWithSegments("/swagger");
 
-                // ✅ VERIFICAR CLAIM DE TENANT
-                var tenantClaim = identity.FindFirst("tenantId");
-                if (tenantClaim != null)
+                // Solo loggear si NO es un endpoint público
+                if (!isPublicEndpoint)
                 {
-                    logger.LogInformation($"✅ TenantId claim found: {tenantClaim.Value}");
+                    Console.WriteLine($"⚠️ Authentication failed for {context.Request.Path}: {context.Exception.Message}");
                 }
-                else
-                {
-                    logger.LogWarning("⚠️ TenantId claim NOT found in token");
-                }
-                
-                // Verificar IsInRole
-                logger.LogInformation($"🔍 User.IsInRole('superusuario'): {context.HttpContext.User.IsInRole("superusuario")}");
-                logger.LogInformation($"🔍 User.IsInRole('manager'): {context.HttpContext.User.IsInRole("manager")}");
-            }
-            
-            return Task.CompletedTask;
-        },
-        OnAuthenticationFailed = context =>
-        {
-            var logger = context.HttpContext.RequestServices
-                .GetRequiredService<ILogger<Program>>();
-            logger.LogError($"❌ Authentication failed: {context.Exception.Message}");
-            logger.LogError($"❌ Exception type: {context.Exception.GetType().Name}");
-            logger.LogError($"❌ Stack trace: {context.Exception.StackTrace}");
-            return Task.CompletedTask;
-        },
-        OnChallenge = context =>
-        {
-            var logger = context.HttpContext.RequestServices
-                .GetRequiredService<ILogger<Program>>();
-            logger.LogWarning($"⚠️ Authentication challenge: {context.Error}, {context.ErrorDescription}");
-            return Task.CompletedTask;
-        },
-        OnForbidden = context =>
-        {
-            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
-            var user = context.HttpContext.User;
-            
-            var rolesShort = user.Claims.Where(c => c.Type == "role").Select(c => c.Value).ToList();
-            var rolesLong = user.Claims.Where(c => c.Type == "http://schemas.microsoft.com/ws/2008/06/identity/claims/role").Select(c => c.Value).ToList();
-            
-            logger.LogWarning($"🚫 FORBIDDEN - Endpoint: {context.HttpContext.Request.Path}");
-            logger.LogWarning($"🚫 Roles (short): {string.Join(", ", rolesShort)} - Count: {rolesShort.Count}");
-            logger.LogWarning($"🚫 Roles (long): {string.Join(", ", rolesLong)} - Count: {rolesLong.Count}");
-            
-            if (rolesLong.Any() && !rolesShort.Any())
+                return Task.CompletedTask;
+            },
+            OnChallenge = context =>
             {
-                logger.LogError("❌❌❌ TOKEN IS OLD! User must LOGOUT and LOGIN again!");
+                // Lista de endpoints públicos que no requieren autenticación
+                var isPublicEndpoint =
+                    context.Request.Path.StartsWithSegments("/api/logout") ||
+                    context.Request.Path.StartsWithSegments("/api/extra-hour/calculate") ||
+                    context.Request.Path.StartsWithSegments("/health") ||
+                    context.Request.Path.StartsWithSegments("/swagger");
+
+                // Suprimir el challenge para endpoints públicos
+                if (isPublicEndpoint)
+                {
+                    context.HandleResponse();
+                }
+                return Task.CompletedTask;
             }
-            
-            return Task.CompletedTask;
-        }
-    };
-});
+        };
+    });
 
 builder.Services.AddAuthorization();
 
