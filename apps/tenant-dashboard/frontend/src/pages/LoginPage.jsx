@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Building2, Lock, Mail } from 'lucide-react';
+import ChangePasswordModal from '../components/auth/ChangePasswordModal';
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({
@@ -11,6 +12,7 @@ const LoginPage = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
 
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -119,6 +121,13 @@ const LoginPage = () => {
           </form>
 
           <div className="mt-6 text-center">
+            <button
+              type="button"
+              onClick={() => setShowChangePasswordModal(true)}
+              className="text-sm text-jega-blue-600 hover:text-jega-blue-700 mb-2 block"
+            >
+              ¿Necesitas cambiar tu contraseña?
+            </button>
             <p className="text-sm text-gray-600">
               ¿Problemas para acceder?{' '}
               <a
@@ -131,6 +140,12 @@ const LoginPage = () => {
           </div>
         </div>
       </motion.div>
+
+      {/* Modal de cambio de contraseña */}
+      <ChangePasswordModal
+        isOpen={showChangePasswordModal}
+        onClose={() => setShowChangePasswordModal(false)}
+      />
     </div>
   );
 };

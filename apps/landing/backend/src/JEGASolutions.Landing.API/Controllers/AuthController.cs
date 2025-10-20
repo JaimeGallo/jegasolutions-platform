@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using JEGASolutions.Landing.Application.Interfaces;
+using JEGASolutions.Landing.Application.DTOs;
 using JEGASolutions.Landing.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Security.Claims;
 
 namespace JEGASolutions.Landing.API.Controllers;
 
@@ -214,6 +216,100 @@ public class AuthController : ControllerBase
         {
             _logger.LogError(ex, "💥 Error checking access for user: {UserId}", userId);
             return StatusCode(500, new { message = "Error al verificar acceso" });
+        }
+    }
+
+    /// <summary>
+    /// Cambiar contraseña del usuario autenticado
+    /// </summary>
+    /// <param name="request">Datos de cambio de contraseña</param>
+    /// <returns>Confirmación del cambio</returns>
+    [HttpPut("change-password")]
+    [Authorize] // Requiere JWT válido
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+    {
+        try
+        {
+            // Extraer userId del JWT token
+            var userIdClaim = User.FindFirst("userId")?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+            {
+                _logger.LogWarning("❌ Invalid JWT token or missing userId claim");
+                return Unauthorized(new { message = "Token inválido" });
+            }
+
+            _logger.LogInformation("🔄 Password change request for user: {UserId}", userId);
+
+            await _authService.ChangePasswordAsync(userId, request.CurrentPassword, request.NewPassword);
+
+            _logger.LogInformation("✅ Password changed successfully for user: {UserId}", userId);
+            return Ok(new { message = "Contraseña actualizada correctamente" });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.LogWarning(ex, "❌ Invalid current password");
+            return Unauthorized(new { message = ex.Message });
+        }
+        catch (ArgumentException ex)
+        {
+            _logger.LogWarning(ex, "❌ Password validation failed");
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            _logger.LogWarning(ex, "❌ User not found");
+            return NotFound(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "💥 Internal error changing password");
+            return StatusCode(500, new { message = "Error interno del servidor" });
+        }
+    }
+
+    /// <summary>
+    /// Cambiar contraseña de cualquier usuario (solo admins)
+    /// </summary>
+    /// <param name="request">Datos de cambio de contraseña admin</param>
+    /// <returns>Confirmación del cambio</returns>
+    [HttpPut("change-password-admin")]
+    [Authorize(Roles = "admin,superusuario")] // Solo admins
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> ChangePasswordAdmin([FromBody] ChangePasswordAdminRequest request)
+    {
+        try
+        {
+            _logger.LogInformation("🔄 Admin password change request for user: {UserId}", request.UserId);
+
+            await _authService.ChangePasswordAdminAsync(request.UserId, request.NewPassword);
+
+            _logger.LogInformation("✅ Password changed by admin for user: {UserId}", request.UserId);
+            return Ok(new { message = "Contraseña actualizada correctamente" });
+        }
+        catch (ArgumentException ex)
+        {
+            _logger.LogWarning(ex, "❌ Password validation failed");
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            _logger.LogWarning(ex, "❌ User not found");
+            return NotFound(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "💥 Internal error changing password (admin)");
+            return StatusCode(500, new { message = "Error interno del servidor" });
         }
     }
 }
