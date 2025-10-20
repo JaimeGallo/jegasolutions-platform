@@ -7,6 +7,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Security.Claims;
 
+// 🔄 Force deployment - Password change endpoints added
+
 namespace JEGASolutions.Landing.API.Controllers;
 
 [ApiController]
