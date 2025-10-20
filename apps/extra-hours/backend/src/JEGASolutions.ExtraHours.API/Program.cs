@@ -61,7 +61,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
             // Mapeo de claims
             RoleClaimType = "role",
-            NameClaimType = ClaimTypes.Name
+            NameClaimType = "name"
         };
 
         // ✅ AGREGAR: Eventos para suprimir warnings en endpoints públicos
