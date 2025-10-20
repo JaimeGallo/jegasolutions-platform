@@ -222,6 +222,20 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
+    /// Endpoint de prueba para verificar despliegue
+    /// </summary>
+    [HttpGet("test-deployment")]
+    [AllowAnonymous]
+    public IActionResult TestDeployment()
+    {
+        return Ok(new { 
+            message = "✅ Password change endpoints deployed successfully!",
+            timestamp = DateTime.UtcNow,
+            endpoints = new[] { "change-password", "change-password-admin" }
+        });
+    }
+
+    /// <summary>
     /// Cambiar contraseña del usuario autenticado
     /// </summary>
     /// <param name="request">Datos de cambio de contraseña</param>
