@@ -64,7 +64,7 @@ const Contact = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
     setIsSubmitting(true);
 
@@ -74,7 +74,9 @@ const Contact = () => {
     const PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
 
     if (!SERVICE_ID || !TEMPLATE_ID || !PUBLIC_KEY) {
-      console.error('❌ Variables de entorno EmailJS no configuradas correctamente');
+      console.error(
+        '❌ Variables de entorno EmailJS no configuradas correctamente'
+      );
       alert('Error interno: configuración de EmailJS faltante.');
       setIsSubmitting(false);
       return;
@@ -97,6 +99,11 @@ const Contact = () => {
 
       setFormData({ name: '', email: '', message: '' });
       alert('¡Gracias por tu mensaje! Te contactaremos pronto.');
+
+      // 🔹 Fragmento de conversión (solo se ejecuta tras envío exitoso)
+      gtag('event', 'conversion', {
+        send_to: 'AW-17670930120/OCMRCNKIlbIbEMj9k-pB',
+      });
     } catch (error) {
       console.error('❌ Error al enviar el email:', error);
       alert(
