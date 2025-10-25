@@ -13,7 +13,7 @@ const Hero = ({ onContactClick, onDemoClick }) => {
           className="mb-8"
         >
           <img
-            src="/logoV2.png"
+            src="/LogoV2.png"
             alt="JEGASolutions Logo"
             className="mx-auto h-auto w-full max-w-[20rem] object-contain relative -translate-x-2 md:max-w-[24rem] lg:max-w-[28rem]"
           />
