@@ -1,5 +1,5 @@
-import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { motion } from 'framer-motion';
+import { ArrowRight } from 'lucide-react';
 
 const Hero = ({ onContactClick, onDemoClick }) => {
   return (
@@ -13,7 +13,7 @@ const Hero = ({ onContactClick, onDemoClick }) => {
           className="mb-8"
         >
           <img
-            src="/logo5.png"
+            src="/logoV1.png"
             alt="JEGASolutions Logo"
             className="mx-auto h-auto w-full max-w-[20rem] object-contain relative -translate-x-2 md:max-w-[24rem] lg:max-w-[28rem]"
           />
@@ -28,7 +28,7 @@ const Hero = ({ onContactClick, onDemoClick }) => {
         >
           Suite digital modular para la transformación de procesos
           administrativos. Automatiza, optimiza y digitaliza con herramientas
-          inteligentes que{" "}
+          inteligentes que{' '}
           <span className="text-jega-blue-800 font-semibold">
             revolucionan la gestión empresarial
           </span>
