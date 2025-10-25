@@ -200,7 +200,7 @@ const TenantDashboard = () => {
               <div className="flex-shrink-0">
                 <div className="flex items-center">
                   <img
-                    src="/logoV1.png"
+                    src="/logoV2.png"
                     alt="JEGASolutions Logo"
                     className="h-8 w-auto"
                   />
