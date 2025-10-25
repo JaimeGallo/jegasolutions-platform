@@ -31,7 +31,7 @@ const Header = ({ activeSection, scrollToSection }) => {
             onClick={() => scrollToSection(0)}
           >
             <img
-              src="/logoV2.png"
+              src="/logoV1.png"
               alt="JEGASolutions logo"
               className="h-12 object-contain drop-shadow-lg lg:h-14"
             />

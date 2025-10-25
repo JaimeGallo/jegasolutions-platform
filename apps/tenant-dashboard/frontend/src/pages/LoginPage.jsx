@@ -52,7 +52,7 @@ const LoginPage = () => {
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
               <img
-                src="/logoV2.png"
+                src="/logoV1.png"
                 alt="JEGASolutions Logo"
                 className="h-16 w-auto"
               />
