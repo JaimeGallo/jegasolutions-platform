@@ -5,7 +5,7 @@ using JEGASolutions.ExtraHours.Core.Entities;
 
 namespace JEGASolutions.ExtraHours.Core.Entities.Models
 {
-    [Table("compensation_requests")]
+    [Table("compensationrequests")]
     public class CompensationRequest : TenantEntity
     {
         [Key]
@@ -13,13 +13,13 @@ namespace JEGASolutions.ExtraHours.Core.Entities.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int id { get; set; }
 
-        [Column("employee_id")]
+        [Column("employeeid")]
         public long EmployeeId { get; set; }
 
-        [Column("work_date")]
+        [Column("workdate")]
         public DateTime WorkDate { get; set; } // Día trabajado (domingo/festivo)
 
-        [Column("requested_compensation_date")]
+        [Column("requestedcompensationdate")]
         public DateTime RequestedCompensationDate { get; set; } // Día solicitado como compensación
 
         [Column("status")]
@@ -28,13 +28,13 @@ namespace JEGASolutions.ExtraHours.Core.Entities.Models
         [Column("justification")]
         public string? Justification { get; set; } // Motivo de rechazo o comentario de aprobación
 
-        [Column("approved_by_id")]
+        [Column("approvedbyid")]
         public long? ApprovedById { get; set; } // Manager o Superusuario que decide
 
-        [Column("requested_at")]
+        [Column("requestedat")]
         public DateTime RequestedAt { get; set; }
 
-        [Column("decided_at")]
+        [Column("decidedat")]
         public DateTime? DecidedAt { get; set; }
 
         // Relaciones de navegación (opcional, para EF Core)
