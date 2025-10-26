@@ -1,5 +1,5 @@
-import EmployeeManagement from "../../components/management/EmployeeManagement/EmployeeManagement";
-import "./EmployeeManagementPage.scss";
+import UserManagement from '../../components/management/UserManagement/UserManagement';
+import './EmployeeManagementPage.scss';
 
 const EmployeeManagementPage = () => {
   return (
@@ -32,7 +32,7 @@ const EmployeeManagementPage = () => {
         </section>
 
         <section className="employee-management-form">
-          <EmployeeManagement />
+          <UserManagement />
         </section>
       </div>
     </div>
