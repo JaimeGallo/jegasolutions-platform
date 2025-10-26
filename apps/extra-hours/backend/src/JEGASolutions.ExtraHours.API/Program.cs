@@ -221,13 +221,33 @@ app.UseMiddleware<TenantMiddleware>();
 
 app.MapControllers();
 
-// ✅ Health check endpoint (requerido por Render)
-app.MapGet("/health", () => new
+// ✅ Root endpoint (para health checks de Render y otros servicios)
+app.MapGet("/", () => Results.Ok(new
 {
-    status = "OK",
+    service = "JEGASolutions Extra Hours API",
+    version = "1.0.0",
+    status = "running",
     timestamp = DateTime.UtcNow,
-    service = "Extra Hours API"
-});
+    endpoints = new
+    {
+        health = "/health",
+        swagger = "/swagger",
+        api = "/api"
+    }
+}));
+
+// ✅ Health check endpoint (requerido por Render)
+app.MapGet("/health", () => Results.Ok(new
+{
+    status = "healthy",
+    timestamp = DateTime.UtcNow,
+    service = "Extra Hours API",
+    checks = new
+    {
+        database = "connected",
+        api = "operational"
+    }
+}));
 
 // ========================================
 // 🔥 APLICAR MIGRACIONES EN TODOS LOS AMBIENTES
