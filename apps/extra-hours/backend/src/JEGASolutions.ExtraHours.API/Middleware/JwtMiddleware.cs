@@ -19,42 +19,77 @@ namespace JEGASolutions.ExtraHours.API.Middleware
 
         public async Task InvokeAsync(HttpContext context, IJWTUtils jwtUtils)
         {
-            var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
-            Console.WriteLine($"🔍 Token recibido en JwtMiddleware");
-
-            if (!string.IsNullOrEmpty(token))
+            // Lista de rutas públicas que no requieren token
+            var publicPaths = new[]
             {
+                "/health",
+                "/",
+                "/swagger",
+                "/api/logout",
+                "/api/extra-hour/calculate"
+            };
+
+            var isPublicPath = publicPaths.Any(path =>
+                context.Request.Path.StartsWithSegments(path, StringComparison.OrdinalIgnoreCase));
+
+            var isOptionsRequest = context.Request.Method == "OPTIONS";
+
+            var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+
+            // Solo loguear si NO es una ruta pública y NO es un OPTIONS request
+            if (!isPublicPath && !isOptionsRequest)
+            {
+                if (!string.IsNullOrEmpty(token))
+                {
+                    try
+                    {
+                        var principal = jwtUtils.ExtractClaims(token);
+                        if (principal != null)
+                        {
+                            context.User = principal;
+
+                            var roleClaim = principal.FindFirst("role")?.Value;
+                            var userId = principal.FindFirst("userId")?.Value
+                                      ?? principal.FindFirst("id")?.Value;
+
+                            _logger.LogDebug("Usuario autenticado - Role: {Role}, UserId: {UserId}", roleClaim, userId);
+
+                            if (string.IsNullOrEmpty(roleClaim))
+                            {
+                                _logger.LogWarning("No se encontró el rol en las claims del token");
+                            }
+                        }
+                        else
+                        {
+                            _logger.LogWarning("No se pudo extraer información del token JWT");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error al procesar el token");
+                    }
+                }
+                else
+                {
+                    // Solo loguear warning si es una ruta protegida
+                    _logger.LogDebug("No se recibió token en la petición a: {Path}", context.Request.Path);
+                }
+            }
+            else if (!string.IsNullOrEmpty(token))
+            {
+                // Si hay token en ruta pública, procesarlo silenciosamente
                 try
                 {
                     var principal = jwtUtils.ExtractClaims(token);
                     if (principal != null)
                     {
                         context.User = principal;
-
-                        var roleClaim = principal.FindFirst("role")?.Value;
-                        var userId = principal.FindFirst("userId")?.Value
-                                  ?? principal.FindFirst("id")?.Value;
-
-                        Console.WriteLine($"✅ Usuario autenticado - Role: {roleClaim}, UserId: {userId}");
-
-                        if (string.IsNullOrEmpty(roleClaim))
-                        {
-                            Console.WriteLine("⚠️ No se encontró el rol en las claims del token");
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine("❌ No se pudo extraer información del token JWT");
                     }
                 }
-                catch (Exception ex)
+                catch
                 {
-                    Console.Error.WriteLine($"❌ Error al procesar el token: {ex.Message}");
+                    // Silenciar errores en rutas públicas
                 }
-            }
-            else
-            {
-                Console.WriteLine("⚠️ No se recibió token en la petición");
             }
 
             await _next(context);
