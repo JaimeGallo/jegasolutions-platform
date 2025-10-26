@@ -63,7 +63,7 @@ namespace JEGASolutions.ExtraHours.Data
 
             // ✅ Configuración explícita de tabla CompensationRequest
             modelBuilder.Entity<CompensationRequest>()
-                .ToTable("compensation_requests"); // Usar snake_case para PostgreSQL
+                .ToTable("compensation_requests"); // Usar snake_case para coincidir con el esquema de la BD
 
             // Datos iniciales para ExtraHoursConfig
             modelBuilder.Entity<ExtraHoursConfig>().HasData(new ExtraHoursConfig { id = 1 });
@@ -72,24 +72,24 @@ namespace JEGASolutions.ExtraHours.Data
             modelBuilder.Entity<ExtraHoursConfig>()
                 .Property(e => e.CreatedAt)
                 .HasConversion(
-                    v => v.HasValue ? (v.Value.Kind == DateTimeKind.Unspecified 
-                        ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) 
+                    v => v.HasValue ? (v.Value.Kind == DateTimeKind.Unspecified
+                        ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc)
                         : v.Value.ToUniversalTime()) : (DateTime?)null,
                     v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) : (DateTime?)null);
 
             modelBuilder.Entity<ExtraHoursConfig>()
                 .Property(e => e.UpdatedAt)
                 .HasConversion(
-                    v => v.HasValue ? (v.Value.Kind == DateTimeKind.Unspecified 
-                        ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) 
+                    v => v.HasValue ? (v.Value.Kind == DateTimeKind.Unspecified
+                        ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc)
                         : v.Value.ToUniversalTime()) : (DateTime?)null,
                     v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) : (DateTime?)null);
 
             modelBuilder.Entity<ExtraHoursConfig>()
                 .Property(e => e.DeletedAt)
                 .HasConversion(
-                    v => v.HasValue ? (v.Value.Kind == DateTimeKind.Unspecified 
-                        ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) 
+                    v => v.HasValue ? (v.Value.Kind == DateTimeKind.Unspecified
+                        ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc)
                         : v.Value.ToUniversalTime()) : (DateTime?)null,
                     v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) : (DateTime?)null);
 
