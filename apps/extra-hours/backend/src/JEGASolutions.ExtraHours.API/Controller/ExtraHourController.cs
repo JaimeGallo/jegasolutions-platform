@@ -103,7 +103,7 @@ namespace JEGASolutions.ExtraHours.API.Controller
                             name = employee.name,
                             position = employee.position,
                             salary = employee.salary,
-                            manager = new { name = employee.manager?.manager_name ?? "Sin asignar" },
+                            manager = new { name = employee.manager?.User?.name ?? "Sin asignar" },
                             registry = extraHour.registry,
                             diurnal = extraHour.diurnal,
                             nocturnal = extraHour.nocturnal,
@@ -115,7 +115,7 @@ namespace JEGASolutions.ExtraHours.API.Controller
                             endTime = extraHour.endTime,
                             approved = extraHour.approved,
                             approvedByManagerId = extraHour.ApprovedByManagerId,
-                            approvedByManagerName = extraHour.ApprovedByManager?.manager_name ?? "No aprobado",
+                            approvedByManagerName = extraHour.ApprovedByManager?.User?.name ?? "No aprobado",
                             observations = extraHour.observations
                         });
                     }
@@ -149,7 +149,7 @@ namespace JEGASolutions.ExtraHours.API.Controller
                     name = employee.name,
                     position = employee.position,
                     salary = employee.salary,
-                    manager = new { name = employee.manager?.manager_name ?? "Sin asignar" },
+                    manager = new { name = employee.manager?.User?.name ?? "Sin asignar" },
                     registry = extraHour.registry,
                     diurnal = extraHour.diurnal,
                     nocturnal = extraHour.nocturnal,
@@ -161,7 +161,7 @@ namespace JEGASolutions.ExtraHours.API.Controller
                     endTime = extraHour.endTime,
                     approved = extraHour.approved,
                     approvedByManagerId = extraHour.ApprovedByManagerId,
-                    approvedByManagerName = extraHour.ApprovedByManager?.manager_name ?? "No aprobado",
+                    approvedByManagerName = extraHour.ApprovedByManager?.User?.name ?? "No aprobado",
                     observations = extraHour.observations
                 });
             }
@@ -200,7 +200,7 @@ namespace JEGASolutions.ExtraHours.API.Controller
                     name = employee.name,
                     position = employee.position,
                     salary = employee.salary,
-                    manager = new { name = employee.manager?.manager_name ?? "Sin asignar" },
+                    manager = new { name = employee.manager?.User?.name ?? "Sin asignar" },
                     registry = extraHour.registry,
                     diurnal = extraHour.diurnal,
                     nocturnal = extraHour.nocturnal,
@@ -212,7 +212,7 @@ namespace JEGASolutions.ExtraHours.API.Controller
                     endTime = extraHour.endTime,
                     approved = extraHour.approved,
                     approvedByManagerId = extraHour.ApprovedByManagerId,
-                    approvedByManagerName = extraHour.ApprovedByManager?.manager_name ?? "No aprobado",
+                    approvedByManagerName = extraHour.ApprovedByManager?.User?.name ?? "No aprobado",
                     observations = extraHour.observations
                 });
             }
@@ -445,7 +445,7 @@ namespace JEGASolutions.ExtraHours.API.Controller
                             name = employee.name,
                             position = employee.position,
                             salary = employee.salary,
-                            manager = new { name = employee.manager?.manager_name ?? "Sin asignar" },
+                            manager = new { name = employee.manager?.User?.name ?? "Sin asignar" },
                             registry = extraHour.registry,
                             diurnal = extraHour.diurnal,
                             nocturnal = extraHour.nocturnal,
@@ -457,7 +457,7 @@ namespace JEGASolutions.ExtraHours.API.Controller
                             endTime = extraHour.endTime,
                             approved = extraHour.approved,
                             approvedByManagerId = extraHour.ApprovedByManagerId,
-                            approvedByManagerName = extraHour.ApprovedByManager?.manager_name ?? "No aprobado",
+                            approvedByManagerName = extraHour.ApprovedByManager?.User?.name ?? "No aprobado",
                             observations = extraHour.observations
                         });
                     }
