@@ -16,6 +16,7 @@ using System.IdentityModel.Tokens.Jwt;
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
 
+// 🔄 Force deploy - AsyncLocal TenantContext fix - 2025-10-27
 var builder = WebApplication.CreateBuilder(args);
 
 // ✅ AGREGAR: Configurar logging para reducir ruido de autenticación
