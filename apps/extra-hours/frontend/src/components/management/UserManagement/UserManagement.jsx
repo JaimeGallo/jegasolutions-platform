@@ -34,6 +34,7 @@ import {
   deleteEmployee,
 } from '../../../services/employeeService';
 import { UserService } from '../../../services/UserService';
+import { managerService } from '../../../services/managerService';
 import './UserManagement.scss';
 
 const { TabPane } = Tabs;
@@ -68,13 +69,11 @@ const UserManagement = () => {
 
   const loadManagers = async () => {
     try {
-      // TODO: Crear endpoint GET /api/managers en el backend
-      // Por ahora, simulamos con búsqueda de todos los usuarios rol manager
-      const allUsers = []; // Obtener todos los usuarios
-      const managersData = allUsers.filter(u => u.role === 'manager');
+      const managersData = await managerService.getAllManagers();
       setManagers(managersData);
     } catch (error) {
       console.error('Error cargando managers:', error);
+      message.error('Error al cargar la lista de managers');
     }
   };
 
