@@ -45,7 +45,8 @@ namespace JEGASolutions.ExtraHours.API.Controller
                     manager = new
                     {
                         id = employee.manager?.manager_id,
-                        name = employee.manager?.manager_name
+                        name = employee.manager?.User?.name ?? "Sin asignar",
+                        department = employee.manager?.Department
                     }
                 });
             }
@@ -115,7 +116,7 @@ namespace JEGASolutions.ExtraHours.API.Controller
                     var newManager = new Manager
                     {
                         manager_id = dto.Id,
-                        manager_name = dto.Name ?? string.Empty
+                        Department = dto.Position ?? "General" // Usar posición como departamento por defecto
                     };
                     await _managerRepository.AddAsync(newManager);
                 }
@@ -193,14 +194,14 @@ namespace JEGASolutions.ExtraHours.API.Controller
                         var newManager = new Manager
                         {
                             manager_id = id,
-                            manager_name = dto.Name ?? string.Empty
+                            Department = dto.Position ?? "General"
                         };
                         await _managerRepository.AddAsync(newManager);
                     }
-                    else if (existingManager.manager_name != dto.Name)
+                    else if (existingManager.Department != dto.Position)
                     {
-                        // Actualizar el nombre del manager si cambió
-                        existingManager.manager_name = dto.Name ?? string.Empty;
+                        // Actualizar el departamento del manager si cambió
+                        existingManager.Department = dto.Position ?? "General";
                         await _managerRepository.UpdateAsync(existingManager);
                     }
                 }
@@ -209,7 +210,8 @@ namespace JEGASolutions.ExtraHours.API.Controller
                 {
                     message = "Empleado actualizado correctamente",
                     manager_id = updatedEmployee.manager?.manager_id,
-                    manager_name = updatedEmployee.manager?.manager_name,
+                    manager_name = updatedEmployee.manager?.User?.name ?? "Sin asignar",
+                    department = updatedEmployee.manager?.Department,
                     role = currentRole
                 });
             }
@@ -424,7 +426,7 @@ namespace JEGASolutions.ExtraHours.API.Controller
                             var newManager = new Manager
                             {
                                 manager_id = employeeDto.Id,
-                                manager_name = employeeDto.Name
+                                Department = employeeDto.Position ?? "General"
                             };
                             await _managerRepository.AddAsync(newManager);
                         }

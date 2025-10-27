@@ -63,7 +63,7 @@ namespace JEGASolutions.ExtraHours.Data
 
             // ✅ Configuración explícita de tabla CompensationRequest
             modelBuilder.Entity<CompensationRequest>()
-                .ToTable("compensationrequests"); // Sin guión bajo para coincidir con la BD de producción
+                .ToTable("compensation_requests"); // Con snake_case según diagrama de entidades
 
             // Datos iniciales para ExtraHoursConfig
             modelBuilder.Entity<ExtraHoursConfig>().HasData(new ExtraHoursConfig { id = 1 });

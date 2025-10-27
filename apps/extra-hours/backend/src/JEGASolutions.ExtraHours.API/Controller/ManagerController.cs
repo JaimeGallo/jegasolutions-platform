@@ -1,81 +1,93 @@
-﻿using JEGASolutions.ExtraHours.Core.Entities.Models;
-using JEGASolutions.ExtraHours.Core.Interfaces;
+﻿using JEGASolutions.ExtraHours.Core.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JEGASolutions.ExtraHours.API.Controller
 {
-    [Route("api/[controller]")]
+    [Route("api/managers")]
     [ApiController]
     public class ManagerController : ControllerBase
     {
         private readonly IManagerRepository _managerRepository;
+        private readonly IUserRepository _userRepository;
 
-        public ManagerController(IManagerRepository managerRepository)
+        public ManagerController(IManagerRepository managerRepository, IUserRepository userRepository)
         {
             _managerRepository = managerRepository;
+            _userRepository = userRepository;
         }
 
-        // Obtener todos los managers
+        /// <summary>
+        /// Obtiene la lista de todos los managers con su información de usuario
+        /// </summary>
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Manager>>> GetAllManagers()
+        [Authorize(Roles = "superusuario,manager")]
+        public async Task<IActionResult> GetAllManagers()
         {
-            var managers = await _managerRepository.GetAllAsync();
-            return Ok(managers);
+            try
+            {
+                var managers = await _managerRepository.GetAllAsync();
+                
+                var result = new List<object>();
+                
+                foreach (var manager in managers)
+                {
+                    // Obtener información del usuario asociado
+                    var user = await _userRepository.GetUserByIdAsync(manager.manager_id);
+                    
+                    if (user != null && !user.DeletedAt.HasValue) // Solo managers activos
+                    {
+                        result.Add(new
+                        {
+                            id = manager.manager_id,
+                            name = user.name,
+                            email = user.email,
+                            position = user.role == "manager" ? (manager.Department ?? "Sin departamento") : user.role,
+                            department = manager.Department,
+                            role = user.role
+                        });
+                    }
+                }
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Error al obtener la lista de managers", details = ex.Message });
+            }
         }
 
-        // Obtener un manager por ID
+        /// <summary>
+        /// Obtiene un manager específico por ID
+        /// </summary>
         [HttpGet("{id}")]
-        public async Task<ActionResult<Manager>> GetManagerById(long id)
+        [Authorize(Roles = "superusuario,manager")]
+        public async Task<IActionResult> GetManagerById(long id)
         {
             try
             {
                 var manager = await _managerRepository.GetByIdAsync(id);
-                return Ok(manager);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
-        }
+                
+                if (manager == null)
+                    return NotFound(new { error = "Manager no encontrado" });
 
-        // Agregar un nuevo manager
-        [HttpPost]
-        public async Task<ActionResult> CreateManager([FromBody] Manager manager)
-        {
-            await _managerRepository.AddAsync(manager);
-            return CreatedAtAction(nameof(GetManagerById), new { id = manager.manager_id }, manager);
-        }
+                var user = await _userRepository.GetUserByIdAsync(manager.manager_id);
+                
+                if (user == null)
+                    return NotFound(new { error = "Usuario asociado no encontrado" });
 
-        // Actualizar un manager
-        [HttpPut("{id}")]
-        public async Task<ActionResult> UpdateManager(long id, [FromBody] Manager manager)
-        {
-            if (id != manager.manager_id)
-                return BadRequest(new { message = "ID mismatch" });
-
-            try
-            {
-                await _managerRepository.UpdateAsync(manager);
-                return NoContent();
+                return Ok(new
+                {
+                    id = manager.manager_id,
+                    name = user.name,
+                    email = user.email,
+                    department = manager.Department,
+                    role = user.role
+                });
             }
-            catch (InvalidOperationException ex)
+            catch (Exception ex)
             {
-                return NotFound(new { message = ex.Message });
-            }
-        }
-
-        // Eliminar un manager
-        [HttpDelete("{id}")]
-        public async Task<ActionResult> DeleteManager(long id)
-        {
-            try
-            {
-                await _managerRepository.DeleteAsync(id);
-                return NoContent();
-            }
-            catch (InvalidOperationException ex)
-            {
-                return NotFound(new { message = ex.Message });
+                return StatusCode(500, new { error = "Error al obtener el manager", details = ex.Message });
             }
         }
     }

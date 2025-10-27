@@ -15,8 +15,7 @@ namespace JEGASolutions.ExtraHours.Core.Entities.Models
         [ForeignKey("manager_id")]
         public User? User { get; set; }
 
-        [Required]
-        [Column("manager_name")]
-        public string manager_name { get; set; } = string.Empty;
+        [Column("department")]
+        public string? Department { get; set; }
     }
 }
