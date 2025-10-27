@@ -46,19 +46,19 @@ namespace JEGASolutions.ExtraHours.API.Middleware
             }
             else
             {
-                _logger.LogDebug("[TenantMiddleware] ✅ User authenticated on path: {Path}", path);
-
+                _logger.LogInformation("[TenantMiddleware] ✅ User authenticated on path: {Path}", path);
+                
                 // Log all claims for debugging
                 var claims = context.User.Claims.Select(c => $"{c.Type}={c.Value}").ToList();
-                _logger.LogDebug("[TenantMiddleware] Claims: {Claims}", string.Join(", ", claims));
+                _logger.LogInformation("[TenantMiddleware] Claims: {Claims}", string.Join(", ", claims));
             }
 
             // Try to extract tenant_id from JWT claims (primary)
             var tenantIdClaim = context.User.FindFirst("tenant_id")?.Value;
             var tenantIdClaimAlt = context.User.FindFirst("tenantId")?.Value;
 
-            _logger.LogDebug("[TenantMiddleware] tenant_id claim: {TenantId}", tenantIdClaim ?? "null");
-            _logger.LogDebug("[TenantMiddleware] tenantId claim: {TenantIdAlt}", tenantIdClaimAlt ?? "null");
+            _logger.LogInformation("[TenantMiddleware] tenant_id claim: {TenantId}", tenantIdClaim ?? "null");
+            _logger.LogInformation("[TenantMiddleware] tenantId claim: {TenantIdAlt}", tenantIdClaimAlt ?? "null");
 
             if (!string.IsNullOrEmpty(tenantIdClaim) && int.TryParse(tenantIdClaim, out int tenantId))
             {
@@ -68,7 +68,7 @@ namespace JEGASolutions.ExtraHours.API.Middleware
                 // Verify it was set correctly
                 if (tenantContextService.HasTenantId())
                 {
-                    _logger.LogDebug("[TenantMiddleware] ✅ Verified tenant context: {TenantId}", tenantContextService.GetCurrentTenantId());
+                    _logger.LogInformation("[TenantMiddleware] ✅ Verified tenant context: {TenantId}", tenantContextService.GetCurrentTenantId());
                 }
                 else
                 {
@@ -83,7 +83,7 @@ namespace JEGASolutions.ExtraHours.API.Middleware
                 // Verify it was set correctly
                 if (tenantContextService.HasTenantId())
                 {
-                    _logger.LogDebug("[TenantMiddleware] ✅ Verified tenant context: {TenantId}", tenantContextService.GetCurrentTenantId());
+                    _logger.LogInformation("[TenantMiddleware] ✅ Verified tenant context: {TenantId}", tenantContextService.GetCurrentTenantId());
                 }
                 else
                 {
@@ -114,7 +114,7 @@ namespace JEGASolutions.ExtraHours.API.Middleware
                 // Verify it was set correctly
                 if (tenantContextService.HasTenantId())
                 {
-                    _logger.LogDebug("[TenantMiddleware] ✅ Verified default tenant context: {TenantId}", tenantContextService.GetCurrentTenantId());
+                    _logger.LogInformation("[TenantMiddleware] ✅ Verified default tenant context: {TenantId}", tenantContextService.GetCurrentTenantId());
                 }
                 else
                 {
