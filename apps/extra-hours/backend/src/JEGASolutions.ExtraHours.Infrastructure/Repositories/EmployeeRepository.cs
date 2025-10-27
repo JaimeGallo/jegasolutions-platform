@@ -91,9 +91,8 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Repositories
             if (employee == null)
                 throw new KeyNotFoundException("Empleado no encontrado");
 
-            employee.name = dto.Name ?? employee.name;
+            // Solo actualizar position (name y salary están en User, no en Employee)
             employee.position = dto.Position ?? employee.position;
-            employee.salary = (double?)(dto.Salary ?? (decimal?)employee.salary);
 
             if (dto.ManagerId.HasValue)
             {

@@ -80,15 +80,19 @@ namespace JEGASolutions.ExtraHours.API.Controller
         [HttpPost]
         public async Task<IActionResult> AddEmployee([FromBody] EmployeeWithUserDTO dto)
         {
-            if (dto.ManagerId == null)
-                return BadRequest(new { error = "Manager ID es requerido" });
+            // Los managers NO necesitan manager_id, los empleados SÍ
+            if (dto.Role?.ToLower() != "manager" && dto.ManagerId == null)
+                return BadRequest(new { error = "Manager ID es requerido para empleados" });
 
             try
             {
-                // Verificar si el manager existe
-                var manager = await _managerRepository.GetByIdAsync(dto.ManagerId.Value);
-                if (manager == null)
-                    return BadRequest(new { error = "Manager no encontrado con el ID proporcionado" });
+                // Verificar si el manager existe (solo si se proporcionó manager_id)
+                if (dto.ManagerId.HasValue)
+                {
+                    var manager = await _managerRepository.GetByIdAsync(dto.ManagerId.Value);
+                    if (manager == null)
+                        return BadRequest(new { error = "Manager no encontrado con el ID proporcionado" });
+                }
 
                 // Verificar si ya existe un usuario con el mismo id
                 if (await _userService.UserExistsAsync((int)dto.Id))
@@ -125,10 +129,8 @@ namespace JEGASolutions.ExtraHours.API.Controller
                 var employee = new Employee
                 {
                     id = dto.Id,
-                    name = dto.Name ?? string.Empty,
                     position = dto.Position ?? string.Empty,
-                    salary = dto.Salary,
-                    manager_id = dto.ManagerId,
+                    manager_id = dto.ManagerId, // Puede ser null para managers
                 };
                 await _employeeService.AddEmployeeAsync(employee);
 
@@ -435,9 +437,7 @@ namespace JEGASolutions.ExtraHours.API.Controller
                         var employee = new Employee
                         {
                             id = employeeDto.Id,
-                            name = employeeDto.Name,
                             position = employeeDto.Position,
-                            salary = (double?)employeeDto.Salary,
                             manager_id = employeeDto.ManagerId
                         };
                         await _employeeService.AddEmployeeAsync(employee);
