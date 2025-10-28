@@ -15,8 +15,26 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Repositories
             _context = context;
         }
 
+        /// <summary>
+        /// ✅ CRITICAL FIX: Gets the extra hours configuration for a specific tenant
+        /// This ensures proper multi-tenant data isolation
+        /// </summary>
+        public async Task<ExtraHoursConfig?> GetConfigByTenantAsync(int tenantId)
+        {
+            return await _context.extraHoursConfigs
+                .Where(c => c.TenantId == tenantId)
+                .FirstOrDefaultAsync();
+        }
+
+        /// <summary>
+        /// ⚠️ DEPRECATED: Legacy method without tenant filtering
+        /// This method is kept for backwards compatibility but should not be used
+        /// </summary>
+        [Obsolete("Use GetConfigByTenantAsync instead to ensure proper multi-tenant isolation")]
         public async Task<ExtraHoursConfig?> GetConfigAsync()
         {
+            // ❌ SECURITY ISSUE: This query does NOT filter by tenant_id
+            // Keeping for backwards compatibility only
             return await _context.extraHoursConfigs.FirstOrDefaultAsync();
         }
 
@@ -24,7 +42,7 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Repositories
         {
             // ✅ SOLUCIÓN: Asegurar que todos los DateTime sean UTC antes de guardar
             config.MarkAsUpdated(); // Esto ya establece UpdatedAt en UTC
-            
+
             // Asegurar que CreatedAt sea UTC si existe
             if (config.CreatedAt.HasValue)
             {
@@ -37,7 +55,7 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Repositories
                     config.CreatedAt = config.CreatedAt.Value.ToUniversalTime();
                 }
             }
-            
+
             // Asegurar que UpdatedAt sea UTC
             if (config.UpdatedAt.HasValue)
             {
@@ -50,7 +68,7 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Repositories
                     config.UpdatedAt = config.UpdatedAt.Value.ToUniversalTime();
                 }
             }
-            
+
             // Asegurar que DeletedAt sea UTC si existe
             if (config.DeletedAt.HasValue)
             {
@@ -63,7 +81,7 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Repositories
                     config.DeletedAt = config.DeletedAt.Value.ToUniversalTime();
                 }
             }
-            
+
             _context.extraHoursConfigs.Update(config);
             await _context.SaveChangesAsync();
             return config;

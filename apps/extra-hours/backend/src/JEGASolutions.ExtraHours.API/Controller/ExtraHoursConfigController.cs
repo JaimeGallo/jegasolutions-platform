@@ -21,24 +21,43 @@ namespace JEGASolutions.ExtraHours.API.Controller
         }
 
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> GetConfig()
         {
             try
             {
-                var config = await _configService.GetConfigAsync();
-                if (config == null)
+                // ✅ CRITICAL FIX: Extract tenant_id from JWT token
+                var tenantIdClaim = User.FindFirst("tenant_id") ?? User.FindFirst("TenantId");
+                if (tenantIdClaim == null || !int.TryParse(tenantIdClaim.Value, out int tenantId))
                 {
-                    return NotFound(new { error = "Configuración no encontrada" });
+                    _logger.LogWarning("⚠️ Tenant ID not found in token");
+                    return BadRequest(new { error = "Tenant ID no encontrado en el token" });
                 }
 
-                _logger.LogInformation("✅ Config retrieved: weeklyLimit={Weekly}, diurnalEnd={End}",
-                    config.weeklyExtraHoursLimit, config.diurnalEnd);
+                _logger.LogInformation("🔍 Getting config for tenant {TenantId}", tenantId);
+
+                // ✅ Use the new method that filters by tenant_id
+                var config = await _configService.GetConfigByTenantAsync(tenantId);
+                if (config == null)
+                {
+                    return NotFound(new { error = "Configuración no encontrada para tu organización" });
+                }
+
+                _logger.LogInformation(
+                    "✅ Config retrieved for tenant {TenantId}: weeklyLimit={Weekly}, diurnalEnd={End}",
+                    tenantId, config.weeklyExtraHoursLimit, config.diurnalEnd);
+
                 return Ok(config);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                _logger.LogWarning(ex, "⚠️ Config not found");
+                return NotFound(new { error = ex.Message });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error getting config");
-                return StatusCode(500, new { error = ex.Message });
+                return StatusCode(500, new { error = "Error interno del servidor" });
             }
         }
 
@@ -48,28 +67,51 @@ namespace JEGASolutions.ExtraHours.API.Controller
         {
             try
             {
+                // ✅ Extract tenant_id from JWT token
+                var tenantIdClaim = User.FindFirst("tenant_id") ?? User.FindFirst("TenantId");
+                if (tenantIdClaim == null || !int.TryParse(tenantIdClaim.Value, out int tenantId))
+                {
+                    _logger.LogWarning("⚠️ Tenant ID not found in token");
+                    return BadRequest(new { error = "Tenant ID no encontrado en el token" });
+                }
+
                 // Log de debugging
                 var userRole = User.FindFirst("role")?.Value;
                 var userId = User.FindFirst("userId")?.Value ?? User.FindFirst("id")?.Value;
                 var userName = User.Identity?.Name;
-                
-                _logger.LogInformation($"🔍 UpdateConfig called by - Role: {userRole}, UserId: {userId}, Name: {userName}");
-                
+
+                _logger.LogInformation(
+                    "🔍 UpdateConfig called by - Role: {Role}, UserId: {UserId}, Name: {Name}, TenantId: {TenantId}",
+                    userRole, userId, userName, tenantId);
+
                 if (config == null)
                 {
                     return BadRequest(new { error = "Datos de configuración no pueden ser nulos" });
                 }
 
+                // ✅ CRITICAL: Ensure the config has the correct tenant_id
+                config.TenantId = tenantId;
+
                 var updatedConfig = await _configService.UpdateConfigAsync(config);
+
+                _logger.LogInformation(
+                    "✅ Config updated successfully for tenant {TenantId}",
+                    tenantId);
+
                 return Ok(updatedConfig);
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning(ex, "⚠️ Invalid operation");
+                return BadRequest(new { error = ex.Message });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error updating config");
-                return StatusCode(500, new 
-                { 
+                return StatusCode(500, new
+                {
                     error = "Error actualizando la configuración",
-                    details = ex.Message 
+                    details = ex.Message
                 });
             }
         }
