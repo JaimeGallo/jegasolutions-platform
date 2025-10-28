@@ -35,8 +35,10 @@ namespace JEGASolutions.ExtraHours.API.Controller
 
                 if (User.Identity?.IsAuthenticated == true)
                 {
+                    // Try multiple claim names for compatibility with different token issuers
                     var tenantIdClaim = User.Claims.FirstOrDefault(c => c.Type == "tenant_id") 
-                                     ?? User.Claims.FirstOrDefault(c => c.Type == "TenantId");
+                                     ?? User.Claims.FirstOrDefault(c => c.Type == "TenantId")
+                                     ?? User.Claims.FirstOrDefault(c => c.Type == "tenantId"); // Landing API uses this format
                     
                     if (tenantIdClaim != null && int.TryParse(tenantIdClaim.Value, out int parsedTenantId))
                     {
@@ -260,9 +262,11 @@ namespace JEGASolutions.ExtraHours.API.Controller
         public async Task<IActionResult> CreateExtraHour([FromBody] ExtraHour extraHour, IEmailService emailService)
         {
             // ✅ CRITICAL FIX: Extract tenant_id from JWT token
+            // Try multiple claim names for compatibility with different token issuers
             var tenantIdClaim = User.Claims.FirstOrDefault(c => c.Type == "tenant_id")
-                             ?? User.Claims.FirstOrDefault(c => c.Type == "TenantId");
-
+                             ?? User.Claims.FirstOrDefault(c => c.Type == "TenantId")
+                             ?? User.Claims.FirstOrDefault(c => c.Type == "tenantId"); // Landing API uses this format
+            
             if (tenantIdClaim == null || !int.TryParse(tenantIdClaim.Value, out int tenantId))
             {
                 Console.WriteLine("❌ ERROR: Tenant ID no encontrado en el token");
