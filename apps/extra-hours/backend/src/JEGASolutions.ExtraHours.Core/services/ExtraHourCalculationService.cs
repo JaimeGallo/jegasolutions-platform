@@ -2,22 +2,67 @@
 using System.Threading.Tasks;
 using JEGASolutions.ExtraHours.Core.Entities.Models;
 using JEGASolutions.ExtraHours.Core.Interfaces;
+using Microsoft.Extensions.Logging;
+
 namespace JEGASolutions.ExtraHours.Core.Services
 {
     public class ExtraHourCalculationService : IExtraHourCalculationService
     {
         private readonly IColombianHolidayService _holidayService;
         private readonly IExtraHoursConfigService _configService;
+        private readonly ILogger<ExtraHourCalculationService> _logger;
 
-        public ExtraHourCalculationService(IColombianHolidayService holidayService, IExtraHoursConfigService configService)
+        public ExtraHourCalculationService(
+            IColombianHolidayService holidayService,
+            IExtraHoursConfigService configService,
+            ILogger<ExtraHourCalculationService> logger)
         {
             _holidayService = holidayService;
             _configService = configService;
+            _logger = logger;
         }
 
+        /// <summary>
+        /// ✅ CRITICAL FIX: Calculate extra hours using tenant-specific configuration
+        /// </summary>
+        public async Task<ExtraHourCalculation> DetermineExtraHourTypeAsync(
+            DateTime date,
+            TimeSpan startTime,
+            TimeSpan endTime,
+            int tenantId)
+        {
+            _logger.LogInformation(
+                "🔍 Calculando horas extra para tenant {TenantId}: Date={Date}, StartTime={StartTime}, EndTime={EndTime}",
+                tenantId, date, startTime, endTime);
+
+            // ✅ Obtener configuración FILTRADA POR TENANT
+            var config = await _configService.GetConfigByTenantAsync(tenantId);
+            if (config == null)
+            {
+                throw new InvalidOperationException(
+                    $"No existe configuración de horas extra para el tenant {tenantId}. " +
+                    "Contacte al administrador del sistema.");
+            }
+
+            TimeSpan diurnalStart = config.diurnalStart;
+            TimeSpan diurnalEnd = config.diurnalEnd;
+
+            _logger.LogInformation(
+                "✅ Usando configuración para tenant {TenantId}: DiurnalStart={Start}, DiurnalEnd={End}",
+                tenantId, diurnalStart, diurnalEnd);
+
+            return await CalculateExtraHoursInternal(date, startTime, endTime, diurnalStart, diurnalEnd);
+        }
+
+        /// <summary>
+        /// ⚠️ DEPRECATED: Legacy method without tenant filtering
+        /// </summary>
+        [Obsolete("Use DetermineExtraHourTypeAsync with tenantId parameter to ensure proper multi-tenant isolation")]
         public async Task<ExtraHourCalculation> DetermineExtraHourTypeAsync(DateTime date, TimeSpan startTime, TimeSpan endTime)
         {
-            // Obtener configuración de franjas horarias
+            _logger.LogWarning("⚠️ DEPRECATED: DetermineExtraHourTypeAsync called without tenant filtering");
+
+            // Obtener configuración de franjas horarias (sin filtrar por tenant - DEPRECATED)
             var config = await _configService.GetConfigAsync();
             if (config == null)
             {
@@ -26,6 +71,20 @@ namespace JEGASolutions.ExtraHours.Core.Services
 
             TimeSpan diurnalStart = config.diurnalStart;
             TimeSpan diurnalEnd = config.diurnalEnd;
+
+            return await CalculateExtraHoursInternal(date, startTime, endTime, diurnalStart, diurnalEnd);
+        }
+
+        /// <summary>
+        /// Internal method that performs the actual calculation
+        /// </summary>
+        private async Task<ExtraHourCalculation> CalculateExtraHoursInternal(
+            DateTime date,
+            TimeSpan startTime,
+            TimeSpan endTime,
+            TimeSpan diurnalStart,
+            TimeSpan diurnalEnd)
+        {
 
             // Verificar que la hora fin sea posterior a la hora inicio
             DateTime startDateTime = date.Date + startTime;

@@ -22,6 +22,7 @@ namespace JEGASolutions.ExtraHours.API.Controller
         }
 
         [HttpPost("calculate")]
+        [Authorize]
         public async Task<IActionResult> CalculateExtraHours([FromBody] ExtraHourCalculationRequest request)
         {
             if (request == null)
@@ -29,16 +30,34 @@ namespace JEGASolutions.ExtraHours.API.Controller
 
             try
             {
+                // ✅ CRITICAL FIX: Extract tenant_id from JWT token
+                var tenantIdClaim = User.Claims.FirstOrDefault(c => c.Type == "tenant_id")
+                                 ?? User.Claims.FirstOrDefault(c => c.Type == "TenantId");
+
+                if (tenantIdClaim == null || !int.TryParse(tenantIdClaim.Value, out int tenantId))
+                {
+                    Console.WriteLine("❌ ERROR: Tenant ID no encontrado en el token");
+                    return BadRequest(new { error = "Tenant ID no encontrado en el token. Por favor, inicie sesión nuevamente." });
+                }
+
+                Console.WriteLine($"🔍 CalculateExtraHours - TenantId: {tenantId}");
+
+                // ✅ Use the new method that filters by tenant_id
                 var calculation = await _calculationService.DetermineExtraHourTypeAsync(
                     request.Date,
                     request.StartTime,
-                    request.EndTime);
+                    request.EndTime,
+                    tenantId);
 
                 return Ok(calculation);
             }
             catch (InvalidOperationException ex)
             {
                 return BadRequest(new { error = ex.Message });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
             }
             catch (Exception ex)
             {
@@ -224,13 +243,30 @@ namespace JEGASolutions.ExtraHours.API.Controller
         [Authorize]
         public async Task<IActionResult> CreateExtraHour([FromBody] ExtraHour extraHour, IEmailService emailService)
         {
+            // ✅ CRITICAL FIX: Extract tenant_id from JWT token
+            var tenantIdClaim = User.Claims.FirstOrDefault(c => c.Type == "tenant_id")
+                             ?? User.Claims.FirstOrDefault(c => c.Type == "TenantId");
+
+            if (tenantIdClaim == null || !int.TryParse(tenantIdClaim.Value, out int tenantId))
+            {
+                Console.WriteLine("❌ ERROR: Tenant ID no encontrado en el token");
+                return BadRequest(new { error = "Tenant ID no encontrado en el token. Por favor, inicie sesión nuevamente." });
+            }
+
             // Obtener ID del empleado desde el token
             var userId = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
             var userRole = User.Claims.FirstOrDefault(c => c.Type == "role")?.Value;
 
+            Console.WriteLine($"🔍 CreateExtraHour - TenantId: {tenantId}, UserId: {userId}, Role: {userRole}");
+
             if (string.IsNullOrEmpty(userId))
             {
                 return Unauthorized(new { error = "No se pudo obtener el ID del usuario logueado." });
+            }
+
+            if (extraHour == null)
+            {
+                return BadRequest(new { error = "Datos de horas extra no pueden ser nulos" });
             }
 
             long currentUserId = long.Parse(userId);
@@ -238,19 +274,44 @@ namespace JEGASolutions.ExtraHours.API.Controller
 
             if (userRole?.ToLower() == "superusuario")
             {
+                // ✅ For superusers, verify that the employee exists AND belongs to the same tenant
+                var targetEmployee = await _employeeService.GetByIdAsync(extraHour.id);
 
-                var targetEmployeeExists = await _employeeService.EmployeeExistsAsync(extraHour.id);
-                if (!targetEmployeeExists)
+                if (targetEmployee == null)
                 {
+                    Console.WriteLine($"❌ Empleado {extraHour.id} no existe");
                     return BadRequest(new { error = "El empleado no existe" });
                 }
+
+                // ✅ CRITICAL: Verify employee belongs to the same tenant
+                if (targetEmployee.TenantId != tenantId)
+                {
+                    Console.WriteLine($"❌ SECURITY: Empleado {extraHour.id} pertenece a tenant {targetEmployee.TenantId}, pero usuario está en tenant {tenantId}");
+                    return Forbid();
+                }
+
                 employeeId = extraHour.id;
+                Console.WriteLine($"✅ Superusuario creando horas extra para empleado {employeeId} en tenant {tenantId}");
             }
             else
             {
                 employeeId = currentUserId;
                 var employee = await _employeeService.GetByIdAsync(currentUserId);
-                if (employee == null || employee.manager_id == null)
+
+                if (employee == null)
+                {
+                    Console.WriteLine($"❌ Empleado {currentUserId} no encontrado");
+                    return BadRequest(new { error = "Empleado no encontrado" });
+                }
+
+                // ✅ CRITICAL: Verify employee belongs to the same tenant
+                if (employee.TenantId != tenantId)
+                {
+                    Console.WriteLine($"❌ SECURITY: Empleado {currentUserId} pertenece a tenant {employee.TenantId}, pero token tiene tenant {tenantId}");
+                    return Forbid();
+                }
+
+                if (employee.manager_id == null)
                 {
                     return BadRequest(new { error = "El empleado no tiene un manager asignado" });
                 }
@@ -263,27 +324,26 @@ namespace JEGASolutions.ExtraHours.API.Controller
                 extraHour.id = employeeId;
             }
 
-            if (extraHour == null)
-            {
-                return BadRequest(new { error = "Datos de horas extra no pueden ser nulos" });
-            }
-
             if (extraHour.startTime == TimeSpan.Zero)
                 return BadRequest(new { error = "Formato de startTime inválido" });
 
             if (extraHour.endTime == TimeSpan.Zero)
                 return BadRequest(new { error = "Formato de endTime inválido" });
 
+            // ✅ CRITICAL: Assign tenant_id to the extra hour record
+            extraHour.TenantId = tenantId;
             extraHour.approved = false;
             extraHour.ApprovedByManagerId = null;
 
             // Realizar el cálculo automático en el backend
             try
             {
+                // ✅ Use the new method that filters by tenant_id
                 var calculation = await _calculationService.DetermineExtraHourTypeAsync(
                     extraHour.date,
                     extraHour.startTime,
-                    extraHour.endTime);
+                    extraHour.endTime,
+                    tenantId);
 
                 // Actualizar los valores calculados
                 extraHour.diurnal = calculation.diurnal;
@@ -292,7 +352,12 @@ namespace JEGASolutions.ExtraHours.API.Controller
                 extraHour.nocturnalHoliday = calculation.nocturnalHoliday;
                 extraHour.extraHours = calculation.extraHours;
 
+                Console.WriteLine($"📝 Guardando horas extra para empleado {employeeId}, tenant {tenantId}");
+                Console.WriteLine($"   Cálculo: Diurnal={calculation.diurnal}, Nocturnal={calculation.nocturnal}, Total={calculation.extraHours}");
+
                 var savedExtraHour = await _extraHourService.AddExtraHourAsync(extraHour);
+
+                Console.WriteLine($"✅ Horas extra guardadas exitosamente: Registry={savedExtraHour.registry}, EmployeeId={savedExtraHour.id}, TenantId={savedExtraHour.TenantId}");
 
                 var employee = await _employeeService.GetByIdAsync(employeeId);
 
