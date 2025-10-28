@@ -22,7 +22,6 @@ namespace JEGASolutions.ExtraHours.API.Controller
         }
 
         [HttpPost("calculate")]
-        [Authorize]
         public async Task<IActionResult> CalculateExtraHours([FromBody] ExtraHourCalculationRequest request)
         {
             if (request == null)
@@ -30,19 +29,32 @@ namespace JEGASolutions.ExtraHours.API.Controller
 
             try
             {
-                // ✅ CRITICAL FIX: Extract tenant_id from JWT token
-                var tenantIdClaim = User.Claims.FirstOrDefault(c => c.Type == "tenant_id")
-                                 ?? User.Claims.FirstOrDefault(c => c.Type == "TenantId");
+                // ✅ Try to extract tenant_id from JWT token (if user is authenticated)
+                int tenantId = 1; // Default tenant
+                bool hasTenantId = false;
 
-                if (tenantIdClaim == null || !int.TryParse(tenantIdClaim.Value, out int tenantId))
+                if (User.Identity?.IsAuthenticated == true)
                 {
-                    Console.WriteLine("❌ ERROR: Tenant ID no encontrado en el token");
-                    return BadRequest(new { error = "Tenant ID no encontrado en el token. Por favor, inicie sesión nuevamente." });
+                    var tenantIdClaim = User.Claims.FirstOrDefault(c => c.Type == "tenant_id") 
+                                     ?? User.Claims.FirstOrDefault(c => c.Type == "TenantId");
+                    
+                    if (tenantIdClaim != null && int.TryParse(tenantIdClaim.Value, out int parsedTenantId))
+                    {
+                        tenantId = parsedTenantId;
+                        hasTenantId = true;
+                        Console.WriteLine($"🔍 CalculateExtraHours - Authenticated user, TenantId: {tenantId}");
+                    }
+                    else
+                    {
+                        Console.WriteLine("⚠️ User authenticated but no tenant_id in token, using default tenant");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("ℹ️ CalculateExtraHours - Unauthenticated request, using default tenant configuration");
                 }
 
-                Console.WriteLine($"🔍 CalculateExtraHours - TenantId: {tenantId}");
-
-                // ✅ Use the new method that filters by tenant_id
+                // ✅ Use tenant-specific configuration (or default if not authenticated)
                 var calculation = await _calculationService.DetermineExtraHourTypeAsync(
                     request.Date,
                     request.StartTime,
@@ -57,7 +69,11 @@ namespace JEGASolutions.ExtraHours.API.Controller
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(new { error = ex.Message });
+                // If tenant configuration not found, provide helpful message
+                return NotFound(new { 
+                    error = "Configuración no encontrada. Por favor, contacte al administrador.",
+                    details = ex.Message 
+                });
             }
             catch (Exception ex)
             {
