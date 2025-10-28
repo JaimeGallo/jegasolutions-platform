@@ -27,7 +27,10 @@ namespace JEGASolutions.ExtraHours.API.Controller
             try
             {
                 // ✅ CRITICAL FIX: Extract tenant_id from JWT token
-                var tenantIdClaim = User.FindFirst("tenant_id") ?? User.FindFirst("TenantId");
+                // Try multiple claim names for compatibility with different token issuers
+                var tenantIdClaim = User.FindFirst("tenant_id") 
+                                 ?? User.FindFirst("TenantId") 
+                                 ?? User.FindFirst("tenantId"); // Landing API uses this format
                 if (tenantIdClaim == null || !int.TryParse(tenantIdClaim.Value, out int tenantId))
                 {
                     _logger.LogWarning("⚠️ Tenant ID not found in token");
@@ -68,7 +71,10 @@ namespace JEGASolutions.ExtraHours.API.Controller
             try
             {
                 // ✅ Extract tenant_id from JWT token
-                var tenantIdClaim = User.FindFirst("tenant_id") ?? User.FindFirst("TenantId");
+                // Try multiple claim names for compatibility with different token issuers
+                var tenantIdClaim = User.FindFirst("tenant_id") 
+                                 ?? User.FindFirst("TenantId") 
+                                 ?? User.FindFirst("tenantId"); // Landing API uses this format
                 if (tenantIdClaim == null || !int.TryParse(tenantIdClaim.Value, out int tenantId))
                 {
                     _logger.LogWarning("⚠️ Tenant ID not found in token");
