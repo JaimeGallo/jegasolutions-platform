@@ -18,6 +18,7 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Repositories
         public async Task<List<Employee>> GetEmployeesByManagerIdAsync(long managerId)
         {
             return await _context.employees
+                .Include(e => e.User) // ✅ Include employee's user data
                 .Include(e => e.manager)
                 .ThenInclude(m => m!.User)
                 .Where(e => e.manager_id == managerId)
@@ -27,6 +28,7 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Repositories
         public async Task<Employee?> GetByIdAsync(long id)
         {
             return await _context.employees
+                .Include(e => e.User) // ✅ Include employee's user data
                 .Include(e => e.manager)
                 .ThenInclude(m => m!.User)
                 .FirstOrDefaultAsync(e => e.id == id);
@@ -40,6 +42,7 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Repositories
         public async Task<List<Employee>> GetAllAsync()
         {
             return await _context.employees
+                .Include(e => e.User) // ✅ Include employee's user data
                 .Include(e => e.manager)
                 .ThenInclude(m => m!.User)
                 .ToListAsync();

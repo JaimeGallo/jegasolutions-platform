@@ -25,14 +25,27 @@ namespace JEGASolutions.ExtraHours.Core.Entities.Models
         [Column("end_time")]
         public TimeSpan endTime { get; set; }
 
+        [Column("diurnal")]
+        public double diurnal { get; set; } = 0;
+
+        [Column("nocturnal")]
+        public double nocturnal { get; set; } = 0;
+
+        [Column("diurnal_holiday")]
+        public double diurnalHoliday { get; set; } = 0;
+
+        [Column("nocturnal_holiday")]
+        public double nocturnalHoliday { get; set; } = 0;
+
         [Column("total_hours")]
-        public double? extraHours { get; set; }
+        public double extraHours { get; set; } = 0;
 
         [Column("type")]
-        public string? type { get; set; }
+        public string? type { get; set; } = "extra"; // Tipo general
 
         [Column("status")]
-        public string? status { get; set; }
+        [Required]
+        public string status { get; set; } = "pending"; // pending, approved, rejected
 
         [Column("notes")]
         public string? observations { get; set; }
@@ -43,23 +56,10 @@ namespace JEGASolutions.ExtraHours.Core.Entities.Models
         [Column("approved_at")]
         public DateTime? approvedAt { get; set; }
 
-        // Computed properties for backward compatibility (not mapped to DB)
-        [NotMapped]
-        public double diurnal { get; set; }
-
-        [NotMapped]
-        public double nocturnal { get; set; }
-
-        [NotMapped]
-        public double diurnalHoliday { get; set; }
-
-        [NotMapped]
-        public double nocturnalHoliday { get; set; }
-
         [NotMapped]
         public bool approved
         {
-            get => status?.ToLower() == "approved";
+            get => status.ToLower() == "approved";
             set => status = value ? "approved" : "pending";
         }
 
