@@ -29,7 +29,7 @@ namespace JEGASolutions.ExtraHours.Core.Entities.Models
         [Required]
         public bool approved { get; set; } = false;
 
-        [Column("approved_by_manager_id")]
+        [Column("approved_by")]
         public long? ApprovedByManagerId { get; set; }
 
         [ForeignKey("id")]
