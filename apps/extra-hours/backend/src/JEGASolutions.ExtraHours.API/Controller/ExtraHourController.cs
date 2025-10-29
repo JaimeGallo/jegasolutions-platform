@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using JEGASolutions.ExtraHours.Core.Entities.Models;
 using JEGASolutions.ExtraHours.Core.Interfaces;
+using JEGASolutions.ExtraHours.Core.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,12 +14,18 @@ namespace JEGASolutions.ExtraHours.API.Controller
         private readonly IExtraHourService _extraHourService;
         private readonly IEmployeeService _employeeService;
         private readonly IExtraHourCalculationService _calculationService;
+        private readonly ITenantContextService _tenantContextService;
 
-        public ExtraHourController(IExtraHourService extraHourService, IEmployeeService employeeService, IExtraHourCalculationService calculationService)
+        public ExtraHourController(
+            IExtraHourService extraHourService,
+            IEmployeeService employeeService,
+            IExtraHourCalculationService calculationService,
+            ITenantContextService tenantContextService)
         {
             _extraHourService = extraHourService;
             _employeeService = employeeService;
             _calculationService = calculationService;
+            _tenantContextService = tenantContextService;
         }
 
         [HttpPost("calculate")]
@@ -36,10 +43,10 @@ namespace JEGASolutions.ExtraHours.API.Controller
                 if (User.Identity?.IsAuthenticated == true)
                 {
                     // Try multiple claim names for compatibility with different token issuers
-                    var tenantIdClaim = User.Claims.FirstOrDefault(c => c.Type == "tenant_id") 
+                    var tenantIdClaim = User.Claims.FirstOrDefault(c => c.Type == "tenant_id")
                                      ?? User.Claims.FirstOrDefault(c => c.Type == "TenantId")
                                      ?? User.Claims.FirstOrDefault(c => c.Type == "tenantId"); // Landing API uses this format
-                    
+
                     if (tenantIdClaim != null && int.TryParse(tenantIdClaim.Value, out int parsedTenantId))
                     {
                         tenantId = parsedTenantId;
@@ -72,9 +79,9 @@ namespace JEGASolutions.ExtraHours.API.Controller
             catch (KeyNotFoundException ex)
             {
                 // If tenant configuration not found, provide helpful message
-                return NotFound(new { 
+                return NotFound(new {
                     error = "Configuración no encontrada. Por favor, contacte al administrador.",
-                    details = ex.Message 
+                    details = ex.Message
                 });
             }
             catch (Exception ex)
@@ -88,6 +95,16 @@ namespace JEGASolutions.ExtraHours.API.Controller
         [Authorize(Roles = "manager")]
         public async Task<IActionResult> GetEmployeesExtraHoursByManager([FromQuery] string? startDate = null, [FromQuery] string? endDate = null)
         {
+            // ✅ Extract tenant_id from JWT token and configure tenant context
+            var tenantIdClaim = User.Claims.FirstOrDefault(c => c.Type == "tenant_id")
+                             ?? User.Claims.FirstOrDefault(c => c.Type == "TenantId")
+                             ?? User.Claims.FirstOrDefault(c => c.Type == "tenantId");
+
+            if (tenantIdClaim != null && int.TryParse(tenantIdClaim.Value, out int tenantId))
+            {
+                _tenantContextService.SetCurrentTenantId(tenantId);
+                Console.WriteLine($"✅ Tenant context configured: {tenantId}");
+            }
 
             var managerId = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
             if (string.IsNullOrEmpty(managerId))
@@ -266,12 +283,16 @@ namespace JEGASolutions.ExtraHours.API.Controller
             var tenantIdClaim = User.Claims.FirstOrDefault(c => c.Type == "tenant_id")
                              ?? User.Claims.FirstOrDefault(c => c.Type == "TenantId")
                              ?? User.Claims.FirstOrDefault(c => c.Type == "tenantId"); // Landing API uses this format
-            
+
             if (tenantIdClaim == null || !int.TryParse(tenantIdClaim.Value, out int tenantId))
             {
                 Console.WriteLine("❌ ERROR: Tenant ID no encontrado en el token");
                 return BadRequest(new { error = "Tenant ID no encontrado en el token. Por favor, inicie sesión nuevamente." });
             }
+
+            // ✅ CRITICAL FIX: Configure tenant context before calling any services
+            _tenantContextService.SetCurrentTenantId(tenantId);
+            Console.WriteLine($"✅ Tenant context configured: {tenantId}");
 
             // Obtener ID del empleado desde el token
             var userId = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
@@ -441,6 +462,17 @@ namespace JEGASolutions.ExtraHours.API.Controller
         [Authorize(Roles = "manager, superusuario")]
         public async Task<IActionResult> ApproveExtraHour(long registry)
         {
+            // ✅ Extract tenant_id from JWT token and configure tenant context
+            var tenantIdClaim = User.Claims.FirstOrDefault(c => c.Type == "tenant_id")
+                             ?? User.Claims.FirstOrDefault(c => c.Type == "TenantId")
+                             ?? User.Claims.FirstOrDefault(c => c.Type == "tenantId");
+
+            if (tenantIdClaim != null && int.TryParse(tenantIdClaim.Value, out int tenantId))
+            {
+                _tenantContextService.SetCurrentTenantId(tenantId);
+                Console.WriteLine($"✅ Tenant context configured: {tenantId}");
+            }
+
             var extraHour = await _extraHourService.FindByRegistryAsync(registry);
             if (extraHour == null)
                 return NotFound(new { error = "Registro de horas extra no encontrado" });
@@ -469,6 +501,17 @@ namespace JEGASolutions.ExtraHours.API.Controller
         [Authorize(Roles = "manager, superusuario")]
         public async Task<IActionResult> UpdateExtraHour(long registry, [FromBody] ExtraHour extraHourDetails)
         {
+            // ✅ Extract tenant_id from JWT token and configure tenant context
+            var tenantIdClaim = User.Claims.FirstOrDefault(c => c.Type == "tenant_id")
+                             ?? User.Claims.FirstOrDefault(c => c.Type == "TenantId")
+                             ?? User.Claims.FirstOrDefault(c => c.Type == "tenantId");
+
+            if (tenantIdClaim != null && int.TryParse(tenantIdClaim.Value, out int tenantId))
+            {
+                _tenantContextService.SetCurrentTenantId(tenantId);
+                Console.WriteLine($"✅ Tenant context configured: {tenantId}");
+            }
+
             var existingExtraHour = await _extraHourService.FindByRegistryAsync(registry);
             if (existingExtraHour == null)
                 return NotFound(new { error = "Registro de horas extra no encontrado" });
@@ -492,6 +535,17 @@ namespace JEGASolutions.ExtraHours.API.Controller
         [Authorize(Roles = "manager, superusuario")]
         public async Task<IActionResult> DeleteExtraHour(long registry)
         {
+            // ✅ Extract tenant_id from JWT token and configure tenant context
+            var tenantIdClaim = User.Claims.FirstOrDefault(c => c.Type == "tenant_id")
+                             ?? User.Claims.FirstOrDefault(c => c.Type == "TenantId")
+                             ?? User.Claims.FirstOrDefault(c => c.Type == "tenantId");
+
+            if (tenantIdClaim != null && int.TryParse(tenantIdClaim.Value, out int tenantId))
+            {
+                _tenantContextService.SetCurrentTenantId(tenantId);
+                Console.WriteLine($"✅ Tenant context configured: {tenantId}");
+            }
+
             var deleted = await _extraHourService.DeleteExtraHourByRegistryAsync(registry);
             if (!deleted)
                 return NotFound(new { error = "Registro de horas extra no encontrado" });
@@ -503,6 +557,17 @@ namespace JEGASolutions.ExtraHours.API.Controller
         [Authorize(Roles = "superusuario")]
         public async Task<IActionResult> GetAllEmployeesExtraHours([FromQuery] string? startDate = null, [FromQuery] string? endDate = null)
         {
+            // ✅ Extract tenant_id from JWT token and configure tenant context
+            var tenantIdClaim = User.Claims.FirstOrDefault(c => c.Type == "tenant_id")
+                             ?? User.Claims.FirstOrDefault(c => c.Type == "TenantId")
+                             ?? User.Claims.FirstOrDefault(c => c.Type == "tenantId");
+
+            if (tenantIdClaim != null && int.TryParse(tenantIdClaim.Value, out int tenantId))
+            {
+                _tenantContextService.SetCurrentTenantId(tenantId);
+                Console.WriteLine($"✅ Tenant context configured: {tenantId}");
+            }
+
             var result = new List<object>();
             var allEmployees = await _employeeService.GetAllAsync();
 
