@@ -169,7 +169,7 @@ namespace JEGASolutions.ExtraHours.API.Controller
                             endTime = extraHour.endTime,
                             approved = extraHour.approved,
                             approvedByManagerId = extraHour.ApprovedByManagerId,
-                            approvedByManagerName = extraHour.ApprovedByManager?.User?.name ?? "No aprobado",
+                            approvedByManagerName = extraHour.ApprovedByManager?.name ?? "No aprobado",
                             observations = extraHour.observations
                         });
                     }
@@ -215,7 +215,7 @@ namespace JEGASolutions.ExtraHours.API.Controller
                     endTime = extraHour.endTime,
                     approved = extraHour.approved,
                     approvedByManagerId = extraHour.ApprovedByManagerId,
-                    approvedByManagerName = extraHour.ApprovedByManager?.User?.name ?? "No aprobado",
+                    approvedByManagerName = extraHour.ApprovedByManager?.name ?? "No aprobado",
                     observations = extraHour.observations
                 });
             }
@@ -266,7 +266,7 @@ namespace JEGASolutions.ExtraHours.API.Controller
                     endTime = extraHour.endTime,
                     approved = extraHour.approved,
                     approvedByManagerId = extraHour.ApprovedByManagerId,
-                    approvedByManagerName = extraHour.ApprovedByManager?.User?.name ?? "No aprobado",
+                    approvedByManagerName = extraHour.ApprovedByManager?.name ?? "No aprobado",
                     observations = extraHour.observations
                 });
             }
@@ -607,7 +607,7 @@ namespace JEGASolutions.ExtraHours.API.Controller
                             endTime = extraHour.endTime,
                             approved = extraHour.approved,
                             approvedByManagerId = extraHour.ApprovedByManagerId,
-                            approvedByManagerName = extraHour.ApprovedByManager?.User?.name ?? "No aprobado",
+                            approvedByManagerName = extraHour.ApprovedByManager?.name ?? "No aprobado",
                             observations = extraHour.observations
                         });
                     }

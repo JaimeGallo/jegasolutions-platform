@@ -19,6 +19,9 @@ namespace JEGASolutions.ExtraHours.Core.Entities.Models
         [Column("work_date")]
         public DateTime WorkDate { get; set; } // Día trabajado (domingo/festivo)
 
+        [Column("hours_worked")]
+        public decimal? HoursWorked { get; set; } // Horas trabajadas en el día
+
         [Column("requested_compensation_date")]
         public DateTime RequestedCompensationDate { get; set; } // Día solicitado como compensación
 
