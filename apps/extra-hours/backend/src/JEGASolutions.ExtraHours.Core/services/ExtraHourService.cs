@@ -20,7 +20,7 @@ namespace JEGASolutions.ExtraHours.Core.Services
         {
             if (!_tenantContextService.HasTenantId())
                 throw new InvalidOperationException("Tenant context is required");
-            
+
             var tenantId = _tenantContextService.GetCurrentTenantId();
             return await _extraHourRepository.FindExtraHoursByIdAsync(id, tenantId);
         }
@@ -29,7 +29,7 @@ namespace JEGASolutions.ExtraHours.Core.Services
         {
             if (!_tenantContextService.HasTenantId())
                 throw new InvalidOperationException("Tenant context is required");
-            
+
             var tenantId = _tenantContextService.GetCurrentTenantId();
             return await _extraHourRepository.FindByDateRangeAsync(startDate, endDate, tenantId);
         }
@@ -38,7 +38,7 @@ namespace JEGASolutions.ExtraHours.Core.Services
         {
             if (!_tenantContextService.HasTenantId())
                 throw new InvalidOperationException("Tenant context is required");
-            
+
             var tenantId = _tenantContextService.GetCurrentTenantId();
             return await _extraHourRepository.FindExtraHoursByIdAndDateRangeAsync(employeeId, startDate, endDate, tenantId);
         }
@@ -47,7 +47,7 @@ namespace JEGASolutions.ExtraHours.Core.Services
         {
             if (!_tenantContextService.HasTenantId())
                 throw new InvalidOperationException("Tenant context is required");
-            
+
             var tenantId = _tenantContextService.GetCurrentTenantId();
             return await _extraHourRepository.FindByRegistryAsync(registry, tenantId);
         }
@@ -56,28 +56,40 @@ namespace JEGASolutions.ExtraHours.Core.Services
         {
             if (!_tenantContextService.HasTenantId())
                 throw new InvalidOperationException("Tenant context is required");
-            
+
             var tenantId = _tenantContextService.GetCurrentTenantId();
             return await _extraHourRepository.DeleteByRegistryAsync(registry, tenantId);
         }
 
         public async Task<ExtraHour> AddExtraHourAsync(ExtraHour extraHour)
         {
-            if (!_tenantContextService.HasTenantId())
-                throw new InvalidOperationException("Tenant context is required");
-            
-            var tenantId = _tenantContextService.GetCurrentTenantId();
-            extraHour.TenantId = tenantId;
+            // ✅ Use tenant_id from the object if already set (controller should set this)
+            // Fallback to TenantContextService if not set
+            if (extraHour.TenantId == null || extraHour.TenantId == 0)
+            {
+                if (!_tenantContextService.HasTenantId())
+                    throw new InvalidOperationException("Tenant context is required");
+
+                var tenantId = _tenantContextService.GetCurrentTenantId();
+                extraHour.TenantId = tenantId;
+            }
+
             return await _extraHourRepository.AddAsync(extraHour);
         }
 
         public async Task UpdateExtraHourAsync(ExtraHour extraHour)
         {
-            if (!_tenantContextService.HasTenantId())
-                throw new InvalidOperationException("Tenant context is required");
-            
-            var tenantId = _tenantContextService.GetCurrentTenantId();
-            extraHour.TenantId = tenantId;
+            // ✅ Use tenant_id from the object if already set (controller should set this)
+            // Fallback to TenantContextService if not set
+            if (extraHour.TenantId == null || extraHour.TenantId == 0)
+            {
+                if (!_tenantContextService.HasTenantId())
+                    throw new InvalidOperationException("Tenant context is required");
+
+                var tenantId = _tenantContextService.GetCurrentTenantId();
+                extraHour.TenantId = tenantId;
+            }
+
             await _extraHourRepository.UpdateAsync(extraHour);
         }
 
@@ -85,7 +97,7 @@ namespace JEGASolutions.ExtraHours.Core.Services
         {
             if (!_tenantContextService.HasTenantId())
                 throw new InvalidOperationException("Tenant context is required");
-            
+
             var tenantId = _tenantContextService.GetCurrentTenantId();
             return await _extraHourRepository.FindAllAsync(tenantId);
         }
