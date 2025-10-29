@@ -53,7 +53,6 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Repositories
         {
             return await _context.extraHours
                 .Include(eh => eh.ApprovedByManager)
-                .ThenInclude(m => m!.User)
                 .FirstOrDefaultAsync(e => e.registry == registry);
         }
 
@@ -84,17 +83,17 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Repositories
         {
             // Ensure all DateTime fields are UTC
             extraHour.UpdatedAt = DateTime.UtcNow;
-            
+
             if (extraHour.CreatedAt.HasValue && extraHour.CreatedAt.Value.Kind == DateTimeKind.Unspecified)
             {
                 extraHour.CreatedAt = DateTime.SpecifyKind(extraHour.CreatedAt.Value, DateTimeKind.Utc);
             }
-            
+
             if (extraHour.date.Kind == DateTimeKind.Unspecified)
             {
                 extraHour.date = DateTime.SpecifyKind(extraHour.date, DateTimeKind.Utc);
             }
-            
+
             // Detach and reattach to avoid tracking conflicts
             _context.Entry(extraHour).State = EntityState.Modified;
             await _context.SaveChangesAsync();
@@ -144,7 +143,6 @@ namespace JEGASolutions.ExtraHours.Infrastructure.Repositories
         {
             return await _context.extraHours
                 .Include(eh => eh.ApprovedByManager)
-                .ThenInclude(m => m!.User)
                 .FirstOrDefaultAsync(e => e.registry == registry && e.TenantId == tenantId);
         }
 

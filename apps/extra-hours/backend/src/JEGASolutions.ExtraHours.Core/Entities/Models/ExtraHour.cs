@@ -10,32 +10,63 @@ namespace JEGASolutions.ExtraHours.Core.Entities.Models
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        [Column("registry")]
+        [Column("id")]
         public int registry { get; set; }
 
+        [Column("employee_id")]
         public long id { get; set; }
+
+        [Column("date")]
         public DateTime date { get; set; }
+
+        [Column("start_time")]
         public TimeSpan startTime { get; set; }
+
+        [Column("end_time")]
         public TimeSpan endTime { get; set; }
 
+        [Column("total_hours")]
+        public double? extraHours { get; set; }
 
-        public double diurnal { get; set; }
-        public double nocturnal { get; set; }
-        public double diurnalHoliday { get; set; }
-        public double nocturnalHoliday { get; set; }
-        public double extraHours { get; set; }
+        [Column("type")]
+        public string? type { get; set; }
+
+        [Column("status")]
+        public string? status { get; set; }
+
+        [Column("notes")]
         public string? observations { get; set; }
-
-        [Required]
-        public bool approved { get; set; } = false;
 
         [Column("approved_by")]
         public long? ApprovedByManagerId { get; set; }
+
+        [Column("approved_at")]
+        public DateTime? approvedAt { get; set; }
+
+        // Computed properties for backward compatibility (not mapped to DB)
+        [NotMapped]
+        public double diurnal { get; set; }
+
+        [NotMapped]
+        public double nocturnal { get; set; }
+
+        [NotMapped]
+        public double diurnalHoliday { get; set; }
+
+        [NotMapped]
+        public double nocturnalHoliday { get; set; }
+
+        [NotMapped]
+        public bool approved
+        {
+            get => status?.ToLower() == "approved";
+            set => status = value ? "approved" : "pending";
+        }
 
         [ForeignKey("id")]
         public Employee? employee { get; set; }
 
         [ForeignKey("ApprovedByManagerId")]
-        public Manager? ApprovedByManager { get; set; }
+        public User? ApprovedByManager { get; set; }
     }
 }
